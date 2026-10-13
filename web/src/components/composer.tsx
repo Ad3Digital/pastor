@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { createPortal } from "react-dom";
 import type { ChangeEvent, ClipboardEvent, CSSProperties, ReactNode } from "react";
 import { useRevalidator } from "react-router";
-import { Check, FileText, Image, Keyboard, Loader2, Mic, Paperclip, Pencil, Send, Settings2, Slash, Square, Terminal, X, Zap } from "lucide-react";
+import { Check, FileText, Image, Keyboard, Loader2, Mic, Paperclip, Pencil, Phone, Send, Settings2, Slash, Square, Terminal, X, Zap } from "lucide-react";
 
 import { applyDraftFontSize, fontStack, inputFocusZoomsPage } from "@/hooks/use-display-prefs";
 import type { DisplayPrefs, Hand } from "@/hooks/use-display-prefs";
@@ -1704,6 +1704,21 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                 disabled: locked,
                 onSelect: () => requestDrawer(drawer === "quick" ? null : "quick"),
               },
+              // Antonio: o /voice do Codex usa o audio do PC; o servico collie-voice (porta 8443 do
+              // mesmo host no tailnet) liga esse audio ao celular. So existe em painel do Codex.
+              ...(agent === "codex"
+                ? [
+                    {
+                      id: "voice-call",
+                      icon: Phone,
+                      label: "Call",
+                      disabled: locked,
+                      onSelect: () => {
+                        window.open(`https://${location.hostname}:8443/?pane=${encodeURIComponent(paneId)}`, "_blank", "noopener");
+                      },
+                    },
+                  ]
+                : []),
               // Withdrawn rather than greyed when this pane has no commands at all: there is no
               // palette to open, which is a different thing from one this device may not use.
               ...(commands.length > 0
