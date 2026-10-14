@@ -31,6 +31,7 @@ import { AnchoredMenu } from "@/components/ui/anchored-menu";
 import * as api from "@/lib/api";
 import { describeApiError, describeThrownError } from "@/lib/api-error-message";
 import { commandsFor } from "@/lib/agent-commands";
+import { startVoiceCall, stopVoiceCall, useVoiceCall } from "@/lib/voice-call";
 import { useMuxCapability, useMuxUnsupportedKeys } from "@/lib/mux-capability";
 import { useOperatorCommands, useOperatorKeys, useUploadCapability } from "@/lib/operator-config";
 import {
@@ -370,6 +371,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   // as before, drafts.ts). It gates every path that reaches the pane (send, raw keys, the belt) and
   // nothing else. There is no outbox: a send refused here is gone, the draft stays in the box.
   const live = useLive(paneId, scope);
+  const voiceCall = useVoiceCall();
   const offline = stale === true || !live;
   const offlineRef = useRef(offline);
   offlineRef.current = offline;
@@ -1704,8 +1706,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                 disabled: locked,
                 onSelect: () => requestDrawer(drawer === "quick" ? null : "quick"),
               },
-              // Antonio: o /voice do Codex usa o audio do PC; o servico collie-voice (porta 8443 do
-              // mesmo host no tailnet) liga esse audio ao celular. So existe em painel do Codex.
+              // Antonio: o /voice do Codex usa o audio do PC; o servico collie-voice (em /voice-call neste
+              // mesmo endereco) liga esse audio ao celular (lib/voice-call.ts). So em painel do Codex.
               ...(agent === "codex"
                 ? [
                     {
@@ -1713,8 +1715,11 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                       icon: Phone,
                       label: "Call",
                       disabled: locked,
+                      on: voiceCall.phase !== "idle",
+                      pressed: voiceCall.phase !== "idle",
                       onSelect: () => {
-                        window.open(`https://${location.hostname}:8443/?pane=${encodeURIComponent(paneId)}`, "_blank", "noopener");
+                        if (voiceCall.phase === "idle") void startVoiceCall(paneId);
+                        else stopVoiceCall();
                       },
                     },
                   ]

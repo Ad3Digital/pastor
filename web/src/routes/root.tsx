@@ -25,6 +25,7 @@ import { ScreenTransition } from "@/components/screen-transition";
 import { CrewProvider } from "@/components/crew-provider";
 import { CollieMark } from "@/components/collie-mark";
 import { TourHost } from "@/components/tour-sheet";
+import { VoiceBubble } from "@/components/voice-bubble";
 import { describeThrownError } from "@/lib/api-error-message";
 import { homePath } from "@/lib/nav";
 import { scopeFromUrl } from "@/lib/session";
@@ -227,6 +228,7 @@ export function RootLayout() {
             </ScreenTransition>
           </StripHost>
         </AppHeaderHost>
+        <VoiceBubble />
       </div>
     </CrewProvider>
   );

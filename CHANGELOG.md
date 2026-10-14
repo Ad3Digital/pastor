@@ -32,6 +32,7 @@ Running a crew? Update the lead first; members follow on their own. Details:
 - **Chat pins the prompt a reply answers above the thread.** Scroll down a long run and the prompt it answers stays at the top in two lines; tap it to jump back to it, even when the first page left it out. Thanks @GGGODLIN (#406).
 - **New sheet options for Grok and Antigravity.** Always approve and Continue last for Grok; Skip permission prompts or Plan mode, plus Continue last, for Antigravity. Thanks @GGGODLIN (#430).
 - **A passkey can pair a new device instead of a code.** A paired device creates one in Settings, under Paired devices; any browser that holds it, synced by Google or Apple, then pairs itself with a name and a fingerprint. The key is checked by the bridge, the device lands in the registry like any other, and `collie devices revoke` still removes it. (Local patch.)
+- **A voice call with Codex starts from the Call button and stays in the chat.** Tapping Call on a Codex pane connects at once through the `collie-voice` service mounted at `/voice-call`; a small bubble shows the call is live, and tapping it ends the call. (Local patch.)
 
 ### Changed
 
