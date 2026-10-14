@@ -1720,13 +1720,18 @@ describe("open routes — every /api route but health and pair asks the pairing 
     return out;
   }
 
-  test("open routes: only /api/health and /api/pair answer without asking a gate", () => {
+  test("open routes: only /api/health, /api/pair and the passkey login pair answer without asking a gate", () => {
     const blocks = routeBlocks();
     // The scan found the table, not a handful of lines: the pane family, the blobs, the snapshot.
     expect(blocks.length).toBeGreaterThan(30);
     expect(blocks.map((b) => b.route)).toContain("BLOB_ROUTE");
     expect(blocks.map((b) => b.route)).toContain('"/api/snapshot"');
-    expect(blocks.filter((b) => !b.gated).map((b) => b.route).toSorted()).toEqual(['"/api/health"', '"/api/pair"']);
+    expect(blocks.filter((b) => !b.gated).map((b) => b.route).toSorted()).toEqual([
+      '"/api/health"',
+      '"/api/pair"',
+      '"/api/passkey/login/options"',
+      '"/api/passkey/login/verify"',
+    ]);
   });
 
   test("open routes: the snapshot asks guard, not a bare checkAccess", () => {

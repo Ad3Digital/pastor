@@ -739,6 +739,10 @@ describe("solo zero-tax — routes", () => {
       // browser answering its own operator. A solo instance registers it and 404s
       // (`crew.not_lead`) — the same shape `/api/stt` has when no provider is configured.
       "/api/pair",
+      "/api/passkey/login/options",
+      "/api/passkey/login/verify",
+      "/api/passkey/register/options",
+      "/api/passkey/register/verify",
       // "Look now" (ADR 0031) — a SOLO route that legitimately extends this list, named here rather
       // than exempted. It is session-scoped and read-gated, and it registers no crew route of its
       // own: a lead reaches a peer's through the peer's existing `/crew/v1/*` dispatch.
@@ -1050,6 +1054,7 @@ const STATE_DIR_ENTRIES = [
   // never does keeps writing exactly the six entries above it.
   "paired-devices.json",
   "pairing-pending.json",
+  "passkeys.json",
   "push-subscriptions.json",
   "snooze.json",
   // One receipt per starter a phone ran on a durable program (ADR 0102). Written by use and by nothing

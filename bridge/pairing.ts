@@ -827,6 +827,27 @@ export class PairingStore {
   }
 
   /**
+   * Enrol `label` with no code: the caller has already proved the operator another way (a passkey a
+   * paired device registered, bridge/passkeys.ts). Same registry rules as {@link claim} — a live
+   * label is refused, an expired one is replaced — and the token is returned once.
+   */
+  async enrolVerified(
+    label: string,
+  ): Promise<{ ok: true; token: string; replacedExpired: boolean } | { ok: false; reason: "duplicate-label" }> {
+    return this.serialize(async () => {
+      const token = generateToken(this.random);
+      const enrolled = enrolDevice(coerceRegistry(await this.io.readRegistry()), {
+        label,
+        tokenHash: sha256Hex(token),
+        now: this.now(),
+      });
+      if (!enrolled) return { ok: false, reason: "duplicate-label" };
+      await this.io.writeRegistry(enrolled.registry);
+      return { ok: true, token, replacedExpired: enrolled.replaced };
+    });
+  }
+
+  /**
    * Adopt a lead's synced entries into this machine's own registry — **at takeover commit, and only
    * then** (RFC §6.5, `bridge/crew/standby-devices.ts`).
    *

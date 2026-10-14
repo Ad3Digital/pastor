@@ -1,6 +1,7 @@
 // Thin REST client for the bridge. Everything is same-origin, so credentials/headers are
 // minimal. Each call throws on a non-2xx so callers (route loaders / action handlers) surface errors.
 
+import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import { parseApiErrorFields, type ApiErrorDetail, type ApiErrorFields } from "./api-error-codes";
 import { trackBusy } from "./busy";
 import {
@@ -1926,6 +1927,52 @@ export async function pairDevice(code: string, label: string): Promise<PairResul
     "/api/pair",
     { method: "POST", body: JSON.stringify({ code, label }) },
     recoverPairFailure,
+  );
+  return "token" in res ? { ok: true, token: res.token, label: res.label } : res;
+}
+
+// ── Chaves de acesso (patch local, bridge/passkeys.ts) ─────────────────────────────────────────
+
+/** A refusal from a passkey route, carried as a value: the caller words it for the person. */
+const passkeyRefusal = (status: number, detail: string): { ok: false; status: number; detail: string } => ({
+  ok: false,
+  status,
+  detail,
+});
+
+/** Registers a passkey for this bridge from a device that is already paired. */
+export async function createPasskey(): Promise<{ ok: true } | { ok: false; status: number; detail: string }> {
+  const { startRegistration } = await import("@simplewebauthn/browser");
+  const options = await req<PublicKeyCredentialCreationOptionsJSON | { ok: false; status: number; detail: string }>(
+    "/api/passkey/register/options",
+    { method: "POST", body: "{}" },
+    passkeyRefusal,
+  );
+  if ("ok" in options) return options;
+  const response = await startRegistration({ optionsJSON: options });
+  return req<{ ok: true } | { ok: false; status: number; detail: string }>(
+    "/api/passkey/register/verify",
+    { method: "POST", body: JSON.stringify({ response }) },
+    passkeyRefusal,
+  );
+}
+
+/** Pairs THIS device under `label` by signing in with a passkey, instead of a code. */
+export async function pairWithPasskey(
+  label: string,
+): Promise<{ ok: true; token: string; label: string } | { ok: false; status: number; detail: string }> {
+  const { startAuthentication } = await import("@simplewebauthn/browser");
+  const options = await req<PublicKeyCredentialRequestOptionsJSON | { ok: false; status: number; detail: string }>(
+    "/api/passkey/login/options",
+    { method: "POST", body: "{}" },
+    passkeyRefusal,
+  );
+  if ("ok" in options) return options;
+  const response = await startAuthentication({ optionsJSON: options });
+  const res = await req<{ token: string; label: string } | { ok: false; status: number; detail: string }>(
+    "/api/passkey/login/verify",
+    { method: "POST", body: JSON.stringify({ response, label }) },
+    passkeyRefusal,
   );
   return "token" in res ? { ok: true, token: res.token, label: res.label } : res;
 }

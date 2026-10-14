@@ -149,6 +149,7 @@ import {
   type PairingStore,
 } from "./pairing.ts";
 import { createPairLimiter, pairSourceKey } from "./pair-limit.ts";
+import { PasskeyStore, relyingPartyOf } from "./passkeys.ts";
 import { LOCAL_LABEL, type LocalCredential } from "./local-secret.ts";
 import { modeForWire } from "./crew/mode.ts";
 import type { CrewRuntime } from "./crew/config.ts";
@@ -1990,6 +1991,27 @@ export function startServer(opts: {
 
   // Ten attempts per source address per minute on POST /api/pair, in memory (bridge/pair-limit.ts).
   const pairLimiter = createPairLimiter();
+  // Chaves de acesso (patch local, bridge/passkeys.ts): uma segunda porta para o pareamento.
+  const passkeys = new PasskeyStore(cfg.stateDir);
+  /** The login routes' door: same-origin like `/api/pair`, and under the same per-source brake. */
+  const passkeyLoginDoor = (req: Request): Response | null => {
+    const gate = checkAccess(req, cfg, "write");
+    if (!gate.ok) return text(gate.reason, 403);
+    const peer = server.requestIP(req)?.address;
+    const limited = pairLimiter.hit(pairSourceKey(peer, isLoopbackPeer(peer), req.headers.get("x-forwarded-for")));
+    if (limited.allowed) return null;
+    if (limited.first) audit.record({ action: "pair-refused", detail: { reason: "rate-limited" } });
+    return secure(new Response("too many pairing attempts, try again in a minute", { status: 429, headers: { "retry-after": "60" } }));
+  };
+  /** A passkey route's body. Anything that is not JSON reads as `{}` and fails the field checks. */
+  const passkeyBody = async (req: Request): Promise<JsonValue> => {
+    try {
+      // SAFETY: `Request.json()` output IS a JsonValue by construction; every caller checks fields.
+      return (await req.json()) as JsonValue;
+    } catch {
+      return {};
+    }
+  };
 
   const server = Bun.serve({
     hostname: cfg.host,
@@ -2932,6 +2954,80 @@ export function startServer(opts: {
         audit.record({ action: "pair", device: parsed.label, detail: { label: parsed.label } });
         // The ONLY time this token exists outside the requesting device. Nothing stores it here.
         return json({ token: claimed.token, label: parsed.label }, req.headers.get("accept-encoding"));
+      }
+      // ── Chaves de acesso (patch local, bridge/passkeys.ts) ──────────────────────────────────
+      // Registering is a write by a device that is ALREADY paired. Logging in is the pairing
+      // bootstrap's twin: open like `/api/pair`, same-origin gated, under the same per-source brake,
+      // and worthless without a signature from a key a paired device registered.
+      if (pathname === "/api/passkey/register/options" && req.method === "POST") {
+        const denied = guard(req, cfg, "write", pairingGate);
+        if (denied) return denied;
+        if (!pairing) return text("pairing unavailable", 503);
+        const rp = relyingPartyOf(req);
+        if (!rp) return text("passkeys need an https origin on a host name", 400);
+        try {
+          const current = pairing.resolve(bearerToken(req.headers));
+          if (!current) return text("device not paired", 403);
+          return json(await passkeys.registrationOptions(rp, current.label), req.headers.get("accept-encoding"));
+        } catch (err) {
+          console.warn(`[passkey] ${errorText(err)}`);
+          return pairingUnavailable();
+        }
+      }
+      if (pathname === "/api/passkey/register/verify" && req.method === "POST") {
+        const denied = guard(req, cfg, "write", pairingGate);
+        if (denied) return denied;
+        if (!pairing) return text("pairing unavailable", 503);
+        const rp = relyingPartyOf(req);
+        if (!rp) return text("passkeys need an https origin on a host name", 400);
+        const ae = req.headers.get("accept-encoding");
+        const record = asJsonRecord((asJsonRecord(await passkeyBody(req)) ?? {}).response);
+        // SAFETY: verifyRegistrationResponse checks the whole credential and rejects a malformed one.
+        if (record === null || !(await passkeys.register(rp, record as never))) {
+          return json({ ok: false, error: "passkey not verified" }, ae, 400);
+        }
+        audit.record({ action: "passkey.register", device: pairing.resolve(bearerToken(req.headers))?.label ?? null, detail: {} });
+        return json({ ok: true }, ae);
+      }
+      if (pathname === "/api/passkey/login/options" && req.method === "POST") {
+        const refused = passkeyLoginDoor(req);
+        if (refused) return refused;
+        const rp = relyingPartyOf(req);
+        if (!rp) return text("passkeys need an https origin on a host name", 400);
+        const ae = req.headers.get("accept-encoding");
+        if ((await passkeys.count()) === 0) return json({ ok: false, error: "no passkey" }, ae, 404);
+        return json(await passkeys.loginOptions(rp), ae);
+      }
+      if (pathname === "/api/passkey/login/verify" && req.method === "POST") {
+        const refused = passkeyLoginDoor(req);
+        if (refused) return refused;
+        if (!pairing) return text("pairing unavailable", 503);
+        const rp = relyingPartyOf(req);
+        if (!rp) return text("passkeys need an https origin on a host name", 400);
+        const ae = req.headers.get("accept-encoding");
+        const fields = asJsonRecord(await passkeyBody(req)) ?? {};
+        const label = normalizeLabel(fields.label);
+        const record = asJsonRecord(fields.response);
+        if (label === null || record === null) return jsonError(apiError("pairing.bad_request"), 400, ae);
+        // SAFETY: verifyAuthenticationResponse checks the whole credential and rejects a malformed one.
+        if (!(await passkeys.verifyLogin(rp, record as never))) {
+          audit.record({ action: "pair-refused", detail: { reason: "passkey" } });
+          return json({ ok: false, error: "passkey not verified" }, ae, 400);
+        }
+        let enrolled: Awaited<ReturnType<PairingStore["enrolVerified"]>>;
+        try {
+          enrolled = await pairing.enrolVerified(label);
+        } catch (err) {
+          console.warn(`[passkey] enrol deferred: ${errorText(err)}`);
+          return pairingUnavailable();
+        }
+        if (!enrolled.ok) return jsonError(apiError(PAIRING_ERROR_CODES["duplicate-label"]), 400, ae);
+        if (enrolled.replacedExpired) {
+          audit.record({ action: "device.revoke", device: label, detail: { label, reason: "expired-replaced" } });
+          await forgetDevice(label, "expired-replaced");
+        }
+        audit.record({ action: "pair", device: label, detail: { label, via: "passkey" } });
+        return json({ token: enrolled.token, label }, ae);
       }
       if (pathname === "/api/crew" && req.method === "GET") {
         // Read-level, exactly like `/api/devices` and `/api/config`: this is a report about machines
@@ -6214,6 +6310,9 @@ interface DevicesResponseBody {
 export const OPEN_API_ROUTES: readonly { readonly path: string; readonly methods: readonly string[] }[] = [
   { path: "/api/health", methods: ["GET", "HEAD"] },
   { path: "/api/pair", methods: ["POST"] },
+  // Patch local: o login por chave de acesso, a outra porta de pareamento (bridge/passkeys.ts).
+  { path: "/api/passkey/login/options", methods: ["POST"] },
+  { path: "/api/passkey/login/verify", methods: ["POST"] },
 ];
 
 /** Whether this method and path are one of {@link OPEN_API_ROUTES}. Exact path, exact method. */

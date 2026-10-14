@@ -159,11 +159,15 @@ describe("the route table read off server.ts", () => {
 });
 
 describe("apiFrontGate: every /api/ path but the allowlist is refused without a token", () => {
-  test("the allowlist is GET|HEAD /api/health and POST /api/pair, and nothing else", () => {
+  test("the allowlist is GET|HEAD /api/health, POST /api/pair and the passkey login pair, and nothing else", () => {
     expect(OPEN_API_ROUTES).toEqual([
       { path: "/api/health", methods: ["GET", "HEAD"] },
       { path: "/api/pair", methods: ["POST"] },
+      { path: "/api/passkey/login/options", methods: ["POST"] },
+      { path: "/api/passkey/login/verify", methods: ["POST"] },
     ]);
+    expect(isOpenApiRoute("/api/passkey/register/options", "POST")).toBe(false);
+    expect(isOpenApiRoute("/api/passkey/register/verify", "POST")).toBe(false);
     expect(isOpenApiRoute("/api/pair", "GET")).toBe(false);
     expect(isOpenApiRoute("/api/health", "POST")).toBe(false);
     expect(isOpenApiRoute("/api/health/", "GET")).toBe(false);

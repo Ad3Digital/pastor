@@ -1,12 +1,12 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { KeyRound, Loader2, Smartphone } from "lucide-react";
+import { Fingerprint, KeyRound, Loader2, Smartphone } from "lucide-react";
 import { useLocation, useRevalidator, useSearchParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLocale } from "@/hooks/use-locale";
 import { t } from "@/lib/i18n";
-import { pairDevice, revokeDevice } from "@/lib/api";
+import { createPasskey, pairDevice, pairWithPasskey, revokeDevice } from "@/lib/api";
 import { dateTime, timeAgo } from "@/lib/format";
 import { PAIRED_DEVICES_HASH } from "@/lib/nav";
 import { setDeviceToken, usePairing } from "@/lib/pairing";
@@ -135,6 +135,8 @@ export function PairedDevices({ data }: { data: DevicesData }) {
           ))}
         </ul>
       )}
+
+      {data.current && !unpaired && passkeysSupported() && <CreatePasskey />}
 
       {unpaired && (
         <PairForm
@@ -326,6 +328,26 @@ function PairForm({
     }
   }
 
+  async function submitPasskey() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await pairWithPasskey(label.trim());
+      if (!res.ok) {
+        setError(passkeyErrorText(null, res.detail));
+        return;
+      }
+      setDeviceToken(res.token);
+      setCode("");
+      setLabel("");
+      onPaired();
+    } catch (err) {
+      setError(passkeyErrorText(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // The CLI command itself is never translated (rule: CLI commands stay literal); the surrounding
   // sentence is, so the command is placed via the same "locate the interpolated value" split as the
   // paired-as sentence above, letting it keep its own <code> styling.
@@ -389,6 +411,71 @@ function PairForm({
         {busy && <Loader2 className="size-4 animate-spin" />}
         {title}
       </Button>
+      {passkeysSupported() && (
+        <Button variant="outline" className="h-11" disabled={label.trim() === "" || busy} onClick={submitPasskey}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
+          Entrar com chave de acesso
+        </Button>
+      )}
+      {passkeysSupported() && (
+        <p className="text-xs text-muted-foreground">
+          Sem código: dê um nome a este aparelho e use a chave de acesso salva no seu gerenciador de senhas.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Patch local: o navegador sabe fazer WebAuthn (todos os atuais sabem, num contexto https). */
+function passkeysSupported(): boolean {
+  return typeof window !== "undefined" && "PublicKeyCredential" in window;
+}
+
+/** O texto de uma recusa das rotas de chave de acesso, ou de uma cerimônia que o navegador cancelou. */
+function passkeyErrorText(err: unknown, detail?: string): string {
+  if (err instanceof Error && err.name === "NotAllowedError") return "Cancelado, ou nenhuma chave de acesso encontrada para este endereço.";
+  if (detail?.includes("no passkey")) return "Ainda não existe chave de acesso. Crie uma num aparelho já pareado.";
+  if (detail?.includes("duplicate") || detail?.includes("duplicate_label")) return "Já existe um aparelho com esse nome. Use outro.";
+  if (detail?.includes("not verified")) return "A chave de acesso não foi aceita. Tente de novo.";
+  if (detail?.includes("too many")) return "Muitas tentativas. Espere um minuto.";
+  return "Não deu certo. Tente de novo.";
+}
+
+/** Patch local: registra uma chave de acesso a partir deste aparelho, que já está pareado. */
+function CreatePasskey() {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function create() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await createPasskey();
+      setMessage(
+        res.ok
+          ? { ok: true, text: "Chave de acesso criada. Em outro navegador, abra Configurações e toque em Entrar com chave de acesso." }
+          : { ok: false, text: passkeyErrorText(null, res.detail) },
+      );
+    } catch (err) {
+      setMessage({ ok: false, text: passkeyErrorText(err) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-t border-border p-4">
+      <div>
+        <div className="font-medium">Chave de acesso</div>
+        <p className="text-sm text-muted-foreground">
+          Salva no gerenciador de senhas (Google ou Apple). Com ela, outro navegador ou computador entra sem código.
+        </p>
+      </div>
+      <Button variant="outline" className="h-11" disabled={busy} onClick={create}>
+        {busy ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
+        Criar chave de acesso
+      </Button>
+      {message && <p className={`text-xs ${message.ok ? "text-status-done" : "text-status-blocked"}`}>{message.text}</p>}
     </div>
   );
 }
