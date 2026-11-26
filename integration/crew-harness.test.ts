@@ -1871,7 +1871,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
       cmdDevicesRevoke({ ctx: d.ctx, io: d.io, files: d.files, exec: d.exec }, ["drill"]),
     );
     expect(revoked.code).toBe(EXIT.OK);
-    expect(revoked.out).toContain('revoked "drill"');
+    expect(revoked.out).toContain('"drill" revogado');
 
     // THE FIX, ASSERTED: the deputy's copy loses it, even though a label collides. The sync never
     // touches the deputy's OWN registry — it replaces `standby-devices.json`, which is what the door
