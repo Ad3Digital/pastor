@@ -149,7 +149,7 @@ const UPDATE_INFO_KEYS = {
   newerVersions: true,
   run: true,
   // The package manager's own upgrade command (M17/02). Optional: only a packaged install under a
-  // prefix Collie recognises has one to name.
+  // prefix Pastor recognises has one to name.
   packageCommand: true,
   // The files on disk stopped naming the version this process runs (M17/02), and the command that
   // clears it. Both optional — a bridge older than the field sends neither.
@@ -268,7 +268,7 @@ describe("solo zero-tax — the client's mirror types carry no crew dimension", 
       "majorUrl",
       "newerVersions",
       // The package manager's own upgrade command (M17/02) — optional, present only on a packaged
-      // install under a prefix Collie recognises.
+      // install under a prefix Pastor recognises.
       "packageCommand",
       // The peers-only run's legs and its settle stamp (M20/09, M20/01). Optional, and a solo
       // install never carries either.
@@ -318,15 +318,15 @@ describe("solo zero-tax — a solo client puts no host on the wire", () => {
   it("the session param is `s`, and a solo scope emits no host param at all", () => {
     expect(SESSION_PARAM).toBe("s");
     expect(sessionSearch(undefined)).toBe("");
-    expect(sessionSearch("collie-demo")).toBe("?s=collie-demo");
+    expect(sessionSearch("pastor-demo")).toBe("?s=pastor-demo");
     expect(normalizeSession("")).toBeUndefined();
     // The host param EXISTS (the addressing dimension shipped), but a solo client never produces it:
     // no host means no `?h=`, so every URL a solo install builds is byte-identical to before.
     expect(HOST_PARAM).toBe("h");
     expect(scopeSearch({})).toBe("");
     expect(scopeSearch({ host: undefined, session: undefined })).toBe("");
-    expect(scopeSearch({ session: "collie-demo" })).toBe("?s=collie-demo");
-    expect(scopeSearch({ session: "collie-demo" })).toBe(sessionSearch("collie-demo"));
+    expect(scopeSearch({ session: "pastor-demo" })).toBe("?s=pastor-demo");
+    expect(scopeSearch({ session: "pastor-demo" })).toBe(sessionSearch("pastor-demo"));
   });
 
   it("fetchSnapshot on a solo install requests a bare /api/snapshot — no query at all", async () => {
@@ -351,8 +351,8 @@ describe("solo zero-tax — a solo client puts no host on the wire", () => {
         return HttpResponse.json(goldenSnapshot);
       }),
     );
-    await fetchSnapshot({ session: "collie-demo" });
-    expect(urls).toEqual(["?session=collie-demo"]);
+    await fetchSnapshot({ session: "pastor-demo" });
+    expect(urls).toEqual(["?session=pastor-demo"]);
     expect(urls[0]).not.toMatch(/\b(h|host)=/);
   });
 });

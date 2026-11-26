@@ -101,7 +101,7 @@ export interface AgentView {
    */
   lastActiveAt?: number;
   /**
-   * Epoch ms you last opened or drove this pane through Collie. Absent as above.
+   * Epoch ms you last opened or drove this pane through Pastor. Absent as above.
    *
    * There is no "seen" flag anywhere: a settled (`idle` or `done`) agent is unseen precisely when
    * `lastActiveAt > lastSeenAt`, so opening the pane clears it by construction.
@@ -366,7 +366,7 @@ export interface PairedDeviceWire {
 export interface DevicesResponse {
   /**
    * Whether a bearer token is required for writes. Not a setting — it is simply "at least one device
-   * is paired", so pairing nobody leaves Collie exactly as it was.
+   * is paired", so pairing nobody leaves Pastor exactly as it was.
    */
   enforced: boolean;
   /** The label this request's token authenticated as, or null when it authenticated as nobody. */
@@ -394,7 +394,7 @@ export type PairFailure =
  * `reachable: false` with zeroed counts and renders greyed-out, non-clickable in the switcher.
  */
 export interface SessionSummary {
-  /** Registry name, e.g. "default", "collie-demo". */
+  /** Registry name, e.g. "default", "pastor-demo". */
   name: string;
   /** The `cfg.socketPath` session — all no-`?s=` requests map to it. */
   isPrimary: boolean;
@@ -456,7 +456,7 @@ export interface ServerSummary {
  * Join / leave / promote / rotate stay CLI verbs (M5 non-goal), so the page it feeds has no button
  * that mutates anything.
  *
- * **Only a LEAD serves it.** A solo collie and a peer both answer 404 with the app's ordinary JSON
+ * **Only a LEAD serves it.** A solo pastor and a peer both answer 404 with the app's ordinary JSON
  * error shape, which `crewLoader` (lib/loaders.ts) turns into `null` rather than a thrown error —
  * "there is no crew here" is an answer, not a failure.
  *
@@ -477,7 +477,7 @@ export interface CrewStatusResponse {
     /** Epoch ms on the LEAD's clock, like every other timestamp here — date it against `ts`. */
     rotatedAt: number;
   };
-  /** The collie answering — i.e. the lead itself. `version` is what a member is compared against. */
+  /** The pastor answering — i.e. the lead itself. `version` is what a member is compared against. */
   self: { id: string; name: string; version: string };
   /**
    * The member named ahead of time to take over if the lead goes silent (ADR 0027), or `null` when
@@ -506,7 +506,7 @@ export interface CrewMemberStatus {
   enrolledAt?: number;
   /**
    * Four states, and the last two are the loud ones: `incompatible` is a version that must be
-   * fixed, `conflicted` is two collies both believing they lead this crew. Neither is a transient
+   * fixed, `conflicted` is two pastors both believing they lead this crew. Neither is a transient
    * the next poll clears, so the page names them rather than folding them into "unreachable".
    */
   health: "reachable" | "unreachable" | "incompatible" | "conflicted";
@@ -514,7 +514,7 @@ export interface CrewMemberStatus {
   reason?: string;
   /** Epoch ms, stamped by the LEAD on receipt (§10.2). `0` = never answered. */
   lastSeenAt: number;
-  /** The Collie version this member reports; absent until it has answered once. */
+  /** The Pastor version this member reports; absent until it has answered once. */
   version?: string;
   /** Enrolled under an older secret generation and has not picked up the current one. */
   secretBehind: boolean;
@@ -606,7 +606,7 @@ export interface MachineSpark {
 }
 
 /**
- * The machines census. Served by a lead and by a solo collie (one row, `isLead` true); a peer
+ * The machines census. Served by a lead and by a solo pastor (one row, `isLead` true); a peer
  * answers 404 `crew.not_lead`. `ts` is the answering bridge's clock: every age on the page is
  * measured against it, never against `Date.now()`.
  */
@@ -631,7 +631,7 @@ export interface MachineHistoryResponse {
 }
 
 /**
- * Version / upgrade status for the running Collie (mirrors UpdateInfo in bridge/types.ts). Optional
+ * Version / upgrade status for the running Pastor (mirrors UpdateInfo in bridge/types.ts). Optional
  * on the snapshot — an older bridge omits it entirely, which the client treats as "no info" (the
  * update banner renders nothing). `latest` is null when the newest upstream release isn't known.
  */
@@ -681,8 +681,8 @@ export interface UpdateInfo {
   /** GitHub release page for `majorAvailable`, or null when there is none. */
   majorUrl: string | null;
   /**
-   * How this Collie is installed — decides the banner's command spelling: Herdr actions reach only a
-   * Herdr-managed (detached) checkout, every other kind is told the `collie` verbs. Absent on an
+   * How this Pastor is installed — decides the banner's command spelling: Herdr actions reach only a
+   * Herdr-managed (detached) checkout, every other kind is told the `pastor` verbs. Absent on an
    * older bridge (pre-M14, the git-install era), which reads as Herdr-managed.
    */
   installKind?: UpdateInstallKind;
@@ -728,7 +728,7 @@ export interface UpdateInfo {
   /** The running bridge PROCESS is behind the on-disk code — a `systemctl restart` picks it up. */
   bridgeStale: boolean;
   /**
-   * The collie on disk is no longer the one this process runs — a package manager replaced the root
+   * The pastor on disk is no longer the one this process runs — a package manager replaced the root
    * under a live bridge, either with a new version or with a rebuild of the same one. Absent on a
    * bridge older than M17/02, which reads as "not raised".
    */
@@ -1453,7 +1453,7 @@ export type CreateResponse =
 
 /**
  * Which role the bridge plays in a crew (CREW_PROTOCOL.md §3). Mirrors CrewMode in bridge/types.ts.
- * `solo` is a lead with zero peers — today's Collie, exactly.
+ * `solo` is a lead with zero peers — today's Pastor, exactly.
  */
 export type CrewMode = "solo" | "lead" | "peer";
 
@@ -1578,7 +1578,7 @@ export interface MuxConfig {
 }
 
 /**
- * How soon Collie sees a change made in the operator's own terminal — declared by the bridge, never
+ * How soon Pastor sees a change made in the operator's own terminal — declared by the bridge, never
  * measured here (ADR 0031).
  *
  * `push` means the multiplexer announces it, so there is nothing to say and the UI says nothing.
@@ -1701,7 +1701,7 @@ export type LauncherItemReason = "not_found" | "adds_off" | "free_text_off";
 /**
  * One thing the New page may start on ONE machine, with its availability there (ADR 0094). Mirrors
  * `LauncherItem` in bridge/types.ts. An unavailable item is a disabled option with its reason; the
- * reasons a whole machine has (not taking writes, an older Collie) are the phone's own to add.
+ * reasons a whole machine has (not taking writes, an older Pastor) are the phone's own to add.
  */
 export interface LauncherItem {
   /** `harness:<id>`, `row:<command>` or `shell`. Stable per machine. */
@@ -1856,7 +1856,7 @@ export interface BridgeConfig {
    */
   whistle?: WhistleStatus;
   /**
-   * What this collie accepts as an attachment. Mirrors `UploadCapability` in bridge/types.ts.
+   * What this pastor accepts as an attachment. Mirrors `UploadCapability` in bridge/types.ts.
    *
    * **Absent is a bridge older than the field**, and the phone reads that as the contract that
    * shipped before it: 10 MB, images only (lib/attachments.ts owns that fallback). So a
@@ -1864,7 +1864,7 @@ export interface BridgeConfig {
    */
   upload?: UploadCapability;
   /**
-   * Whether the bridge masks secret shapes before text reaches this phone (`COLLIE_REDACT`). The
+   * Whether the bridge masks secret shapes before text reaches this phone (`PASTOR_REDACT`). The
    * phone only SHOWS this and never sets it: a switch on the phone would let any paired or stolen
    * phone unmask. **Absent is an older bridge** (or a member-scoped read), shown as unknown.
    */
@@ -2007,7 +2007,7 @@ export interface NotifyPrefs {
   blocked: boolean;
   /** Push when an agent finishes its task. Default off. */
   done: boolean;
-  /** Push when a new Collie version is available (a restart or upgrade is waiting). Default on. */
+  /** Push when a new Pastor version is available (a restart or upgrade is waiting). Default on. */
   updates: boolean;
   /** Push before an agent pane's prompt cache expires. Default off, and it covers EVERY pane — the
    *  panes watched one by one from their own settings sheet keep warning either way (ADR 0042). */

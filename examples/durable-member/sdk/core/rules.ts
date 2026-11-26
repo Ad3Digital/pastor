@@ -24,7 +24,7 @@ export const CAPS = {
   sendText: 32768,
   note: 2048,
   body: 65536,
-  /** The smallest `sun_path` limit of the platforms Collie runs on (macOS 104), less the closing NUL. */
+  /** The smallest `sun_path` limit of the platforms Pastor runs on (macOS 104), less the closing NUL. */
   socketPath: 103,
 } as const;
 

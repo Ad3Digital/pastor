@@ -1,5 +1,5 @@
-// A small Pi Durable program with the Collie SDK inside. It triages made-up support tickets, and a
-// Collie peer with COLLIE_MUX=durable shows each conversation as a pane.
+// A small Pi Durable program with the Pastor SDK inside. It triages made-up support tickets, and a
+// Pastor peer with PASTOR_MUX=durable shows each conversation as a pane.
 //   bun app.ts
 // The README lists every environment variable. The model is Pi's faux model, scripted, so no key is
 // needed. REAL_MODEL=<OpenRouter model id> uses a real one through OpenRouter ($OPENROUTER_API_KEY).
@@ -23,7 +23,7 @@ import {
   type Storage,
 } from "@earendil-works/pi-durable";
 import { openNodeJsonlStorage } from "@earendil-works/pi-durable/storage/jsonl/node";
-import { type Collie, openCollie, SOCKET_ENV } from "./sdk/index.ts";
+import { type Pastor, openPastor, SOCKET_ENV } from "./sdk/index.ts";
 import { PaneRegistry, riskGuard, showConversation, spawnHelperTool } from "./pi-durable/index.ts";
 import { INSTRUCTIONS, REAL_INSTRUCTIONS, useScriptedModel } from "./script.ts";
 
@@ -44,7 +44,7 @@ export interface AppOptions {
 }
 
 export interface App {
-  collie: Collie;
+  pastor: Pastor;
   harness: Harness;
   close(): Promise<void>;
 }
@@ -69,8 +69,8 @@ export async function startApp(o: AppOptions): Promise<App> {
   // Tools and layout.
   const notes = o.notesFile;
   mkdirSync(dirname(notes), { recursive: true, mode: 0o700 });
-  const collie = await openCollie({ socket: o.socket, hostName: "durable-member", callerCheck: o.callerCheck });
-  const ws = collie.workspace("triage", { title: "Triage", cwd: "/srv/triage" });
+  const pastor = await openPastor({ socket: o.socket, hostName: "durable-member", callerCheck: o.callerCheck });
+  const ws = pastor.workspace("triage", { title: "Triage", cwd: "/srv/triage" });
   const inbox = ws.tab("inbox", { title: "Inbox" });
   const helpers = ws.tab("helpers", { title: "Helpers" });
 
@@ -126,7 +126,7 @@ export async function startApp(o: AppOptions): Promise<App> {
     await conversation.submit({ type: "input", content: `${prefix}Triage ticket ${400 + tickets}: a customer cannot log in.` }, ctx);
     return { paneId: pane.id };
   };
-  collie.starters([
+  pastor.starters([
     { id: "new-triage", label: "New triage", run: startTriage("") },
     { id: "two-notes", label: "Two notes at once (faux only)", run: startTriage("TWO: ") },
   ]);
@@ -141,16 +141,16 @@ export async function startApp(o: AppOptions): Promise<App> {
   const reRaised = panes.reRaised(risky);
   harness.resume();
   await reRaised;
-  collie.ready(); // the layout is complete: only now may Collie see a snapshot
+  pastor.ready(); // the layout is complete: only now may Pastor see a snapshot
 
   return {
-    collie,
+    pastor,
     harness,
     close: async () => {
       // Stop the server first, and leave open asks open: a shutdown is not an answer. Then stop the
       // event streams and close the harness. A hook that waits for the phone does not hold the close
       // up, and no result is written for it (observed). The ask is raised again on the next start.
-      await collie.close();
+      await pastor.close();
       await panes.close();
       await harness.close(ctx);
     },
@@ -205,7 +205,7 @@ if (import.meta.main) {
     console.error(`durable-member: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
-  console.log(`listening ${app.collie.address}`);
+  console.log(`listening ${app.pastor.address}`);
   if (!process.env.REAL_MODEL) console.log("Using the scripted model. Set REAL_MODEL and OPENROUTER_API_KEY for a real one.");
   const stop = () => {
     setTimeout(() => process.exit(1), 3000).unref(); // a hung close must not hang the shell

@@ -12,7 +12,7 @@ import { fill, installApiStub, installCrewWorld } from "./fixtures/api";
 // Pins ignore the filter (ADR 0070). 390x844, the phone.
 //
 // The crew fixture (src/test/handlers.ts): the lead bluefin holds webapp (a blocked claude pane) and
-// collie (a working codex pane and a shell); the peer workshop holds moonward (a blocked codex pane);
+// pastor (a working codex pane and a shell); the peer workshop holds moonward (a blocked codex pane);
 // attic is incompatible and holds nothing.
 
 // No service worker, for the reason e2e/m24-crew.spec.ts gives: a worker claiming the page part way
@@ -89,7 +89,7 @@ test("hiding a machine drops its rows and options, and its \"Show\" option bring
 
   // workshop's workspace left the list and the select, and one "Show" option took its place.
   await expect.poll(() => headings(page)).not.toContain("moonward");
-  expect((await headings(page)).slice(0, 2)).toEqual(["webapp", "collie"]);
+  expect((await headings(page)).slice(0, 2)).toEqual(["webapp", "pastor"]);
   await expect(workspaceSelect(page).getByRole("option", { name: /moonward/u })).toHaveCount(0);
   await expect(standIn(page)).toBeAttached();
   await expect(standIn(page)).toContainText(PEER);
@@ -120,7 +120,7 @@ test("hiding a machine drops its rows and options, and its \"Show\" option bring
 test("a pinned pane on a hidden machine still leads the list", async ({ page }) => {
   await page.goto("/");
   // moonward's codex pane, on workshop: the codex row under the moonward heading, the last codex row
-  // in place order (bluefin's collie comes first).
+  // in place order (bluefin's pastor comes first).
   const peerRow = page.getByRole("main").getByRole("button", { name: /^codex logo codex/u }).last();
   await peerRow.click({ button: "right" });
   const menu = page.getByRole("dialog");
@@ -132,7 +132,7 @@ test("a pinned pane on a hidden machine still leads the list", async ({ page }) 
 
   // The Pinned group leads, holding the hidden machine's pane; the machine's own group is gone.
   await expect.poll(() => headings(page)).not.toContain("moonward");
-  expect((await headings(page)).slice(0, 3)).toEqual([en["home.pinned.title"], "webapp", "collie"]);
+  expect((await headings(page)).slice(0, 3)).toEqual([en["home.pinned.title"], "webapp", "pastor"]);
   await expect(pinnedGroup(page).getByRole("button", { name: /^codex logo codex/u })).toHaveCount(1);
   await expect(standIn(page)).toBeAttached();
 

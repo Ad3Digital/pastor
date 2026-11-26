@@ -33,12 +33,12 @@ describe("Chip — the leading glyph", () => {
   });
 
   it("renders exactly as before when no glyph and no name are given", () => {
-    const { container } = render(<Chip label="collie" active={false} status="needs" onClick={() => {}} />);
+    const { container } = render(<Chip label="pastor" active={false} status="needs" onClick={() => {}} />);
     const button = container.querySelector("button")!;
     expect(button).not.toHaveAttribute("aria-label");
     expect(button).not.toHaveAttribute("aria-describedby");
     // The status word runs straight into the label, as it always has (agent-list.test.tsx's chips).
-    expect(button).toHaveAccessibleName("needs youcollie");
+    expect(button).toHaveAccessibleName("needs youpastor");
   });
 });
 

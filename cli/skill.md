@@ -1,11 +1,11 @@
 ---
-name: collie
-description: How Collie works, and how to help the operator run it from this terminal.
+name: pastor
+description: How Pastor works, and how to help the operator run it from this terminal.
 ---
 
-# Collie
+# Pastor
 
-Collie is a phone web UI for the AI agents running in a terminal. One bridge mirrors one
+Pastor is a phone web UI for the AI agents running in a terminal. One bridge mirrors one
 multiplexer on one machine, and the phone reaches it over Tailscale. A crew joins several machines
 behind one URL.
 
@@ -20,29 +20,29 @@ behind one URL.
 
 ## Get the facts, do not guess them
 
-- `collie status`, whether the bridge runs, and on which URLs.
-- `collie crew status`, every member of this crew, and what each one reports.
-- `collie doctor`, the checks that say why something does not work.
-- `collie docs <name>`, one operator page, printed from this binary. `collie docs` lists them.
+- `pastor status`, whether the bridge runs, and on which URLs.
+- `pastor crew status`, every member of this crew, and what each one reports.
+- `pastor doctor`, the checks that say why something does not work.
+- `pastor docs <name>`, one operator page, printed from this binary. `pastor docs` lists them.
 
 ## Helping with a crew
 
 Give the operator the commands to type on the lead machine. Do not run ssh, and do not run
-`collie crew add`, on their behalf unless they ask you to.
+`pastor crew add`, on their behalf unless they ask you to.
 
-The operator adds a machine with `collie crew add <ssh-host>` on the lead, then reads
-`collie crew status` to see it arrive. Run `collie docs crew` for the full flow, and for the section
+The operator adds a machine with `pastor crew add <ssh-host>` on the lead, then reads
+`pastor crew status` to see it arrive. Run `pastor docs crew` for the full flow, and for the section
 "Herdr machines and the crew".
 
-The crew's own name is display data the lead shows. `collie crew rename <name>` on the lead changes
+The crew's own name is display data the lead shows. `pastor crew rename <name>` on the lead changes
 it; it writes only that machine's trust store and sends nothing to a member.
 
 A machine saved in Herdr is not a crew member. Herdr's saved machines are ssh targets in the
-operator's own Herdr window. A crew is Collie on every machine, reached over Collie's own link. The
+operator's own Herdr window. A crew is Pastor on every machine, reached over Pastor's own link. The
 operator sets ssh up once, and both tools use it.
 
 ## The operator pages
 
-{{COLLIE_DOCS_TABLE}}
+{{PASTOR_DOCS_TABLE}}
 
-Collie {{COLLIE_VERSION}}. This text is embedded in the binary; it matches the installed version.
+Pastor {{PASTOR_VERSION}}. This text is embedded in the binary; it matches the installed version.

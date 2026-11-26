@@ -49,11 +49,11 @@ describe("tmux's one title slot", () => {
 
     const pane = await paneOf(adapter, TITLED_PANE);
     expect(pane.paneLabel).toBeUndefined();
-    // Verbatim, glyph included: it is the program's own text, and Collie does not edit it.
+    // Verbatim, glyph included: it is the program's own text, and Pastor does not edit it.
     expect(pane.terminalTitle).toBe("✳ waiting for soak time - server performance");
   });
 
-  test("a label set THROUGH Collie is the operator's, and clearing it hands the slot back", async () => {
+  test("a label set THROUGH Pastor is the operator's, and clearing it hands the slot back", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
 
@@ -85,7 +85,7 @@ describe("tmux's one title slot", () => {
     const fake = new FakeTmux();
     await new TmuxMux(fake).renamePane(TITLED_PANE, "deploy");
 
-    // What a `systemctl restart collie` looks like from tmux's side: the slot still holds the label,
+    // What a `systemctl restart pastor` looks like from tmux's side: the slot still holds the label,
     // and nothing alive remembers setting it. It degrades to a title — visible, never a false claim.
     const pane = await paneOf(new TmuxMux(fake), TITLED_PANE);
     expect(pane.paneLabel).toBeUndefined();
@@ -281,7 +281,7 @@ describe("a transport that dies during the call", () => {
 
 // WHICH SESSION THE OPERATOR IS LOOKING AT — a question only tmux poses this way, because only tmux
 // lets this adapter attach clients of its own. Conformance asks whether focus is reported and whether
-// `setFocus` moves it; it has no vocabulary for "and Collie's own control client is not a person",
+// `setFocus` moves it; it has no vocabulary for "and Pastor's own control client is not a person",
 // which is the mistake the old activity-only heuristic was written around rather than fixed.
 describe("focus follows a real terminal, not this adapter's own watch", () => {
   test("a session with a non-control client attached is the focused space", async () => {
@@ -289,16 +289,16 @@ describe("focus follows a real terminal, not this adapter's own watch", () => {
     const adapter = new TmuxMux(fake);
     // The seeded world's SECOND session is the last-active one, so the activity fallback would pick
     // it — which is what makes attaching a terminal to the first one a real assertion.
-    fake.attachClient("collie", { activity: 10 });
+    fake.attachClient("pastor", { activity: 10 });
 
     const spaces = (await adapter.snapshot()).spaces;
-    expect(spaces.find((space) => space.focused)?.label).toBe("collie");
+    expect(spaces.find((space) => space.focused)?.label).toBe("pastor");
   });
 
   test("a control client is nobody's screen — the fallback answers instead", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    fake.attachClient("collie", { control: true, activity: 99 });
+    fake.attachClient("pastor", { control: true, activity: 99 });
 
     const spaces = (await adapter.snapshot()).spaces;
     expect(spaces.find((space) => space.focused)?.label).toBe("scratch");
@@ -320,21 +320,21 @@ describe("focus follows a real terminal, not this adapter's own watch", () => {
   test("`setFocus` carries an attached terminal that is sitting on another session", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    // The operator's terminal is on `scratch`; the pane they tapped lives in `collie`. Selecting the
-    // window alone moves `collie`'s own current window and NOTHING on their screen.
+    // The operator's terminal is on `scratch`; the pane they tapped lives in `pastor`. Selecting the
+    // window alone moves `pastor`'s own current window and NOTHING on their screen.
     fake.attachClient("scratch", { tty: "/dev/pts/7" });
 
     const moved = await adapter.setFocus("%3");
     expect(moved.ok).toBe(true);
     const switched = fake.invocations().filter((invocation) => invocation.at(0) === "switch-client");
     expect(switched).toEqual([["switch-client", "-c", "/dev/pts/7", "-t", "$1"]]);
-    expect(fake.clientSessions().get("/dev/pts/7")).toBe("collie");
+    expect(fake.clientSessions().get("/dev/pts/7")).toBe("pastor");
   });
 
   test("`setFocus` switches nothing when the terminal is already on the pane's session", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    fake.attachClient("collie", { tty: "/dev/pts/7" });
+    fake.attachClient("pastor", { tty: "/dev/pts/7" });
 
     const moved = await adapter.setFocus("%3");
     expect(moved.ok).toBe(true);

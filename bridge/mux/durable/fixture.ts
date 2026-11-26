@@ -70,7 +70,7 @@ import {
 
 /** A `hello` document as the fake serves it. `epoch`, `ready` and `protocol` come from the fake's state. */
 export interface FakeHello {
-  /** `collie-durable` for a durable program. A test removes or changes it to play a wrong socket. */
+  /** `pastor-durable` for a durable program. A test removes or changes it to play a wrong socket. */
   service?: string;
   host: { name: string };
   caps: {
@@ -347,7 +347,7 @@ export class FakeDurableProgram {
   /** Start a program on a fresh socket under the temp directory. */
   static async start(): Promise<FakeDurableProgram> {
     // `mkdtemp` makes the directory mode 0700.
-    const dir = mkdtempSync(join(tmpdir(), "collie-durable-"));
+    const dir = mkdtempSync(join(tmpdir(), "pastor-durable-"));
     const program = new FakeDurableProgram(join(dir, "s.sock"), dir, null);
     program.listen();
     return program;
@@ -365,7 +365,7 @@ export class FakeDurableProgram {
    * socket. On Linux and macOS it is the private socket, as in {@link start}. Windows has no socket
    * transport, so there it listens on 127.0.0.1 and {@link wire} dials it, with the adapter still on the
    * socket's budgets and cadence. `loopback` forces that form on any platform, which is how the Linux
-   * gate proves the Windows form (`COLLIE_TEST_LOOPBACK=1`).
+   * gate proves the Windows form (`PASTOR_TEST_LOOPBACK=1`).
    */
   static async startWire(loopback: boolean = wireOverLoopback()): Promise<FakeDurableProgram> {
     return loopback ? FakeDurableProgram.startHttp(testToken()) : FakeDurableProgram.start();
@@ -547,7 +547,7 @@ export class FakeDurableProgram {
 
   private async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const version = request.headers.get("x-collie-session");
+    const version = request.headers.get("x-pastor-session");
     const ifNoneMatch = request.headers.get("if-none-match");
     const body = request.method === "POST" ? await request.text() : null;
     const bearer = this.bearerOf(request);
@@ -800,13 +800,13 @@ export function isPrivateFile(path: string): boolean {
 
 /** Whether wire tests dial a loopback port: always on Windows, and on request elsewhere. */
 export function wireOverLoopback(platform: NodeJS.Platform = HOST.platform, env: DurableEnvLike = process.env): boolean {
-  return platform === "win32" || env.COLLIE_TEST_LOOPBACK === "1";
+  return platform === "win32" || env.PASTOR_TEST_LOOPBACK === "1";
 }
 
 /**
  * Skip a test that is about the socket itself (its mode, its path, the environment variable that names
  * it, a program that asks for a token on it). Windows has no socket transport, so these cannot run
- * there; `COLLIE_TEST_LOOPBACK=1` skips them on Linux too, which is how the Windows form is proven.
+ * there; `PASTOR_TEST_LOOPBACK=1` skips them on Linux too, which is how the Windows form is proven.
  */
 export const SOCKET_ONLY_SKIP = wireOverLoopback();
 

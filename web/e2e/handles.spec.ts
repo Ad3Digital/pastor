@@ -86,14 +86,14 @@ test.beforeEach(async ({ page }) => {
   // playground itself renders no translated string on this page: consistent with every other case
   // in this tier, and cheap insurance against a card that gains one.
   await page.addInitScript(() => {
-    window.localStorage.setItem("collie:locale:v1", "en");
+    window.localStorage.setItem("pastor:locale:v1", "en");
   });
 });
 
 test("the playground page has a title and a main landmark", async ({ page }) => {
   await page.goto("/playground.html");
 
-  await expect(page).toHaveTitle(/collie/i);
+  await expect(page).toHaveTitle(/pastor/i);
   await expect(page.getByRole("main").first()).toBeVisible();
 });
 

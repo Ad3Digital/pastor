@@ -21,7 +21,7 @@ import { clearUpdateStarted } from "@/lib/update-ribbon";
 import { UpdateCard } from "./update-card";
 import { UpdateScreen } from "./update-screen";
 
-// The update CARD (M15/05): the settings surface that starts a Collie update from the phone. Driven
+// The update CARD (M15/05): the settings surface that starts a Pastor update from the phone. Driven
 // through a memory router (for the root loader's snapshot) plus MSW (for the card's own reads and
 // for POST /api/update), which is how every other data-driven component here is tested — no
 // `vi.mock` of the API module.
@@ -31,7 +31,7 @@ const GREEN: PreflightReport = {
   verdict: "green",
   checks: [
     { id: "disk", verdict: "green", reason: "4.2 GB free" },
-    { id: "service", verdict: "green", reason: "collie.service is present" },
+    { id: "service", verdict: "green", reason: "pastor.service is present" },
   ],
 };
 
@@ -54,7 +54,7 @@ const GREEN_SIX: PreflightReport = {
     { id: "bun", verdict: "green", reason: "bun is on PATH" },
     { id: "tree", verdict: "green", reason: "the working tree is clean" },
     { id: "upstream", verdict: "green", reason: "upstream is reachable" },
-    { id: "service", verdict: "green", reason: "collie.service is present" },
+    { id: "service", verdict: "green", reason: "pastor.service is present" },
   ],
 };
 
@@ -68,10 +68,10 @@ const PACKAGED: PreflightReport = {
       id: "package",
       verdict: "green",
       reason: "updates come from your package manager",
-      remedy: "sudo pacman -Syu collie-bin",
+      remedy: "sudo pacman -Syu pastor-bin",
     },
     { id: "upstream", verdict: "green", reason: "upstream is reachable" },
-    { id: "service", verdict: "green", reason: "collie.service is present" },
+    { id: "service", verdict: "green", reason: "pastor.service is present" },
   ],
 };
 
@@ -101,7 +101,7 @@ const GREEN_WITH_ONE_AMBER: PreflightReport = {
 const info = (over: Partial<UpdateInfo> = {}): UpdateInfo => ({
   current: "1.3.0",
   latest: "1.4.0",
-  latestUrl: "https://github.com/AltanS/collie/releases/tag/v1.4.0",
+  latestUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v1.4.0",
   releaseAvailable: true,
   majorAvailable: null,
   majorUrl: null,
@@ -214,7 +214,7 @@ describe("update card — what it says before anything happens", () => {
     expect(await screen.findByText(/folds in 1\.3\.1, 1\.4\.0/)).toBeInTheDocument();
     // And it does NOT borrow the bundle banner's words — two things called "update" in one UI is
     // the confusion this card exists to avoid.
-    expect(screen.getByText("Update Collie")).toBeInTheDocument();
+    expect(screen.getByText("Update Pastor")).toBeInTheDocument();
     expect(screen.queryByText(/tap to update/i)).not.toBeInTheDocument();
   });
 
@@ -259,21 +259,21 @@ describe("release notes on the card", () => {
   const notes = {
     current: {
       version: "1.3.0",
-      url: "https://github.com/AltanS/collie/releases/tag/v1.3.0",
+      url: "https://github.com/Ad3Digital/pastor/releases/tag/v1.3.0",
       groups: [{ name: "Fixed", leads: ["The red row closes when you tap its ✕."] }],
     },
     offered: [
       {
         version: "1.3.1",
-        url: "https://github.com/AltanS/collie/releases/tag/v1.3.1",
+        url: "https://github.com/Ad3Digital/pastor/releases/tag/v1.3.1",
         groups: [{ name: "Fixed", leads: ["A patch line."] }],
       },
       {
         version: "1.4.0",
-        url: "https://github.com/AltanS/collie/releases/tag/v1.4.0",
+        url: "https://github.com/Ad3Digital/pastor/releases/tag/v1.4.0",
         groups: [
           { name: "Added", leads: ["The Updates page lists what an update changes."] },
-          { name: "Fixed", leads: ["`collie doctor` names the check."] },
+          { name: "Fixed", leads: ["`pastor doctor` names the check."] },
         ],
       },
     ],
@@ -288,11 +288,11 @@ describe("release notes on the card", () => {
     expect(screen.getByText("The Updates page lists what an update changes.")).toBeInTheDocument();
     expect(screen.getByText("A patch line.")).toBeInTheDocument();
     // A lead's backticks render as code, not as backticks.
-    expect(screen.getByText("collie doctor").tagName).toBe("CODE");
+    expect(screen.getByText("pastor doctor").tagName).toBe("CODE");
     // Notes about the version already installed are not notes about the update.
     expect(screen.queryByText("The red row closes when you tap its ✕.")).not.toBeInTheDocument();
     const pages = screen.getAllByRole("link", { name: "Release page" });
-    expect(pages[0]).toHaveAttribute("href", "https://github.com/AltanS/collie/releases/tag/v1.4.0");
+    expect(pages[0]).toHaveAttribute("href", "https://github.com/Ad3Digital/pastor/releases/tag/v1.4.0");
   });
 
   it("after the update, names what the running version changed", async () => {
@@ -613,7 +613,7 @@ describe("rolled back card — the machine is named, the log is there, and there
     renderCard(
       info({
         run: runAt("rolled-back", {
-          logTail: "collie.service: Main process exited, code=exited, status=1/FAILURE",
+          logTail: "pastor.service: Main process exited, code=exited, status=1/FAILURE",
           reason: "the new build failed its health check",
         }),
       }),
@@ -626,8 +626,8 @@ describe("rolled back card — the machine is named, the log is there, and there
   });
 
   it("stuck prints the recovery command, and interrupted offers a Retry", async () => {
-    const view = renderCard(info({ run: runAt("stuck", { recovery: "collie update --rollback" }) }));
-    expect(await screen.findByText("collie update --rollback")).toBeInTheDocument();
+    const view = renderCard(info({ run: runAt("stuck", { recovery: "pastor update --rollback" }) }));
+    expect(await screen.findByText("pastor update --rollback")).toBeInTheDocument();
     view.unmount();
 
     renderCard(info({ run: runAt("interrupted") }));
@@ -637,7 +637,7 @@ describe("rolled back card — the machine is named, the log is there, and there
 
 // ── THE CREW, INSIDE THE CARD (M16/01) ──────────────────────────────────────────────────────────
 //
-// The line this card used to carry — "Peers are updated from the terminal: collie crew update" —
+// The line this card used to carry — "Peers are updated from the terminal: pastor crew update" —
 // is gone, because it is no longer true. The crew is lines in this card now, and the button above
 // them covers it.
 
@@ -864,7 +864,7 @@ describe("UpdateCard — an install a package manager owns", () => {
     const update = info({ installKind: "packaged" });
     serveCheck(update, PACKAGED);
     renderCard(update);
-    expect(await screen.findByText("sudo pacman -Syu collie-bin")).toBeInTheDocument();
+    expect(await screen.findByText("sudo pacman -Syu pastor-bin")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Update to 1\.4\.0/i })).not.toBeInTheDocument();
     // The version is still on screen: that a release exists is worth knowing however it is taken.
     expect(screen.getByText(/Newest 1\.4\.0/)).toBeInTheDocument();
@@ -873,18 +873,18 @@ describe("UpdateCard — an install a package manager owns", () => {
   it("takes the command off the snapshot first, and falls back to the preflight remedy", async () => {
     // The snapshot carries the host's own answer since M17/02, so the card no longer has to dig it
     // out of a check's remedy. It wins where both are present.
-    const fromSnapshot = info({ installKind: "packaged", packageCommand: "nix profile upgrade collie" });
+    const fromSnapshot = info({ installKind: "packaged", packageCommand: "nix profile upgrade pastor" });
     serveCheck(fromSnapshot, PACKAGED);
     const { unmount } = renderCard(fromSnapshot);
-    expect(await screen.findByText("nix profile upgrade collie")).toBeInTheDocument();
-    expect(screen.queryByText("sudo pacman -Syu collie-bin")).not.toBeInTheDocument();
+    expect(await screen.findByText("nix profile upgrade pastor")).toBeInTheDocument();
+    expect(screen.queryByText("sudo pacman -Syu pastor-bin")).not.toBeInTheDocument();
     unmount();
 
     // And the fallback survives: a bridge older than the field still answers through the remedy.
     const older = info({ installKind: "packaged" });
     serveCheck(older, PACKAGED);
     renderCard(older);
-    expect(await screen.findByText("sudo pacman -Syu collie-bin")).toBeInTheDocument();
+    expect(await screen.findByText("sudo pacman -Syu pastor-bin")).toBeInTheDocument();
   });
 
   it("with no command to name, the sentence stands alone and the button is still gone", async () => {
@@ -912,11 +912,11 @@ describe("UpdateCard — an install a package manager owns", () => {
     const update = info({
       installKind: "packaged",
       majorAvailable: "2.0.0",
-      majorUrl: "https://github.com/AltanS/collie/releases/tag/v2.0.0",
+      majorUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v2.0.0",
     });
     serveCheck(update, PACKAGED);
     renderCard(update);
-    expect(await screen.findByText("sudo pacman -Syu collie-bin")).toBeInTheDocument();
+    expect(await screen.findByText("sudo pacman -Syu pastor-bin")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Cross to 2\.0\.0/i })).not.toBeInTheDocument();
   });
 
@@ -985,7 +985,7 @@ describe("UpdateCard — an install a package manager owns", () => {
     ];
     serveCheck(update, PACKAGED, level);
     renderCard(update, LEAD_ROSTER);
-    expect(await screen.findByText("sudo pacman -Syu collie-bin")).toBeInTheDocument();
+    expect(await screen.findByText("sudo pacman -Syu pastor-bin")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Update all machines to 1.4.0" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: RETRY })).not.toBeInTheDocument();
     expect(screen.getByText(/package manager updates this install/i)).toBeInTheDocument();

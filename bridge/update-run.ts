@@ -269,7 +269,7 @@ export function readsAsInterrupted(run: UpdateRun, now: number, pidAlive: boolea
 
 /**
  * `run` as of `now` — the record itself, or the `interrupted` reading of it. Every reader goes
- * through this, so the bridge, the standby door and `collie update --status` can never disagree
+ * through this, so the bridge, the standby door and `pastor update --status` can never disagree
  * about whether a stale marker is still a run.
  */
 export function resolveUpdateRun(run: UpdateRun, now: number, pidAlive: boolean): UpdateRun {

@@ -33,7 +33,7 @@ import type { Exec, Files } from "./sys.ts";
 // hook needs, what the running bridge actually reports per pane, and where a journal would be read
 // from — and every ✗ names the verb that fixes it.
 //
-// IT STAYS A READ, like everything else in `collie doctor`: `herdr --version`, `herdr integration
+// IT STAYS A READ, like everything else in `pastor doctor`: `herdr --version`, `herdr integration
 // status`, one `which`, one GET of this bridge's own `/api/snapshot`, and `exists`/`list` on the
 // journal roots. It installs nothing and restarts nothing.
 
@@ -217,10 +217,10 @@ export interface HistoryDeps {
 }
 
 /**
- * The oldest Herdr a Windows host is checked against. 0.9.3 is the build Collie was verified with on
+ * The oldest Herdr a Windows host is checked against. 0.9.3 is the build Pastor was verified with on
  * the Windows 11 test VM (2026-10-01: the named-pipe dial, the supervisor, restart). An older Windows
  * build may work, and nobody has checked, so `doctor` warns rather than fails. Linux and macOS have
- * no minimum here: every Herdr Collie supports there predates this check.
+ * no minimum here: every Herdr Pastor supports there predates this check.
  */
 export const HERDR_MIN_WINDOWS = "0.9.3";
 
@@ -231,7 +231,7 @@ const INSTALL_NOTE = "then start a new session of that agent in the pane (hooks 
  *
  * "Refused" and "silent" are DIFFERENT facts and the operator is owed the difference (issue #238): a
  * bridge that answers 403 is up, serving the PWA, and merely declining to identify this caller, while
- * a bridge that answers nothing may be down. Telling the first one to run `collie start` sends the
+ * a bridge that answers nothing may be down. Telling the first one to run `pastor start` sends the
  * operator after a machine that is already running.
  */
 export type SnapshotRead =
@@ -265,7 +265,7 @@ function herdrVersion(deps: HistoryDeps): Finding {
       check,
       "no `herdr` on this host — it owns both the socket the bridge reads and the agent hooks that" +
         " report a session, so no pane can ever offer its history",
-      "install Herdr, then `collie doctor` again",
+      "install Herdr, then `pastor doctor` again",
     );
   }
   if (asked.code !== 0) {
@@ -282,7 +282,7 @@ function herdrVersion(deps: HistoryDeps): Finding {
   if (host.platform === "win32" && named !== undefined && compareSemver(named, HERDR_MIN_WINDOWS) < 0) {
     return warn(
       check,
-      `${version} — older than ${HERDR_MIN_WINDOWS}, the oldest Herdr for Windows Collie has been checked with`,
+      `${version} — older than ${HERDR_MIN_WINDOWS}, the oldest Herdr for Windows Pastor has been checked with`,
       `update Herdr to ${HERDR_MIN_WINDOWS} or newer`,
     );
   }
@@ -328,7 +328,7 @@ function integration(
     }
     return skipped(
       check,
-      `this Herdr build does not list ${agent} — Collie can read its journal, Herdr has no hook for it`,
+      `this Herdr build does not list ${agent} — Pastor can read its journal, Herdr has no hook for it`,
       `upgrade Herdr (\`herdr --version\` names this build), or read that pane's history from the agent's own log`,
     );
   }
@@ -417,9 +417,9 @@ function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): 
         check,
         `the bridge refused this check's own read of \`/api/snapshot\` (${String(read.status)}) — it is up and` +
           " serving, and no pane can be checked from here",
-        "`collie restart` so the bridge writes its local read credential; if it still refuses, name your" +
-          " tailnet login in `COLLIE_TRUSTED_USER` for this instance (`collie config` shows what is set)," +
-          " restart again, then re-run `collie doctor`",
+        "`pastor restart` so the bridge writes its local read credential; if it still refuses, name your" +
+          " tailnet login in `PASTOR_TRUSTED_USER` for this instance (`pastor config` shows what is set)," +
+          " restart again, then re-run `pastor doctor`",
       );
     }
     return skipped(
@@ -427,10 +427,10 @@ function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): 
       read.kind === "body"
         ? "the bridge answered `/api/snapshot` with something that is not a snapshot"
         : "the bridge did not answer `/api/snapshot`, so no pane can be checked",
-      "`collie status`, then `collie start` if it is down; re-run `collie doctor` once it answers",
+      "`pastor status`, then `pastor start` if it is down; re-run `pastor doctor` once it answers",
     );
   }
-  if (verdicts.length === 0) return skipped(check, "the bridge reports no agent panes", "start an agent in a pane, then re-run `collie doctor`");
+  if (verdicts.length === 0) return skipped(check, "the bridge reports no agent panes", "start an agent in a pane, then re-run `pastor doctor`");
   const silent = silentPanes(verdicts);
   const journalled = verdicts.filter((v) => v.journalled).length;
   const summary =
@@ -458,7 +458,7 @@ function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): 
 }
 
 /**
- * `journal-roots` — `COLLIE_TRANSCRIPT`, and whether a journal could be read at all.
+ * `journal-roots` — `PASTOR_TRANSCRIPT`, and whether a journal could be read at all.
  *
  * **The home in every path below is the home of whoever ran this verb**, and the bridge resolves its
  * own. A bridge running as another user reads that user's `~/.claude/projects`, so a root that reads
@@ -467,12 +467,12 @@ function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): 
 function journalRoots(deps: HistoryDeps): Finding {
   const check = "journal-roots";
   const whose = `resolved from ${deps.ctx.home}; the BRIDGE resolves them from ITS OWN user's home`;
-  if (!envOn(deps.ctx.env.COLLIE_TRANSCRIPT)) {
+  if (!envOn(deps.ctx.env.PASTOR_TRANSCRIPT)) {
     return warn(
       check,
-      "COLLIE_TRANSCRIPT is off — the bridge reads no journal at all, so no pane offers a history" +
+      "PASTOR_TRANSCRIPT is off — the bridge reads no journal at all, so no pane offers a history" +
         " however well its hooks are installed",
-      `remove COLLIE_TRANSCRIPT (or set it to 1) in ${deps.ctx.configDir}/.env, then \`collie restart\``,
+      `remove PASTOR_TRANSCRIPT (or set it to 1) in ${deps.ctx.configDir}/.env, then \`pastor restart\``,
     );
   }
   const readings = readJournalRoots(deps.ctx.env, deps.ctx.home, deps.files);
@@ -480,9 +480,9 @@ function journalRoots(deps: HistoryDeps): Finding {
   if (present.length === 0) {
     return warn(
       check,
-      `COLLIE_TRANSCRIPT is on, and none of the ${String(readings.length)} journal roots is there (${whose})`,
-      "run an agent once so it writes its log, or point COLLIE_TRANSCRIPT_ROOT at the tree it uses," +
-        " then `collie restart`",
+      `PASTOR_TRANSCRIPT is on, and none of the ${String(readings.length)} journal roots is there (${whose})`,
+      "run an agent once so it writes its log, or point PASTOR_TRANSCRIPT_ROOT at the tree it uses," +
+        " then `pastor restart`",
     );
   }
   const blind = present.filter((r) => r.entries === 0).map((r) => r.path);
@@ -497,7 +497,7 @@ function journalRoots(deps: HistoryDeps): Finding {
   );
 }
 
-/** `COLLIE_TRANSCRIPT` as `bridge/config.ts` reads it: unset is ON, and only the off words turn it off. */
+/** `PASTOR_TRANSCRIPT` as `bridge/config.ts` reads it: unset is ON, and only the off words turn it off. */
 const envOn = (raw: string | undefined): boolean =>
   raw === undefined || raw.trim() === "" || !["off", "0", "false", "no"].includes(raw.trim().toLowerCase());
 

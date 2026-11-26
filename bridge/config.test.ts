@@ -19,22 +19,22 @@ import { DEFAULT_MAX_UPLOAD_BYTES } from "./uploads.ts";
 // process.env + homedir), so we drive it by mutating the environment and restoring it after.
 
 const KEYS = [
-  "COLLIE_PORT",
-  "COLLIE_HOST",
-  "COLLIE_POLL_MS",
-  "COLLIE_POLL_IDLE_MS",
-  "COLLIE_NOTIFY_DELAY_MS",
-  "COLLIE_CACHE_WARN_SECONDS",
-  "COLLIE_READ_LINES",
-  "COLLIE_TRANSCRIPT",
-  "COLLIE_TRANSCRIPT_ROOT",
-  "COLLIE_REDACT",
-  "COLLIE_CODEX_ROOT",
-  "COLLIE_PI_ROOT",
-  "COLLIE_OPENCODE_ROOT",
-  "COLLIE_GROK_ROOT",
-  "COLLIE_HERMES_ROOT",
-  "COLLIE_OPENCLAW_ROOT",
+  "PASTOR_PORT",
+  "PASTOR_HOST",
+  "PASTOR_POLL_MS",
+  "PASTOR_POLL_IDLE_MS",
+  "PASTOR_NOTIFY_DELAY_MS",
+  "PASTOR_CACHE_WARN_SECONDS",
+  "PASTOR_READ_LINES",
+  "PASTOR_TRANSCRIPT",
+  "PASTOR_TRANSCRIPT_ROOT",
+  "PASTOR_REDACT",
+  "PASTOR_CODEX_ROOT",
+  "PASTOR_PI_ROOT",
+  "PASTOR_OPENCODE_ROOT",
+  "PASTOR_GROK_ROOT",
+  "PASTOR_HERMES_ROOT",
+  "PASTOR_OPENCLAW_ROOT",
   // Each harness's own home var participates in journal-root resolution, so the suite must own them
   // too — otherwise a developer with CODEX_HOME set gets different results than CI.
   "CODEX_HOME",
@@ -42,28 +42,28 @@ const KEYS = [
   "XDG_DATA_HOME",
   "GROK_HOME",
   "OPENCLAW_STATE_DIR",
-  "COLLIE_SUBMIT_KEYS",
-  "COLLIE_TRUSTED_USER",
-  "COLLIE_TRUSTED_USER_OPTIONAL",
-  "COLLIE_ALLOW_NON_LOOPBACK_BIND",
-  "COLLIE_ALLOW_ANY_HOST",
-  "COLLIE_TAILSCALE_HOSTS",
-  "COLLIE_DEVICE_HEADER",
-  "COLLIE_DEVICE_ALLOWLIST",
-  "COLLIE_ALLOWED_ORIGINS",
-  "COLLIE_PUBLIC_HOSTS",
-  "COLLIE_VAPID_PUBLIC",
-  "COLLIE_VAPID_PRIVATE",
-  "COLLIE_VAPID_SUBJECT",
-  "COLLIE_STATE_DIR",
-  "COLLIE_MULTI_SESSION",
-  "COLLIE_SKIP_SERVE",
-  "COLLIE_MAX_UPLOAD_MB",
-  "COLLIE_UPLOAD_EXTRA_TYPES",
+  "PASTOR_SUBMIT_KEYS",
+  "PASTOR_TRUSTED_USER",
+  "PASTOR_TRUSTED_USER_OPTIONAL",
+  "PASTOR_ALLOW_NON_LOOPBACK_BIND",
+  "PASTOR_ALLOW_ANY_HOST",
+  "PASTOR_TAILSCALE_HOSTS",
+  "PASTOR_DEVICE_HEADER",
+  "PASTOR_DEVICE_ALLOWLIST",
+  "PASTOR_ALLOWED_ORIGINS",
+  "PASTOR_PUBLIC_HOSTS",
+  "PASTOR_VAPID_PUBLIC",
+  "PASTOR_VAPID_PRIVATE",
+  "PASTOR_VAPID_SUBJECT",
+  "PASTOR_STATE_DIR",
+  "PASTOR_MULTI_SESSION",
+  "PASTOR_SKIP_SERVE",
+  "PASTOR_MAX_UPLOAD_MB",
+  "PASTOR_UPLOAD_EXTRA_TYPES",
   "HERDR_SOCKET_PATH",
   "HERDR_PLUGIN_STATE_DIR",
   "HERDR_PLUGIN_CONFIG_DIR",
-  "COLLIE_HERDR_DIAL",
+  "PASTOR_HERDR_DIAL",
 ];
 
 let saved: Record<string, string | undefined>;
@@ -120,81 +120,81 @@ describe("loadConfig", () => {
     expect(cfg.skipServe).toBe(false);
   });
 
-  test("parses COLLIE_MULTI_SESSION as a boolean toggle (default on)", () => {
+  test("parses PASTOR_MULTI_SESSION as a boolean toggle (default on)", () => {
     // Falsey spellings turn it off (pin to the primary session only).
     for (const off of ["off", "0", "false", "no", "OFF", " False "]) {
-      process.env.COLLIE_MULTI_SESSION = off;
+      process.env.PASTOR_MULTI_SESSION = off;
       expect(loadConfig().multiSession).toBe(false);
     }
     // Truthy spellings keep it on.
     for (const on of ["on", "1", "true", "yes", "ON", " True "]) {
-      process.env.COLLIE_MULTI_SESSION = on;
+      process.env.PASTOR_MULTI_SESSION = on;
       expect(loadConfig().multiSession).toBe(true);
     }
     // Garbage and empty fall back to the default (on).
-    process.env.COLLIE_MULTI_SESSION = "banana";
+    process.env.PASTOR_MULTI_SESSION = "banana";
     expect(loadConfig().multiSession).toBe(true);
-    process.env.COLLIE_MULTI_SESSION = "";
+    process.env.PASTOR_MULTI_SESSION = "";
     expect(loadConfig().multiSession).toBe(true);
   });
 
-  test("parses COLLIE_SKIP_SERVE as a boolean toggle (default off)", () => {
+  test("parses PASTOR_SKIP_SERVE as a boolean toggle (default off)", () => {
     // Truthy spellings turn it on (reverse-proxy mode; bypass tailscale serve).
     for (const on of ["on", "1", "true", "yes", "ON", " True "]) {
-      process.env.COLLIE_SKIP_SERVE = on;
+      process.env.PASTOR_SKIP_SERVE = on;
       expect(loadConfig().skipServe).toBe(true);
     }
     // Falsey spellings keep it off (the default tailscale serve path).
     for (const off of ["off", "0", "false", "no", "OFF", " False "]) {
-      process.env.COLLIE_SKIP_SERVE = off;
+      process.env.PASTOR_SKIP_SERVE = off;
       expect(loadConfig().skipServe).toBe(false);
     }
     // Garbage and empty fall back to the default (off).
-    process.env.COLLIE_SKIP_SERVE = "banana";
+    process.env.PASTOR_SKIP_SERVE = "banana";
     expect(loadConfig().skipServe).toBe(false);
-    process.env.COLLIE_SKIP_SERVE = "";
+    process.env.PASTOR_SKIP_SERVE = "";
     expect(loadConfig().skipServe).toBe(false);
   });
 
-  test("parses COLLIE_TRANSCRIPT as a boolean toggle (default ON)", () => {
+  test("parses PASTOR_TRANSCRIPT as a boolean toggle (default ON)", () => {
     for (const off of ["off", "0", "false", "no", "OFF"]) {
-      process.env.COLLIE_TRANSCRIPT = off;
+      process.env.PASTOR_TRANSCRIPT = off;
       expect(loadConfig().transcript).toBe(false);
     }
     for (const on of ["on", "1", "true", "yes"]) {
-      process.env.COLLIE_TRANSCRIPT = on;
+      process.env.PASTOR_TRANSCRIPT = on;
       expect(loadConfig().transcript).toBe(true);
     }
     // Garbage falls back to the default — a typo must not silently remove the only scrollback a
     // Claude pane has.
-    process.env.COLLIE_TRANSCRIPT = "banana";
+    process.env.PASTOR_TRANSCRIPT = "banana";
     expect(loadConfig().transcript).toBe(true);
   });
 
-  test("COLLIE_REDACT masks secrets by default and turns off with off/0/false/no", () => {
+  test("PASTOR_REDACT masks secrets by default and turns off with off/0/false/no", () => {
     expect(loadConfig().redact).toBe(true);
     for (const off of ["off", "0", "false", "no", "OFF"]) {
-      process.env.COLLIE_REDACT = off;
+      process.env.PASTOR_REDACT = off;
       expect(loadConfig().redact).toBe(false);
     }
-    process.env.COLLIE_REDACT = "on";
+    process.env.PASTOR_REDACT = "on";
     expect(loadConfig().redact).toBe(true);
     // A typo must not quietly turn the mask off.
-    process.env.COLLIE_REDACT = "banana";
+    process.env.PASTOR_REDACT = "banana";
     expect(loadConfig().redact).toBe(true);
   });
 
-  // COLLIE_TRANSCRIPT_ROOT predates the per-harness split and meant Claude's root — it keeps meaning
+  // PASTOR_TRANSCRIPT_ROOT predates the per-harness split and meant Claude's root — it keeps meaning
   // exactly that, so an existing deployment's env survives the change untouched.
-  test("COLLIE_TRANSCRIPT_ROOT relocates the CLAUDE journal root", () => {
-    process.env.COLLIE_TRANSCRIPT_ROOT = "/srv/claude/projects";
+  test("PASTOR_TRANSCRIPT_ROOT relocates the CLAUDE journal root", () => {
+    process.env.PASTOR_TRANSCRIPT_ROOT = "/srv/claude/projects";
     expect(loadConfig().journalRoots.claude).toEqual(["/srv/claude/projects"]);
   });
 
   // The multi-profile case from issue #92: CLAUDE_CONFIG_DIR gives each Claude profile its own
   // projects tree, so one root can only ever serve half the herd's history.
-  test("COLLIE_TRANSCRIPT_ROOT takes several roots, comma-separated and in order", () => {
-    process.env.COLLIE_TRANSCRIPT_ROOT = "/srv/work/projects,/srv/personal/projects";
+  test("PASTOR_TRANSCRIPT_ROOT takes several roots, comma-separated and in order", () => {
+    process.env.PASTOR_TRANSCRIPT_ROOT = "/srv/work/projects,/srv/personal/projects";
     expect(loadConfig().journalRoots.claude).toEqual([
       "/srv/work/projects",
       "/srv/personal/projects",
@@ -202,22 +202,22 @@ describe("loadConfig", () => {
   });
 
   test("whitespace and empty entries around the separators are dropped", () => {
-    process.env.COLLIE_TRANSCRIPT_ROOT = " /a/projects , , /b/projects ,";
+    process.env.PASTOR_TRANSCRIPT_ROOT = " /a/projects , , /b/projects ,";
     expect(loadConfig().journalRoots.claude).toEqual(["/a/projects", "/b/projects"]);
   });
 
   // An empty value used to become a root of `""` — which resolves against the bridge's cwd, not a
   // journal. Falling back to the default is both safer and what the operator meant.
   test("an empty value falls back to the default root", () => {
-    process.env.COLLIE_TRANSCRIPT_ROOT = "   ";
+    process.env.PASTOR_TRANSCRIPT_ROOT = "   ";
     expect(loadConfig().journalRoots.claude).toEqual([join(homedir(), ".claude", "projects")]);
   });
 
   test("every harness root takes a list, not just Claude's", () => {
-    process.env.COLLIE_CODEX_ROOT = "/a/sessions,/b/sessions";
-    process.env.COLLIE_PI_ROOT = "/c/sessions,/d/sessions";
-    process.env.COLLIE_OPENCODE_ROOT = "/e/opencode,/f/opencode";
-    process.env.COLLIE_GROK_ROOT = "/g/sessions,/h/sessions";
+    process.env.PASTOR_CODEX_ROOT = "/a/sessions,/b/sessions";
+    process.env.PASTOR_PI_ROOT = "/c/sessions,/d/sessions";
+    process.env.PASTOR_OPENCODE_ROOT = "/e/opencode,/f/opencode";
+    process.env.PASTOR_GROK_ROOT = "/g/sessions,/h/sessions";
     const cfg = loadConfig();
     expect(cfg.journalRoots.codex).toEqual(["/a/sessions", "/b/sessions"]);
     expect(cfg.journalRoots.pi).toEqual(["/c/sessions", "/d/sessions"]);
@@ -237,155 +237,155 @@ describe("loadConfig", () => {
     expect(cfg.journalRoots.grok).toEqual([join("/srv/grok", "sessions")]);
   });
 
-  test("an explicit COLLIE_* root beats the harness's home var", () => {
+  test("an explicit PASTOR_* root beats the harness's home var", () => {
     process.env.CODEX_HOME = "/srv/codex";
-    process.env.COLLIE_CODEX_ROOT = "/elsewhere/rollouts";
+    process.env.PASTOR_CODEX_ROOT = "/elsewhere/rollouts";
     expect(loadConfig().journalRoots.codex).toEqual(["/elsewhere/rollouts"]);
   });
 
-  test("COLLIE_HERMES_ROOT relocates Hermes state.db", () => {
-    process.env.COLLIE_HERMES_ROOT = "/srv/hermes";
+  test("PASTOR_HERMES_ROOT relocates Hermes state.db", () => {
+    process.env.PASTOR_HERMES_ROOT = "/srv/hermes";
     expect(loadConfig().journalRoots.hermes).toEqual(["/srv/hermes"]);
   });
 
-  test("OpenClaw's state folder follows OPENCLAW_STATE_DIR, and the Collie override wins", () => {
+  test("OpenClaw's state folder follows OPENCLAW_STATE_DIR, and the Pastor override wins", () => {
     process.env.OPENCLAW_STATE_DIR = "/srv/openclaw-state";
     expect(loadConfig().journalRoots.openclaw).toEqual(["/srv/openclaw-state"]);
-    process.env.COLLIE_OPENCLAW_ROOT = "/srv/a,/srv/b";
+    process.env.PASTOR_OPENCLAW_ROOT = "/srv/a,/srv/b";
     expect(loadConfig().journalRoots.openclaw).toEqual(["/srv/a", "/srv/b"]);
   });
 
   // The operator's rows sit beside their .env, and the launcher hands us that dir precisely so the
-  // bridge and scripts/collie-ctl.sh never disagree about which one it is.
+  // bridge and scripts/pastor-ctl.sh never disagree about which one it is.
   test("commands.toml is resolved in the plugin config dir the launcher passed", () => {
-    process.env.HERDR_PLUGIN_CONFIG_DIR = "/srv/herdr/plugins/collie";
-    expect(loadConfig().commandsFile).toBe(join("/srv/herdr/plugins/collie", "commands.toml"));
-    expect(loadConfig().keysFile).toBe(join("/srv/herdr/plugins/collie", "keys.toml"));
+    process.env.HERDR_PLUGIN_CONFIG_DIR = "/srv/herdr/plugins/pastor";
+    expect(loadConfig().commandsFile).toBe(join("/srv/herdr/plugins/pastor", "commands.toml"));
+    expect(loadConfig().keysFile).toBe(join("/srv/herdr/plugins/pastor", "keys.toml"));
     delete process.env.HERDR_PLUGIN_CONFIG_DIR;
-    expect(loadConfig().commandsFile).toBe(join(homedir(), ".config", "collie", "commands.toml"));
-    expect(loadConfig().keysFile).toBe(join(homedir(), ".config", "collie", "keys.toml"));
+    expect(loadConfig().commandsFile).toBe(join(homedir(), ".config", "pastor", "commands.toml"));
+    expect(loadConfig().keysFile).toBe(join(homedir(), ".config", "pastor", "keys.toml"));
   });
 
   test("reads the per-device auth header and allowlist", () => {
-    process.env.COLLIE_DEVICE_HEADER = "  X-Device-Id  ";
-    process.env.COLLIE_DEVICE_ALLOWLIST = " phone , laptop ,";
+    process.env.PASTOR_DEVICE_HEADER = "  X-Device-Id  ";
+    process.env.PASTOR_DEVICE_ALLOWLIST = " phone , laptop ,";
     const cfg = loadConfig();
     expect(cfg.deviceHeader).toBe("X-Device-Id");
     expect(cfg.deviceAllowlist).toEqual(["phone", "laptop"]);
   });
 
   test("parses integer env vars and falls back to the default on garbage", () => {
-    process.env.COLLIE_PORT = "9999";
+    process.env.PASTOR_PORT = "9999";
     expect(loadConfig().port).toBe(9999);
-    process.env.COLLIE_PORT = "not-a-number";
+    process.env.PASTOR_PORT = "not-a-number";
     expect(loadConfig().port).toBe(8787);
   });
 
   test("rejects trailing-garbage integers (parseInt would have accepted '8080abc')", () => {
-    process.env.COLLIE_PORT = "8080abc";
+    process.env.PASTOR_PORT = "8080abc";
     expect(loadConfig().port).toBe(8787);
     // Surrounding whitespace is still fine.
-    process.env.COLLIE_READ_LINES = "  120  ";
+    process.env.PASTOR_READ_LINES = "  120  ";
     expect(loadConfig().readLines).toBe(120);
   });
 
   test("clamps out-of-range integers back to the default", () => {
-    process.env.COLLIE_PORT = "0";
+    process.env.PASTOR_PORT = "0";
     expect(loadConfig().port).toBe(8787);
-    process.env.COLLIE_PORT = "70000";
+    process.env.PASTOR_PORT = "70000";
     expect(loadConfig().port).toBe(8787);
-    process.env.COLLIE_POLL_MS = "100"; // below the 250 floor
+    process.env.PASTOR_POLL_MS = "100"; // below the 250 floor
     expect(loadConfig().pollMs).toBe(1500);
-    process.env.COLLIE_POLL_IDLE_MS = "500"; // below the 1000 floor
+    process.env.PASTOR_POLL_IDLE_MS = "500"; // below the 1000 floor
     expect(loadConfig().pollIdleMs).toBe(12_000);
-    process.env.COLLIE_NOTIFY_DELAY_MS = "-5"; // below the 0 floor
+    process.env.PASTOR_NOTIFY_DELAY_MS = "-5"; // below the 0 floor
     expect(loadConfig().notifyDelayMs).toBe(30_000);
   });
 
   test("accepts an in-range integer and a zero notify delay", () => {
-    process.env.COLLIE_POLL_MS = "250";
+    process.env.PASTOR_POLL_MS = "250";
     expect(loadConfig().pollMs).toBe(250);
-    process.env.COLLIE_POLL_IDLE_MS = "30000";
+    process.env.PASTOR_POLL_IDLE_MS = "30000";
     expect(loadConfig().pollIdleMs).toBe(30_000);
-    process.env.COLLIE_NOTIFY_DELAY_MS = "0";
+    process.env.PASTOR_NOTIFY_DELAY_MS = "0";
     expect(loadConfig().notifyDelayMs).toBe(0);
   });
 
-  test("COLLIE_CACHE_WARN_SECONDS defaults to 300 and is bounded at 30 and 3600", () => {
+  test("PASTOR_CACHE_WARN_SECONDS defaults to 300 and is bounded at 30 and 3600", () => {
     // The push window for a watched pane (ADR 0042), and NOT the quarter-of-the-TTL threshold that
     // turns the countdown chip amber. Two numbers with two jobs, so this one has its own bounds: a
     // window shorter than one idle poll is noise, and an hour is past the longest TTL any rule claims.
     expect(loadConfig().cacheWarnSeconds).toBe(300);
-    process.env.COLLIE_CACHE_WARN_SECONDS = "600";
+    process.env.PASTOR_CACHE_WARN_SECONDS = "600";
     expect(loadConfig().cacheWarnSeconds).toBe(600);
-    process.env.COLLIE_CACHE_WARN_SECONDS = "29";
+    process.env.PASTOR_CACHE_WARN_SECONDS = "29";
     expect(loadConfig().cacheWarnSeconds).toBe(300);
-    process.env.COLLIE_CACHE_WARN_SECONDS = "3601";
+    process.env.PASTOR_CACHE_WARN_SECONDS = "3601";
     expect(loadConfig().cacheWarnSeconds).toBe(300);
-    process.env.COLLIE_CACHE_WARN_SECONDS = "five minutes";
+    process.env.PASTOR_CACHE_WARN_SECONDS = "five minutes";
     expect(loadConfig().cacheWarnSeconds).toBe(300);
   });
 
-  test("uses the default upload cap when unset, and resolves COLLIE_MAX_UPLOAD_MB to bytes", () => {
+  test("uses the default upload cap when unset, and resolves PASTOR_MAX_UPLOAD_MB to bytes", () => {
     expect(loadConfig().maxUploadBytes).toBe(DEFAULT_MAX_UPLOAD_BYTES);
-    process.env.COLLIE_MAX_UPLOAD_MB = "5";
+    process.env.PASTOR_MAX_UPLOAD_MB = "5";
     expect(loadConfig().maxUploadBytes).toBe(5 * 1024 * 1024);
   });
 
-  test("an out-of-range or non-integer COLLIE_MAX_UPLOAD_MB falls back to the default", () => {
-    process.env.COLLIE_MAX_UPLOAD_MB = "0";
+  test("an out-of-range or non-integer PASTOR_MAX_UPLOAD_MB falls back to the default", () => {
+    process.env.PASTOR_MAX_UPLOAD_MB = "0";
     expect(loadConfig().maxUploadBytes).toBe(DEFAULT_MAX_UPLOAD_BYTES);
-    process.env.COLLIE_MAX_UPLOAD_MB = "9999";
+    process.env.PASTOR_MAX_UPLOAD_MB = "9999";
     expect(loadConfig().maxUploadBytes).toBe(DEFAULT_MAX_UPLOAD_BYTES);
-    process.env.COLLIE_MAX_UPLOAD_MB = "not-a-number";
+    process.env.PASTOR_MAX_UPLOAD_MB = "not-a-number";
     expect(loadConfig().maxUploadBytes).toBe(DEFAULT_MAX_UPLOAD_BYTES);
   });
 
-  test("COLLIE_UPLOAD_EXTRA_TYPES normalises entries: lowercased, leading dot forgiven, invalid dropped, deduped", () => {
-    process.env.COLLIE_UPLOAD_EXTRA_TYPES = " .RB, ex ,bad name,rb";
+  test("PASTOR_UPLOAD_EXTRA_TYPES normalises entries: lowercased, leading dot forgiven, invalid dropped, deduped", () => {
+    process.env.PASTOR_UPLOAD_EXTRA_TYPES = " .RB, ex ,bad name,rb";
     expect(loadConfig().uploadExtraTypes).toEqual(["rb", "ex"]);
   });
 
   test("reads the public-hosts allowlist, trimming and dropping blanks", () => {
-    process.env.COLLIE_PUBLIC_HOSTS = " collie.example.ts.net , collie.example.com:8443 ,";
+    process.env.PASTOR_PUBLIC_HOSTS = " pastor.example.ts.net , pastor.example.com:8443 ,";
     expect(loadConfig().publicHosts).toEqual([
-      "collie.example.ts.net",
-      "collie.example.com:8443",
+      "pastor.example.ts.net",
+      "pastor.example.com:8443",
     ]);
   });
 
   test("splits comma lists, trimming whitespace and dropping blanks", () => {
-    process.env.COLLIE_SUBMIT_KEYS = " ctrl+a , Enter ,";
+    process.env.PASTOR_SUBMIT_KEYS = " ctrl+a , Enter ,";
     expect(loadConfig().submitKeys).toEqual(["ctrl+a", "Enter"]);
-    process.env.COLLIE_ALLOWED_ORIGINS = "https://a.example.com, https://b.example.com";
+    process.env.PASTOR_ALLOWED_ORIGINS = "https://a.example.com, https://b.example.com";
     expect(loadConfig().allowedOrigins).toEqual(["https://a.example.com", "https://b.example.com"]);
   });
 
-  test("falls back to [Enter] when COLLIE_SUBMIT_KEYS is empty", () => {
-    process.env.COLLIE_SUBMIT_KEYS = "";
+  test("falls back to [Enter] when PASTOR_SUBMIT_KEYS is empty", () => {
+    process.env.PASTOR_SUBMIT_KEYS = "";
     expect(loadConfig().submitKeys).toEqual(["Enter"]);
   });
 
   test("honours an explicit trusted user", () => {
-    process.env.COLLIE_TRUSTED_USER = "me@example.com";
+    process.env.PASTOR_TRUSTED_USER = "me@example.com";
     const cfg = loadConfig();
     expect(cfg.trustedUser).toBe("me@example.com");
   });
 
   test("carries a non-loopback bind and its escape hatch without deciding either", () => {
-    process.env.COLLIE_HOST = "0.0.0.0";
+    process.env.PASTOR_HOST = "0.0.0.0";
     // loadConfig REPORTS the bind; it does not refuse it. The refusal needs the crew mode, which is
     // resolved after this runs (bridge/index.ts) — see nonLoopbackBindRefusal below.
     expect(loadConfig().host).toBe("0.0.0.0");
     expect(loadConfig().allowNonLoopbackBind).toBe(false);
-    process.env.COLLIE_ALLOW_NON_LOOPBACK_BIND = "1";
+    process.env.PASTOR_ALLOW_NON_LOOPBACK_BIND = "1";
     expect(loadConfig().allowNonLoopbackBind).toBe(true);
   });
 
   test("parses discovered Tailscale hosts and the two fail-closed opt-outs", () => {
-    process.env.COLLIE_TAILSCALE_HOSTS = "host.tailnet.ts.net,100.64.0.1";
-    process.env.COLLIE_ALLOW_ANY_HOST = "1";
-    process.env.COLLIE_TRUSTED_USER_OPTIONAL = "1";
+    process.env.PASTOR_TAILSCALE_HOSTS = "host.tailnet.ts.net,100.64.0.1";
+    process.env.PASTOR_ALLOW_ANY_HOST = "1";
+    process.env.PASTOR_TRUSTED_USER_OPTIONAL = "1";
     const cfg = loadConfig();
     expect(cfg.tailscaleHosts).toEqual(["host.tailnet.ts.net", "100.64.0.1"]);
     expect(cfg.allowAnyHost).toBe(true);
@@ -394,14 +394,14 @@ describe("loadConfig", () => {
 
   test("dial mode defaults to auto and accepts a forced dialer", () => {
     expect(loadConfig().dialMode).toBe("auto");
-    process.env.COLLIE_HERDR_DIAL = "net";
+    process.env.PASTOR_HERDR_DIAL = "net";
     expect(loadConfig().dialMode).toBe("net");
-    process.env.COLLIE_HERDR_DIAL = "BUN"; // case-insensitive
+    process.env.PASTOR_HERDR_DIAL = "BUN"; // case-insensitive
     expect(loadConfig().dialMode).toBe("bun");
   });
 
   test("an unrecognised dial mode falls back to auto rather than dialling nothing", () => {
-    process.env.COLLIE_HERDR_DIAL = "carrier-pigeon";
+    process.env.PASTOR_HERDR_DIAL = "carrier-pigeon";
     expect(loadConfig().dialMode).toBe("auto");
   });
 });
@@ -415,10 +415,10 @@ describe("nonLoopbackBindRefusal", () => {
   test("a wide bind is refused, and names the one variable that permits it", () => {
     const why = nonLoopbackBindRefusal({ host: "0.0.0.0", allowNonLoopbackBind: false });
     expect(why).toMatch(/not a loopback address/);
-    expect(why).toContain("COLLIE_ALLOW_NON_LOOPBACK_BIND=1");
+    expect(why).toContain("PASTOR_ALLOW_NON_LOOPBACK_BIND=1");
   });
 
-  test("an empty COLLIE_HOST is a wide bind, and says so in words", () => {
+  test("an empty PASTOR_HOST is a wide bind, and says so in words", () => {
     expect(nonLoopbackBindRefusal({ host: "", allowNonLoopbackBind: false })).toContain(
       "every interface",
     );
@@ -468,30 +468,30 @@ describe("defaultSocketPath", () => {
 // sent `push-test` (and every other state-reading action) to a directory the bridge never uses.
 describe("resolveStateDir", () => {
   test("ignores the state dir Herdr injects into a plugin action", () => {
-    expect(resolveStateDir({ HERDR_PLUGIN_STATE_DIR: "/h/.local/state/herdr/plugins/herdr.collie" }, "/h")).toBe(
-      join("/h", ".local", "state", "collie"),
+    expect(resolveStateDir({ HERDR_PLUGIN_STATE_DIR: "/h/.local/state/herdr/plugins/ad3.pastor" }, "/h")).toBe(
+      join("/h", ".local", "state", "pastor"),
     );
   });
 
-  test("COLLIE_STATE_DIR still moves it, with or without Herdr's variable beside it", () => {
-    expect(resolveStateDir({ COLLIE_STATE_DIR: "/s" }, "/h")).toBe("/s");
-    expect(resolveStateDir({ COLLIE_STATE_DIR: "/s", HERDR_PLUGIN_STATE_DIR: "/p" }, "/h")).toBe("/s");
+  test("PASTOR_STATE_DIR still moves it, with or without Herdr's variable beside it", () => {
+    expect(resolveStateDir({ PASTOR_STATE_DIR: "/s" }, "/h")).toBe("/s");
+    expect(resolveStateDir({ PASTOR_STATE_DIR: "/s", HERDR_PLUGIN_STATE_DIR: "/p" }, "/h")).toBe("/s");
   });
 });
 
 // Also the source `cli/doctor.ts`'s bind check and `cli/lifecycle.ts`'s readiness probe read, so a
-// peer's COLLIE_HOST resolves identically wherever it's asked.
+// peer's PASTOR_HOST resolves identically wherever it's asked.
 describe("resolveBridgeHost", () => {
-  test("absent COLLIE_HOST resolves to loopback", () => {
+  test("absent PASTOR_HOST resolves to loopback", () => {
     expect(resolveBridgeHost({})).toBe("127.0.0.1");
   });
 
-  test("an explicit COLLIE_HOST is used verbatim — a peer's tailnet address, say", () => {
-    expect(resolveBridgeHost({ COLLIE_HOST: "100.64.0.8" })).toBe("100.64.0.8");
+  test("an explicit PASTOR_HOST is used verbatim — a peer's tailnet address, say", () => {
+    expect(resolveBridgeHost({ PASTOR_HOST: "100.64.0.8" })).toBe("100.64.0.8");
   });
 
   test("explicitly empty is passed through, not defaulted — the wildcard-bind case", () => {
-    expect(resolveBridgeHost({ COLLIE_HOST: "" })).toBe("");
+    expect(resolveBridgeHost({ PASTOR_HOST: "" })).toBe("");
   });
 });
 
@@ -517,34 +517,34 @@ describe("envBool", () => {
   });
 
   test("defaults to process.env when no source is given", () => {
-    process.env.COLLIE_MULTI_SESSION = "off";
-    expect(envBool("COLLIE_MULTI_SESSION", true)).toBe(false);
+    process.env.PASTOR_MULTI_SESSION = "off";
+    expect(envBool("PASTOR_MULTI_SESSION", true)).toBe(false);
   });
 });
 
 // ADR 0052: the mount is a runtime setting, and this is its one reader.
-describe("normaliseBasePath — COLLIE_BASE_PATH as the bridge mounts it", () => {
+describe("normaliseBasePath — PASTOR_BASE_PATH as the bridge mounts it", () => {
   test("the root for unset, empty and a bare slash", () => {
     for (const v of [undefined, "", "  ", "/", "//"]) expect(normaliseBasePath(v)).toBe("/");
   });
 
   test("one leading and one trailing slash around the given segments", () => {
-    for (const v of ["collie", "/collie", "collie/", "/collie/", "//collie//", " /collie "]) {
-      expect(normaliseBasePath(v)).toBe("/collie/");
+    for (const v of ["pastor", "/pastor", "pastor/", "/pastor/", "//pastor//", " /pastor "]) {
+      expect(normaliseBasePath(v)).toBe("/pastor/");
     }
-    expect(normaliseBasePath("apps/collie")).toBe("/apps/collie/");
+    expect(normaliseBasePath("apps/pastor")).toBe("/apps/pastor/");
   });
 
   test("refuses what a URL path cannot carry, and answers the root", () => {
-    for (const v of ["..", "/a/../b", "./collie", "a b", "a?b", "a#b", "a\\b"]) {
+    for (const v of ["..", "/a/../b", "./pastor", "a b", "a?b", "a#b", "a\\b"]) {
       expect(normaliseBasePath(v)).toBe("/");
     }
   });
 
   test("loadConfig carries it", () => {
-    process.env.COLLIE_BASE_PATH = "collie";
-    expect(loadConfig().basePath).toBe("/collie/");
-    delete process.env.COLLIE_BASE_PATH;
+    process.env.PASTOR_BASE_PATH = "pastor";
+    expect(loadConfig().basePath).toBe("/pastor/");
+    delete process.env.PASTOR_BASE_PATH;
     expect(loadConfig().basePath).toBe("/");
   });
 });

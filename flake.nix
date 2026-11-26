@@ -1,5 +1,5 @@
 {
-  description = "Collie's build environment: the tools a release is built and checked with.";
+  description = "Pastor's build environment: the tools a release is built and checked with.";
 
   # Pinned by revision, not by branch. `flake.lock` records the same revision with its hash, and
   # that lock moves ONLY in a `chore(release): x.y.z` commit — see CLAUDE.md → Versioning. A lock
@@ -60,37 +60,37 @@
       forEachSystem = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
     {
-      # `packages.<system>.collie` is Collie itself, and it WRAPS the release tarball rather than
+      # `packages.<system>.pastor` is Pastor itself, and it WRAPS the release tarball rather than
       # building it: `fetchurl` by the sha256 in packaging/nix/sources.json, which comes from that
       # release's own integrity manifest, then `autoPatchelfHook` on Linux so the binary finds an
-      # interpreter on NixOS, then the whole tarball root into `$out/lib/collie` with
-      # `$out/bin/collie` as a symlink into it — the Arch package's layout, because bridge/root.ts
+      # interpreter on NixOS, then the whole tarball root into `$out/lib/pastor` with
+      # `$out/bin/pastor` as a symlink into it — the Arch package's layout, because bridge/root.ts
       # resolves the install root through that symlink.
       #
       # A SOURCE BUILD IS DELIBERATELY OUT OF SCOPE. Installing the dependencies with `bun` needs
       # the network and a Nix derivation has none, so a source build would mean vendoring every
       # dependency or dropping the sandbox. The derivation and the rest of that reasoning live in
-      # packaging/nix/collie.nix; `packages.<system>.bun` below is the pinned build tool, which is a
+      # packaging/nix/pastor.nix; `packages.<system>.bun` below is the pinned build tool, which is a
       # different thing and stays.
       packages = forEachSystem (pkgs: {
-        collie = pkgs.callPackage ./packaging/nix/collie.nix { };
+        pastor = pkgs.callPackage ./packaging/nix/pastor.nix { };
         bun = pinBun pkgs;
-        default = pkgs.callPackage ./packaging/nix/collie.nix { };
+        default = pkgs.callPackage ./packaging/nix/pastor.nix { };
       });
 
       devShells = forEachSystem (pkgs: {
         default = pkgs.mkShell {
-          name = "collie";
+          name = "pastor";
 
           # Five tools, and the reason each one is here:
           #   bun     — builds and runs everything (`bun run build`, `bun run lint`, `bun test`)
           #   nodejs  — what `tsc` runs under, on both sides of the double typecheck
-          #   git     — what `collie update` and the preflight shell out to
-          #   tmux    — a shipped multiplexer driver, exercised by scripts/collie-cli.test.sh
+          #   git     — what `pastor update` and the preflight shell out to
+          #   tmux    — a shipped multiplexer driver, exercised by scripts/pastor-cli.test.sh
           #   zellij  — the other one
           #
           # Herdr is deliberately NOT pinned. It is not in nixpkgs, it is the product's peer rather
-          # than one of Collie's build tools, and pinning it would turn this flake into a
+          # than one of Pastor's build tools, and pinning it would turn this flake into a
           # distribution channel for something this repository does not build.
           packages = [
             (pinBun pkgs)

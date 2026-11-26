@@ -34,8 +34,8 @@ describe("OmO composer", () => {
 
   it("reads the literal draft when it was typed into the real sandbox editor", () => {
     const lines = capture("draft");
-    expect(composerDraft(lines)).toBe("collie composer draft probe");
-    expect(composerPrompt(lines)).toBe(`${rule}\n❯ collie composer draft probe\n${rule}`);
+    expect(composerDraft(lines)).toBe("pastor composer draft probe");
+    expect(composerPrompt(lines)).toBe(`${rule}\n❯ pastor composer draft probe\n${rule}`);
   });
 
   it("binds the exact frame when terminal padding follows the prompt", () => {
@@ -139,8 +139,8 @@ describe("stock pi composer", () => {
 
   it("reads the literal draft when it was typed into a real stock pi editor", () => {
     const lines = stock("draft");
-    expect(composerDraft(lines)).toBe("collie stock pi draft probe");
-    expect(composerPrompt(lines)?.split("\n")[1]).toBe("collie stock pi draft probe");
+    expect(composerDraft(lines)).toBe("pastor stock pi draft probe");
+    expect(composerPrompt(lines)?.split("\n")[1]).toBe("pastor stock pi draft probe");
   });
 
   it("keeps the editor when a running turn labels the top rule", () => {
@@ -245,7 +245,7 @@ describe("OmO default install (issue 416)", () => {
     const lines = omo("plain-idle");
     expect(locateComposer(lines)).toEqual({ layout: "omo", top: 0, bottom: 2, statusStart: 3, end: 5 });
     expect(composerStatusLines(lines)).toEqual(lines.slice(3, 5));
-    expect(composerDraft(omo("plain-draft"))).toBe("hello collie draft");
+    expect(composerDraft(omo("plain-draft"))).toBe("hello pastor draft");
     expect(locateComposer(omo("plain-running"))?.top).toBe(0);
   });
 

@@ -79,7 +79,7 @@ const INPUT_PLACEHOLDERS = new Set(["Press up to edit queued messages"]);
  *  3. worst, it could VOUCH FOR A SEND THAT NEVER LANDED. `draftCarriesSend` accepts a draft whose
  *     visible characters appear contiguously in the sent text, so a suggestion that happens to be an
  *     8-character substring of the message ("fix the parser…" vs a ghost "fix the ") would satisfy the
- *     guard against a box our text never reached — Collie then fires the submit key and reports
+ *     guard against a box our text never reached — Pastor then fires the submit key and reports
  *     `sent`, and the message is lost. Returning null here keeps a ghost out of that comparison
  *     entirely, which is the defense in depth: the guard never sees a ghost to be fooled by.
  *

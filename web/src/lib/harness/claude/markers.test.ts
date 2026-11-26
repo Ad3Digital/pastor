@@ -42,14 +42,14 @@ describe("isHorizontalRule", () => {
     expect(isHorizontalRule("Do you want to proceed?")).toBe(false);
     expect(isHorizontalRule("1. Yes")).toBe(false);
     expect(isHorizontalRule("----")).toBe(false); // ASCII dashes are NOT rules (markdown/code)
-    expect(isHorizontalRule("── collie upgrades ──")).toBe(false); // embedded label ⇒ not a pure rule
+    expect(isHorizontalRule("── pastor upgrades ──")).toBe(false); // embedded label ⇒ not a pure rule
   });
 });
 
 describe("isBoxBorder", () => {
   it("matches a long rule run even with an embedded label (input-box top border)", () => {
     expect(isBoxBorder("─".repeat(40))).toBe(true);
-    expect(isBoxBorder("─".repeat(30) + " collie upgrades ──")).toBe(true);
+    expect(isBoxBorder("─".repeat(30) + " pastor upgrades ──")).toBe(true);
   });
 
   it("rejects ordinary text and short dashes", () => {

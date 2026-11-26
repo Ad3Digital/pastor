@@ -11,7 +11,7 @@ import {
 import { acceptOperatorFonts, operatorFontCss, operatorFontUrl } from "@/lib/operator-fonts";
 import { DEFAULT_UI_FONT_URL, FONT_URLS, UI_COMPANION_FONT_URLS, UI_FONT_URLS } from "@/lib/sw-routes";
 
-// Collie ships five webfonts — two Nerd Font symbol subsets, two UI typefaces and a Cyrillic companion — and the design
+// Pastor ships five webfonts — two Nerd Font symbol subsets, two UI typefaces and a Cyrillic companion — and the design
 // rests on facts that are silent when broken: the stylesheet, the service worker and the disk agree
 // on which files exist; the symbol faces stay range-restricted so they stay lazy; the UI face is
 // preloaded and metric-matched so its swap moves nothing; and none of them re-enters the precache.
@@ -300,7 +300,7 @@ describe("theme-init.js and lib/design.ts agree", () => {
   const design = read("src/lib/design.ts");
 
   it("uses the same storage key", () => {
-    expect(DESIGN_STORAGE_KEY).toBe("collie:design:v1");
+    expect(DESIGN_STORAGE_KEY).toBe("pastor:design:v1");
     expect(init).toContain(`localStorage.getItem("${DESIGN_STORAGE_KEY}")`);
     expect(design).toContain(`const STORAGE_KEY = "${DESIGN_STORAGE_KEY}";`);
   });

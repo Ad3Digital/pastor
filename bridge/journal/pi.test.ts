@@ -693,7 +693,7 @@ describe("parsePiTranscript — the structured call", () => {
   });
 
   test("OmO's `details.answers` fills the chosen label, in question order", () => {
-    const q = "Pick a color for the Collie sandbox probe?";
+    const q = "Pick a color for the Pastor sandbox probe?";
     const part = partOf(
       call("call_1", "ask_user_question", {
         questions: [{
@@ -717,7 +717,7 @@ describe("parsePiTranscript — the structured call", () => {
         questions: [{
           id: "color",
           header: "Color",
-          question: "Pick a color for the Collie sandbox probe?",
+          question: "Pick a color for the Pastor sandbox probe?",
           options: [{ label: "Red", description: "Warm color." }, { label: "Blue", description: "Deep color." }],
           multiSelect: false,
         }],
@@ -794,7 +794,7 @@ describe("PiTranscriptSource — path refs are confined to the root", () => {
    *   base/sessions/--repo--/sneaky.jsonl → ../../outside.jsonl   a symlink out of the root
    */
   async function fixture() {
-    const created = `${tmpdir()}/collie-pi-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/pastor-pi-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // Built with `join`: `resolve` answers with this platform's separators, and the tests compare
@@ -867,7 +867,7 @@ describe("PiTranscriptSource — several sessions roots", () => {
   const B = "019f4665-7df0-7540-a64f-7068335f21b0";
 
   async function fixture() {
-    const created = `${tmpdir()}/collie-pi-roots-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/pastor-pi-roots-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // `join`, for the same reason as the fixture above: compare like with like on every platform.
@@ -913,10 +913,10 @@ describe("PiTranscriptSource — several sessions roots", () => {
   });
 });
 
-describe("resolveImageUrl — only this collie's own blobs and inline images", () => {
+describe("resolveImageUrl — only this pastor's own blobs and inline images", () => {
   const hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-  test("a blob reference becomes this collie's own route", () => {
+  test("a blob reference becomes this pastor's own route", () => {
     expect(resolveImageUrl(`blob:sha256:${hash}`)).toBe(`/api/blobs/${hash}`);
   });
 
@@ -956,7 +956,7 @@ describe("resolveBlobPath", () => {
   });
 
   test("resolves candidate contained in sibling blobs directory", async () => {
-    const base = await mkdtemp(join(tmpdir(), "collie-pi-blob-"));
+    const base = await mkdtemp(join(tmpdir(), "pastor-pi-blob-"));
     const sessionsDir = join(base, "sessions");
     const blobsDir = join(base, "blobs");
     await mkdir(sessionsDir, { recursive: true });

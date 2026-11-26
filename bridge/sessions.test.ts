@@ -39,7 +39,7 @@ describe("sessionNameFor", () => {
   });
 
   test("a socket under sessions/<name> is named for its directory", () => {
-    expect(sessionNameFor(`${root}/sessions/collie-demo/herdr.sock`, root)).toBe("collie-demo");
+    expect(sessionNameFor(`${root}/sessions/pastor-demo/herdr.sock`, root)).toBe("pastor-demo");
   });
 
   test("a named-session primary resolves to that name against its own root", () => {
@@ -49,11 +49,11 @@ describe("sessionNameFor", () => {
 });
 
 describe("herdTagFor", () => {
-  test("the primary keeps the bare collie:herd tag", () => {
-    expect(herdTagFor(true, "default")).toBe("collie:herd");
+  test("the primary keeps the bare pastor:herd tag", () => {
+    expect(herdTagFor(true, "default")).toBe("pastor:herd");
   });
-  test("a non-primary session tags collie:herd:<name>", () => {
-    expect(herdTagFor(false, "collie-demo")).toBe("collie:herd:collie-demo");
+  test("a non-primary session tags pastor:herd:<name>", () => {
+    expect(herdTagFor(false, "pastor-demo")).toBe("pastor:herd:pastor-demo");
   });
 });
 

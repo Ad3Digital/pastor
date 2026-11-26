@@ -31,7 +31,6 @@ import { AnchoredMenu } from "@/components/ui/anchored-menu";
 import * as api from "@/lib/api";
 import { describeApiError, describeThrownError } from "@/lib/api-error-message";
 import { commandsFor } from "@/lib/agent-commands";
-import { startVoiceCall, stopVoiceCall, useVoiceCall } from "@/lib/voice-call";
 import { useMuxCapability, useMuxUnsupportedKeys } from "@/lib/mux-capability";
 import { useOperatorCommands, useOperatorKeys, useUploadCapability } from "@/lib/operator-config";
 import {
@@ -193,6 +192,8 @@ interface ComposerProps {
    * left of the field, Send on the outer edge, Attach beside the field.
    */
   hand?: Hand;
+  /** Opens the live voice call sheet; present only on a Codex or OMP pane (components/live-call.tsx). */
+  onLiveCall?: () => void;
 }
 
 // The composer cluster at the bottom of the pane view — everything a phone keyboard can't do on its
@@ -318,7 +319,7 @@ interface ClearedDraft {
 }
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { paneId, scope, agent, isShell, gone, readOnly, hostBlock, composing, dialogPresent, dialogUnread, text, terminalDraft, rawTerminalDraft, prefs, display, onSent, pullHandle, draftNoticeSlot, changesPill, stale, hand = "right" },
+  { paneId, scope, agent, isShell, gone, readOnly, hostBlock, composing, dialogPresent, dialogUnread, text, terminalDraft, rawTerminalDraft, prefs, display, onSent, pullHandle, draftNoticeSlot, changesPill, stale, hand = "right", onLiveCall },
   ref,
 ) {
   const revalidator = useRevalidator();
@@ -371,7 +372,6 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   // as before, drafts.ts). It gates every path that reaches the pane (send, raw keys, the belt) and
   // nothing else. There is no outbox: a send refused here is gone, the draft stays in the box.
   const live = useLive(paneId, scope);
-  const voiceCall = useVoiceCall();
   const offline = stale === true || !live;
   const offlineRef = useRef(offline);
   offlineRef.current = offline;
@@ -656,7 +656,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   });
   // ── THE ORBIT TURNS WHILE THE OPERATOR'S WORK IS IN FLIGHT (lib/busy.ts) ───────────────────────
   //
-  // Three intervals, declared where the state already lives, so the Collie mark in the header spins
+  // Three intervals, declared where the state already lives, so the Pastor mark in the header spins
   // for exactly as long as the work does and not a frame longer. `sending` spans the whole guarded
   // send (type → settle → verify → submit), which is the interval the operator is actually waiting
   // through; `uploading` spans the attachment POST; the recorder's `transcribing` phase spans the trip to
@@ -948,7 +948,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   // visibility test here and the palette's own list below (same call, same arguments).
   const operatorCommands = useOperatorCommands();
   const commands = commandsFor(agent, operatorCommands);
-  // What this collie takes as an attachment, off the same one-shot /api/config read. On a bridge
+  // What this pastor takes as an attachment, off the same one-shot /api/config read. On a bridge
   // that publishes nothing (older than the field, or the read has not landed) `uploadLimits` answers
   // with the contract that shipped before attachments — images, 10 MB — so the button is never
   // dead and never offers what this host would refuse.
@@ -1642,7 +1642,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             `agent-chat.tsx`, because the swipe handle stands on that same ground and the boundary
             against the terminal is drawn once, above everything the thumb operates. */}
         {/* ── THE ACTIONS ROW ──────────────────────────────────────────────────────────────────
-            One row, two segments: Collie's own controls, then the running harness's own commands in
+            One row, two segments: Pastor's own controls, then the running harness's own commands in
             the harness's own colour. It replaced the Controls row and the separate harness bar,
             which were two rows of a phone's glass answering one question. The row itself is
             actions-row.tsx; everything below is only what each action DOES.
@@ -1706,21 +1706,15 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                 disabled: locked,
                 onSelect: () => requestDrawer(drawer === "quick" ? null : "quick"),
               },
-              // Antonio: o /voice do Codex usa o audio do PC; o servico collie-voice (em /voice-call neste
-              // mesmo endereco) liga esse audio ao celular (lib/voice-call.ts). So em painel do Codex.
-              ...(agent === "codex"
+              // A live voice call with this agent (bridge/live/). Offered only where the pane can host one.
+              ...(onLiveCall
                 ? [
                     {
-                      id: "voice-call",
+                      id: "live-call",
                       icon: Phone,
-                      label: "Call",
+                      label: translate("live.control.open"),
                       disabled: locked,
-                      on: voiceCall.phase !== "idle",
-                      pressed: voiceCall.phase !== "idle",
-                      onSelect: () => {
-                        if (voiceCall.phase === "idle") void startVoiceCall(paneId);
-                        else stopVoiceCall();
-                      },
+                      onSelect: onLiveCall,
                     },
                   ]
                 : []),

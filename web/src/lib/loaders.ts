@@ -77,7 +77,7 @@ import type {
 // stale-data/error-banner path would flash a spurious "reconnecting…" on every fast poll.
 export function isAbortError<TThrown>(e: TThrown): boolean {
   // `fetch` rejects an aborted request with a DOMException, which is an Error subclass in every
-  // engine Collie runs in (and in jsdom) — so an `instanceof Error` test reaches it without having
+  // engine Pastor runs in (and in jsdom) — so an `instanceof Error` test reaches it without having
   // to inspect the shape of an arbitrary thrown value.
   return e instanceof Error && e.name === "AbortError";
 }
@@ -328,7 +328,7 @@ function toHomeData(
   error: boolean,
   lastSeenAt?: number,
 ): HomeData {
-  // Where the Collie UPDATE run is, on every snapshot — the self-updater must not reload the bundle
+  // Where the Pastor UPDATE run is, on every snapshot — the self-updater must not reload the bundle
   // out from under a running update, and it must reload once that run is done (M15/05). Stamped here
   // rather than in the card so the hold applies on every route, not only where the card is mounted.
   noteUpdateRun(snap.update?.run?.state);
@@ -640,7 +640,7 @@ const NO_ECHO_TAIL_LINES = 40;
 /**
  * Whether this mirror is a pane sitting at a password prompt — the ADR 0017 exclusion.
  *
- * Recognition already exists and already changes what Collie SAYS (lib/no-echo.ts); this is the one
+ * Recognition already exists and already changes what Pastor SAYS (lib/no-echo.ts); this is the one
  * other thing it changes, and it is a subtraction: a screen the operator is being asked to type a
  * secret into is not written to the browser's store, and whatever was written for that pane earlier is
  * dropped. Note what it is NOT about — the prompt echoes nothing, so there is no secret on the screen
@@ -842,13 +842,13 @@ export async function devicesLoader({ request }: { request?: Request } = {}): Pr
 // answered the question badly.
 //
 // The 404 is not a failure and must not be rendered as one. Only a lead serves `/api/crew`; a solo
-// collie and a peer refuse, and that refusal is the truthful answer "there is no crew here". So it
+// pastor and a peer refuse, and that refusal is the truthful answer "there is no crew here". So it
 // is folded to `status: null, error: false`, and the route says so in one honest card. Every OTHER
 // refusal — a real outage, a 500 — keeps `status: null` but sets `error`, because "I could not ask"
 // and "there is nothing to ask about" are different sentences and the operator's next move differs.
 
 export interface CrewData {
-  /** The census, or `null` when this collie leads no crew (404) or the fetch failed. */
+  /** The census, or `null` when this pastor leads no crew (404) or the fetch failed. */
   status: CrewStatusResponse | null;
   /** True only for a fetch that FAILED — a 404 is an answer, not an error. */
   error: boolean;
@@ -869,7 +869,7 @@ export async function crewLoader({ request }: { request?: Request } = {}): Promi
 //
 // `crewLoader`'s shape for the same reasons: it rides the poll loop (a firing alert and a quiet
 // machine should show without a reload), and a failure degrades instead of throwing. A 404 is an
-// answer, not a failure: only a lead or a solo collie serves `/api/machines`, so a peer opened
+// answer, not a failure: only a lead or a solo pastor serves `/api/machines`, so a peer opened
 // directly says "there is nothing to show here" in one card.
 //
 // `/machines/:id` reads this same loader for its row. Its history is NOT loaded here: 1440 points
@@ -877,7 +877,7 @@ export async function crewLoader({ request }: { request?: Request } = {}): Promi
 // and then once a minute while visible (routes/machine.tsx).
 
 export interface MachinesData {
-  /** The census, or `null` when this collie serves none (404) or the fetch failed. */
+  /** The census, or `null` when this pastor serves none (404) or the fetch failed. */
   census: MachinesResponse | null;
   /** True only for a fetch that FAILED. A 404 is an answer, not an error. */
   error: boolean;

@@ -349,7 +349,7 @@ describe("CodexTranscriptSource — several sessions roots", () => {
    * base/outside.jsonl                      a file neither root may reach
    */
   async function fixture() {
-    const created = `${tmpdir()}/collie-codex-roots-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/pastor-codex-roots-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // `join`, because `resolve` answers with this platform's separators and a test compares to it.

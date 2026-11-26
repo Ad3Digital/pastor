@@ -113,24 +113,24 @@ export const PREFLIGHT_FRESH = "fresh";
 // ── The membership routes (M4/07) ────────────────────────────────────────────
 // Three routes that exist because three operator verbs are otherwise undeliverable: §8.4's rotation
 // "distributes to every reachable peer", §14's promotion "reachable peers are updated by the
-// promotion itself", and §8.4's `collie leave` "revokes on both sides where reachable". Each is the
+// promotion itself", and §8.4's `pastor leave` "revokes on both sides where reachable". Each is the
 // receiving half of a verb in `cli/crew.ts`; none is reachable by a browser, and all three sit behind
 // the same two factors as everything else on the prefix.
 //
 // They are NOT in §5's proxy table and never will be: that table is "the routes the phone already
-// calls, re-exposed". These carry no pane data, take no `?session=`, and are addressed to the collie
+// calls, re-exposed". These carry no pane data, take no `?session=`, and are addressed to the pastor
 // rather than to anything it fronts.
 
 /** `POST` — the lead hands a peer the rotated crew secret (§8.4). */
 export const CREW_SECRET_PATH = "/crew/v1/secret";
 /** `POST` — "this member is the crew's lead now" (§14). Answered by the old lead and by every peer. */
 export const CREW_LEAD_PATH = "/crew/v1/lead";
-/** `POST` — the caller removes ITSELF from this collie's roster (§8.4, `collie leave`). */
+/** `POST` — the caller removes ITSELF from this pastor's roster (§8.4, `pastor leave`). */
 export const CREW_LEAVE_PATH = "/crew/v1/leave";
 /**
- * `POST` — this collie's own lead delivers or refreshes the warrant naming the crew's deputy (§18).
+ * `POST` — this pastor's own lead delivers or refreshes the warrant naming the crew's deputy (§18).
  *
- * **Storage only.** What arrives here lands on disk and is inert at the transport until this collie
+ * **Storage only.** What arrives here lands on disk and is inert at the transport until this pastor
  * restarts: `server.reload({tls})` does not swap a pinned `ca` list, so the second anchor a warrant
  * authorises is built at bind time or not at all (§8.1). That is the two-phase arming, and no route
  * can climb it.
@@ -141,14 +141,14 @@ export const CREW_WARRANT_PATH = "/crew/v1/warrant";
  *
  * **Two-phase, and the phase is additive-optional whose absent reading is `probe`** — the reading
  * that changes nothing anywhere. It is the one route a caller admitted **as the deputy** may use, and
- * it is also answerable by a collie that still believes it leads: there it is a deposition, exactly as
+ * it is also answerable by a pastor that still believes it leads: there it is a deposition, exactly as
  * `/crew/v1/warrant` is, because it is the same proof arriving at a different kind of recipient.
  */
 export const CREW_TAKEOVER_PATH = "/crew/v1/takeover";
 /**
  * `POST` — the lead syncs its paired-device registry to the DEPUTY ONLY (RFC §6.5, §18.14).
  *
- * Hashes only. It lands in `standby-devices.json` and is **never** merged into this collie's own
+ * Hashes only. It lands in `standby-devices.json` and is **never** merged into this pastor's own
  * `paired-devices.json`, so a merge would silently let the lead's phones into this machine's own
  * front door for its own operator (RFC §16, decision 5; pairing is always on, ADR 0086).
  */
@@ -157,14 +157,14 @@ export const CREW_PAIRING_PATH = "/crew/v1/pairing";
 /**
  * The machine-readable `code` on §14.3's refusal of an unapproved leadership claim.
  *
- * It exists so `collie promote` can tell "the lead said no" from "the lead did not answer" without
+ * It exists so `pastor promote` can tell "the lead said no" from "the lead did not answer" without
  * parsing prose — the difference between an operator running one more verb on the lead and an
  * operator reaching for `--force`, which strands every peer (§14.4).
  */
 export const HANDOVER_NOT_APPROVED = "handover_not_approved";
 
 /**
- * The machine-readable `code` on §18.10's named refusal: **this collie follows a different lead.**
+ * The machine-readable `code` on §18.10's named refusal: **this pastor follows a different lead.**
  *
  * One answer, one code, read by two features. Today: a lead that was deposed while it was down comes
  * back up and dials a member that has already re-pinned — and gets a sentence naming the member that
@@ -188,8 +188,8 @@ export const PAIRING_LABEL_COLLISION = "pairing_label_collision";
  *
  * These are exactly the routes that travel **peer → lead**, which is the one direction where the
  * transport cannot pin (the lead's front door terminates TLS, `bridge/crew/transport.ts`). The two
- * membership routes are why the mechanism exists; `hello` is on the list because `collie crew status`
- * and `collie reconnect` run on a peer and must be able to probe their lead — a diagnostic that could
+ * membership routes are why the mechanism exists; `hello` is on the list because `pastor crew status`
+ * and `pastor reconnect` run on a peer and must be able to probe their lead — a diagnostic that could
  * not authenticate would report every healthy lead as refusing.
  *
  * **The proxy surface is not on this list and must not be**: those calls run lead → peer over a
@@ -209,7 +209,7 @@ const SIGNABLE_PATHS: ReadonlySet<string> = new Set([
   // is what makes it safe to add to `MEMBERSHIP_PATHS` below alongside `leave` and `lead`.
   CREW_WARRANT_PATH,
   // §18.16's takeover, on the same reasoning as the warrant above and for the same one delivery: a
-  // takeover travels deputy → peer over a pinned handshake, EXCEPT when the recipient is a collie
+  // takeover travels deputy → peer over a pinned handshake, EXCEPT when the recipient is a pastor
   // that still believes it leads. That listener pins nothing inbound (§8.1), so without a signature
   // the deposed machine could not admit the very member that can prove its deposition. Idempotent by
   // construction — a doubled deposition lands the same store — which is what makes it safe beside
@@ -245,7 +245,7 @@ const MEMBERSHIP_PATHS: ReadonlySet<string> = new Set([
 const DEPUTY_ROUTES: ReadonlySet<string> = new Set<string>([CREW_TAKEOVER_PATH, CREW_WARRANT_PATH]);
 
 /**
- * This collie's own snapshot body, for the one merged route (§9.2). `undefined` ⇒ the `?session=`
+ * This pastor's own snapshot body, for the one merged route (§9.2). `undefined` ⇒ the `?session=`
  * named does not exist here, which is the peer's own 404 and not the lead's.
  *
  * Injected from `bridge/server.ts`, which hands over the very closure it serves browsers from —
@@ -259,7 +259,7 @@ const DEPUTY_ROUTES: ReadonlySet<string> = new Set<string>([CREW_TAKEOVER_PATH, 
 export type SnapshotSource = (view: SnapshotView) => SnapshotResponse | undefined;
 
 /**
- * Run one session-scoped route — the pane family, tabs, workspaces — as this collie would for its
+ * Run one session-scoped route — the pane family, tabs, workspaces — as this pastor would for its
  * own operator (§5). `from` is the admitted member that forwarded it, for the peer's audit line.
  *
  * Injected from `bridge/server.ts` for the same reason {@link SnapshotSource} is: it hands over the
@@ -269,7 +269,7 @@ export type SnapshotSource = (view: SnapshotView) => SnapshotResponse | undefine
 export type ApiDispatch = (req: Request, url: URL, from: string) => Promise<Response>;
 
 /**
- * This collie's own multiplexer block, exactly as its `/api/config` publishes it, or `null` when it
+ * This pastor's own multiplexer block, exactly as its `/api/config` publishes it, or `null` when it
  * has no adapter in hand (M22/03).
  *
  * A FUNCTION, and injected from `bridge/server.ts` for {@link SnapshotSource}'s reason: the answer
@@ -279,11 +279,11 @@ export type ApiDispatch = (req: Request, url: URL, from: string) => Promise<Resp
  */
 export type MuxSource = () => MuxConfig | null;
 
-/** What this collie exposes to an admitted lead. Absent ⇒ that half of §5's table simply 404s. */
+/** What this pastor exposes to an admitted lead. Absent ⇒ that half of §5's table simply 404s. */
 export interface CrewSurface {
   readonly snapshot?: SnapshotSource;
   readonly dispatch?: ApiDispatch;
-  /** This collie's own capability declaration, for `hello`. See {@link MuxSource}. */
+  /** This pastor's own capability declaration, for `hello`. See {@link MuxSource}. */
   readonly mux?: MuxSource;
 }
 
@@ -297,20 +297,20 @@ export interface StandbySurface {
   readonly warrantsSelf: () => boolean;
   /** Gap A's silence, in ms — **the same number** `crew status` and the door read (RFC §10.1). */
   readonly silentForMs: () => number;
-  /** The arming threshold this collie was started with (`standby.ts` → `armThresholdMs`). */
+  /** The arming threshold this pastor was started with (`standby.ts` → `armThresholdMs`). */
   readonly armMs: number;
   /** Which of the incoming labels already exist in this machine's OWN paired-device registry. */
   readonly collidingLabels: (devices: readonly SyncedDevice[]) => readonly string[];
   /** Replace `standby-devices.json` wholesale. A sync is never a merge. */
   readonly applySync: (sync: PairingSync) => Promise<void>;
   /**
-   * The digest of the synced registry this collie actually holds, or `null` when it holds none
+   * The digest of the synced registry this pastor actually holds, or `null` when it holds none
    * (§18.14). Reported on `hello` and `snapshot` so the lead's re-push decision is a fact rather than
    * something a restarted process has forgotten.
    */
   readonly syncedDigest: () => string | null;
   /**
-   * The labels this collie's OWN paired devices share with the synced registry it holds (§18.14).
+   * The labels this pastor's OWN paired devices share with the synced registry it holds (§18.14).
    *
    * Empty for the ordinary case. Reported on the exchange rather than answered once by the sync, so
    * `crew status` on the LEAD — the machine whose operator can rename the device — sees it the moment
@@ -360,8 +360,8 @@ export interface CrewRouterDeps {
    */
   readonly onMembershipChange?: () => void;
   /**
-   * Gap A (RFC §10.1): **an admitted request from this collie's own lead just landed**, stamped on
-   * this collie's clock. Every admitted request refreshes it — a poll, a proxied read, a forwarded
+   * Gap A (RFC §10.1): **an admitted request from this pastor's own lead just landed**, stamped on
+   * this pastor's clock. Every admitted request refreshes it — a poll, a proxied read, a forwarded
    * write — mirroring §10.2's "every landed call is a receipt".
    *
    * A notification, never a control: it takes nothing back and it is not awaited. In memory on the
@@ -369,7 +369,7 @@ export interface CrewRouterDeps {
    */
   readonly onLeadDialled?: (at: number) => void;
   /**
-   * **An admitted request from a member of THIS collie's roster just landed** (M20/02) — the lead's
+   * **An admitted request from a member of THIS pastor's roster just landed** (M20/02) — the lead's
    * mirror of {@link CrewRouterDeps.onLeadDialled}, and the evidence that any backoff this lead holds
    * against that member is a guess about a machine that is plainly reachable.
    *
@@ -389,8 +389,8 @@ export interface CrewRouterDeps {
    */
   readonly onLeadRefused?: (at: number) => void;
   /**
-   * This collie has been **deposed**: a member it leads delivered a warrant of at least its own
-   * generation, naming a deputy, signed by this collie's own key (§18.12). The store has already been
+   * This pastor has been **deposed**: a member it leads delivered a warrant of at least its own
+   * generation, naming a deputy, signed by this pastor's own key (§18.12). The store has already been
    * rewritten as a peer's when this fires with a `healed` state.
    *
    * A notification, exactly like {@link CrewRouterDeps.onMembershipChange} — the bridge does not
@@ -406,8 +406,8 @@ export interface CrewRouterDeps {
   readonly standby?: StandbySurface;
   /**
    * This build's own version string, for `hello` **and for every `snapshot` answer** (§5, §7.1,
-   * §19) — bare, as `collie version` names it without its parenthetical (`bridge/version.ts`'s
-   * `collieVersionBare`).
+   * §19) — bare, as `pastor version` names it without its parenthetical (`bridge/version.ts`'s
+   * `pastorVersionBare`).
    *
    * Two routes carry one fact, and that is the 2026-09-04 amendment: the lead's poll dials
    * `snapshot`, never `hello`, so a version that rides only `hello` is a version the lead learns
@@ -438,7 +438,7 @@ export interface CrewRouterDeps {
    */
   readonly warrantActiveGeneration?: number | null;
   /**
-   * **This machine's own `collie update --check --local` verdict** (§19), published beside the
+   * **This machine's own `pastor update --check --local` verdict** (§19), published beside the
    * snapshot body so one confirm on the phone can cover the whole crew (M16/03).
    *
    * `fresh` is the lead's `X-Crew-Preflight: fresh` reaching through: a REQUEST to re-read, which
@@ -468,7 +468,7 @@ export interface CrewRouterDeps {
   /**
    * §20's two REQUEST headers reaching through: the lead's own settled release, and the turn.
    *
-   * A **notification**, not a route: this collie decides for itself whether any of it means
+   * A **notification**, not a route: this pastor decides for itself whether any of it means
    * anything (`bridge/crew/follow.ts` holds all eight guards), and a build that supplies no
    * `onFollow` simply ignores both headers — which is a correct peer. Nothing here awaits it, so a
    * follow decision can never cost this snapshot its answer.
@@ -509,7 +509,7 @@ function withinSkew(req: Request, now: number): boolean {
  * Verify a §8.6 signature against a **pinned** member's certificate.
  *
  * Order is the rule: the signature is checked before the timestamp, so a caller who cannot sign
- * learns nothing about clock skew or about which timestamps this collie has already seen. Every
+ * learns nothing about clock skew or about which timestamps this pastor has already seen. Every
  * failure returns the same `certificate` factor, which the caller sees as the same uniform 401 as an
  * unpinned certificate — because that is exactly what it is.
  *
@@ -631,16 +631,16 @@ function badRequest(self: string, reason: string): Response {
 }
 
 /**
- * §18.10's named answer, or `null` when this caller and this collie agree about who leads.
+ * §18.10's named answer, or `null` when this caller and this pastor agree about who leads.
  *
  * **The question is asked of the caller's CLAIMED identity, and that is sound here.** A verified §8.6
  * signature names the member outright; absent one, `X-Crew-Member` is a hint the transport cannot
  * corroborate (§6) — but a hint is enough to *refuse* on. The worst a forged header buys is a 409
- * that names this collie's own lead and hands over a public object, which is exactly what an admitted
+ * that names this pastor's own lead and hands over a public object, which is exactly what an admitted
  * caller may already learn (§5), and any caller reaching this line has already cleared both factors.
  * A hint is never enough to *admit*, and nothing here admits anything.
  *
- * Only a collie that HAS a lead can answer it: a lead pins its members individually and each of them
+ * Only a pastor that HAS a lead can answer it: a lead pins its members individually and each of them
  * is a legitimate caller, so the same comparison there would refuse the whole roster.
  *
  * It names the new lead's member id, its generation, and the warrant — **and nothing else**. Not an
@@ -662,12 +662,12 @@ function leadConflict(
   const stored = currentWarrant(data);
   const generation = stored?.warrant.generation ?? 0;
   const body: JsonObject = {
-    error: `this collie follows lead "${lead.memberId}" since warrant generation ${generation}`,
+    error: `this pastor follows lead "${lead.memberId}" since warrant generation ${generation}`,
     code: LEAD_CONFLICT,
     leadMemberId: lead.memberId,
     warrantGeneration: generation,
   };
-  // The proof rides along only when it IS the proof: a warrant naming the member this collie now
+  // The proof rides along only when it IS the proof: a warrant naming the member this pastor now
   // follows is what deposed the caller. A revocation, or a warrant naming somebody else entirely,
   // proves nothing about this conflict and is not evidence to hand over.
   if (stored !== null && stored.warrant.deputyMemberId === lead.memberId) {
@@ -693,11 +693,11 @@ function rePinRequestOf(body: JsonObject | null): TakeoverRequest | null {
 
 /** What a refused takeover claim is TOLD. The signature failure is NOT here — that is the 401. */
 function takeoverRefusalText(reason: Exclude<TakeoverRefusal, "bad-signature">): string {
-  if (reason === "not-a-peer") return "this collie is not a peer of the lead that signed this warrant";
-  if (reason === "foreign") return "this warrant is not from this collie's own lead, or not for this crew";
+  if (reason === "not-a-peer") return "this pastor is not a peer of the lead that signed this warrant";
+  if (reason === "foreign") return "this warrant is not from this pastor's own lead, or not for this crew";
   if (reason === "not-the-deputy") return "this warrant names a different machine, or a different key";
-  if (reason === "generation") return "this warrant is older than the one this collie already holds";
-  return "this warrant is past its validity on this collie's clock — re-run `collie crew deputy`";
+  if (reason === "generation") return "this warrant is older than the one this pastor already holds";
+  return "this warrant is past its validity on this pastor's clock — re-run `pastor crew deputy`";
 }
 
 /** The one body `/crew/v1/warrant` answers with. `applied: false` is a success, not a refusal. */
@@ -711,7 +711,7 @@ function warrantAnswer(self: string, generation: number, applied: boolean): Resp
 /**
  * What a refused warrant push is TOLD, which is deliberately less than what is known.
  *
- * The caller here is this collie's own pinned lead, so §8.1's uniform-401 rule does not apply and a
+ * The caller here is this pastor's own pinned lead, so §8.1's uniform-401 rule does not apply and a
  * useful sentence is owed: every one of these is an operator-fixable fault on the *lead's* side, and
  * a lead that cannot tell "your clock says this expired" from "your certificate did not match" has
  * to guess at a two-machine problem. The signature failure is NOT in this table — it is answered as
@@ -719,8 +719,8 @@ function warrantAnswer(self: string, generation: number, applied: boolean): Resp
  */
 function warrantRefusalText(reason: Exclude<WarrantRefusal, "bad-signature">): string {
   if (reason === "malformed") return "a warrant push needs a well-formed `warrant`";
-  if (reason === "foreign") return "this warrant is not from this collie's own lead, or not for this crew";
-  if (reason === "expired") return "this warrant is past its validity on this collie's clock — re-run `collie crew deputy`";
+  if (reason === "foreign") return "this warrant is not from this pastor's own lead, or not for this crew";
+  if (reason === "expired") return "this warrant is past its validity on this pastor's clock — re-run `pastor crew deputy`";
   return "the certificate that rode with this warrant is not the one its fingerprint names";
 }
 
@@ -735,7 +735,7 @@ function warrantRefusalText(reason: Exclude<WarrantRefusal, "bad-signature">): s
  * **Freshness is the skew window and the receiver binding, not the replay floor** — see `signing.ts`'s
  * header for why a monotonic floor cannot go here (the lead dials several members concurrently within
  * one millisecond) and why it does not need to (the only party positioned to capture a dial is its
- * receiver, and the receiver is the only collie it verifies at).
+ * receiver, and the receiver is the only pastor it verifies at).
  *
  * Every failure is the same `null`: a missing header, a missing or malformed timestamp, a skewed
  * clock and a signature that does not verify are indistinguishable to the caller, which is §8.1's
@@ -815,7 +815,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       // A signature the ROSTER cannot account for is normally the uniform 401. One caller is exempt,
       // and only from the refusal: the DEPUTY this listener anchored. RFC §9's reconciliation is a
       // signed warrant push from a machine that has just become the lead, and it is signed because
-      // the OTHER recipient of that same dial — a collie that still believes it leads — pins nothing
+      // the OTHER recipient of that same dial — a pastor that still believes it leads — pins nothing
       // inbound and could not otherwise admit it. A peer must therefore not refuse the identical
       // request just because the signer is not in its one-entry roster.
       //
@@ -869,7 +869,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       deps.onLeadDialled?.(now());
     }
 
-    // M20/02, and the lead's half of the same receipt: a member of this collie's own roster spoke to
+    // M20/02, and the lead's half of the same receipt: a member of this pastor's own roster spoke to
     // it, so it is due. Stamped in the same place and for the same reason — after both factors and
     // before any route runs, so a `leave`, a `hello` and a warrant delivery all count as contact.
     deps.onMemberDialled?.(verdict.member.memberId);
@@ -965,7 +965,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       return pairingSync(req, signedBody, verdict.member, verdict.self, data);
     }
     if (pathname === CREW_TAKEOVER_PATH && req.method === "POST") {
-      // A takeover arriving at a collie that still believes it LEADS is a deposition, not a witness
+      // A takeover arriving at a pastor that still believes it LEADS is a deposition, not a witness
       // question — the same proof, at a different kind of recipient, exactly as `/crew/v1/warrant`
       // is. Any other member reaching this route is a member exceeding its role.
       if (data !== null && isLeading(data)) {
@@ -1014,14 +1014,14 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       // with nothing to merge. Proxied reads (§9.1, M4/05) are the opposite case and keep theirs.
       //
       // The warrant report rides ALONG the body rather than inside it (§18, RFC §11.2): `body` is the
-      // very object this collie serves its own browser, and a crew-only field has no business in the
+      // very object this pastor serves its own browser, and a crew-only field has no business in the
       // browser's snapshot type. `mergeSnapshot` whitelists what it reads, so the siblings reach the
       // lead's sweep and never the phone.
       const report = warrantReportOf(data);
       const synced = deps.standby?.syncedDigest() ?? null;
       const active = deps.warrantActiveGeneration ?? null;
       // All three reports ride ALONGSIDE the body, never inside it, for the reason the warrant's pair
-      // does: `body` is the very object this collie serves its own browser, and a crew-only fact has
+      // does: `body` is the very object this pastor serves its own browser, and a crew-only fact has
       // no business in the browser's snapshot type. `mergeSnapshot` whitelists what it reads.
       const withWarrant =
         report === null
@@ -1029,7 +1029,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
           : { ...body, warrantGeneration: report.generation, warrantRefreshedAt: report.refreshedAt };
       const withActive = active === null ? withWarrant : { ...withWarrant, warrantActiveGeneration: active };
       const withDigest = synced === null ? withActive : { ...withActive, pairingDigest: synced };
-      // §18.14's finding, beside the digest: which of THIS collie's own paired devices share a label
+      // §18.14's finding, beside the digest: which of THIS pastor's own paired devices share a label
       // with the registry it was synced. An empty list is OMITTED, and an omitted field is "no
       // finding" — the closed reading. It rides the sweep's own answer rather than the sync's, so the
       // lead sees it while it is true instead of for the one sweep a push happened to land on.
@@ -1184,11 +1184,11 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
   }
 
   /**
-   * `POST /crew/v1/takeover` **at a collie that still believes it leads** — the deposition, reached by
+   * `POST /crew/v1/takeover` **at a pastor that still believes it leads** — the deposition, reached by
    * the second of its two doors.
    *
    * It is deliberately the *same* function `/crew/v1/warrant` uses: one proof, one set of clauses, one
-   * self-heal. A `probe` is answered honestly rather than specially — this collie IS the lead and it
+   * self-heal. A `probe` is answered honestly rather than specially — this pastor IS the lead and it
    * IS answering, which is exactly the `lead_is_alive` the deputy must abort on.
    */
   async function takeoverAtLead(
@@ -1227,8 +1227,8 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
     return new Response(
       JSON.stringify({
         error:
-          `this lead has not approved "${claimant}" to take over — run \`collie crew approve-promote ${claimant}\` ` +
-          "here, then re-run `collie promote` on that machine within 10 minutes",
+          `this lead has not approved "${claimant}" to take over — run \`pastor crew approve-promote ${claimant}\` ` +
+          "here, then re-run `pastor promote` on that machine within 10 minutes",
         code: HANDOVER_NOT_APPROVED,
       }),
       { status: 403, headers: crewResponseHeaders(self) },
@@ -1238,7 +1238,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
   /**
    * `POST /crew/v1/secret` — the peer side of rotation (§8.4).
    *
-   * **Only this collie's own lead may rotate it.** A crew secret is crew-wide, so without that check
+   * **Only this pastor's own lead may rotate it.** A crew secret is crew-wide, so without that check
    * any admitted member could hand every other member a value of its own choosing and lock the lead
    * out of its own crew — a compromised peer escalating to crew-wide denial (§8.5 is explicit that a
    * compromised peer must not reach past its own machine).
@@ -1274,20 +1274,20 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
   /**
    * `POST /crew/v1/warrant` — the lead delivers or refreshes the warrant naming the deputy (§18).
    *
-   * **Only this collie's own lead may push one**, the same role check `/crew/v1/secret` carries and
+   * **Only this pastor's own lead may push one**, the same role check `/crew/v1/secret` carries and
    * for the same reason: a warrant is a crew-wide statement about who may take the crown, so an
    * admitted *peer* minting one would be a compromised member reaching past its own machine (§8.5).
    * The check is doubled — the caller must be the pinned lead, and the warrant must claim to come
    * from that same member — because they are two different questions and only both close the gap.
    *
    * **A refusal costs no write.** Every branch below either answers without touching the store or
-   * hands one transition to `commitCrewChange`; a warrant that does not verify leaves this collie
+   * hands one transition to `commitCrewChange`; a warrant that does not verify leaves this pastor
    * holding exactly what it held before, which is the fail-closed reading of every failure mode.
    */
   async function warrant(req: Request, cached: string | null, from: TrustedMember, self: string): Promise<Response> {
     const data = await deps.store.load();
-    // §18.12's delivery path 1: this collie still believes it leads, and a member of its OWN roster is
-    // handing back a warrant this collie signed. That is not a push to store — it is a deposition, and
+    // §18.12's delivery path 1: this pastor still believes it leads, and a member of its OWN roster is
+    // handing back a warrant this pastor signed. That is not a push to store — it is a deposition, and
     // it is answered here rather than on a route of its own because it is the same object arriving at
     // a different kind of recipient, exactly as `/crew/v1/lead` is (§14).
     if (data !== null && isLeading(data)) {
@@ -1315,7 +1315,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       return warrantAnswer(self, verdict.generation, false);
     }
     const applied = await commitCrewChange(deps.store, deps.audit, (current) =>
-      // The roster rides along ONLY when this collie is the deputy the warrant names (RFC §7.4), and
+      // The roster rides along ONLY when this pastor is the deputy the warrant names (RFC §7.4), and
       // `checkWarrantPush` is what decided that — a peer never stores pins for machines it must never
       // dial (§4), and a deputy without one could not lead the crew it is about to inherit.
       current === null ? null : storeWarrant(current, verdict.stored, verdict.roster),
@@ -1333,9 +1333,9 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
    *
    * Three questions, and all three must answer yes:
    *
-   *   1. **the caller is this collie's own lead** — the same role check `/crew/v1/secret` carries and
+   *   1. **the caller is this pastor's own lead** — the same role check `/crew/v1/secret` carries and
    *      for the same reason (§5: *admitted* and *allowed to do this* are different questions);
-   *   2. **this collie holds a verified warrant naming ITSELF.** Every other peer that ever receives
+   *   2. **this pastor holds a verified warrant naming ITSELF.** Every other peer that ever receives
    *      one refuses it. A registry on a machine that is not the deputy is a credential store nobody
    *      asked for, on a machine with no door to check it at;
    *   3. **no label collides with this machine's own paired devices.** Refuse and report, never
@@ -1365,7 +1365,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
     const sync = parsePairingSync(await readJson(req, cached));
     if (sync === null) return badRequest(self, "a pairing sync needs `crewId`, `leadMemberId` and `devices`");
     if (data.crew === null || sync.crewId !== data.crew.crewId || sync.leadMemberId !== from.memberId) {
-      return badRequest(self, "this pairing sync is not from this collie's own lead, or not for this crew");
+      return badRequest(self, "this pairing sync is not from this pastor's own lead, or not for this crew");
     }
     // ── THE SYNC ALWAYS LANDS. A COLLISION IS REPORTED, NOT A REFUSAL ─────────
     // This used to `return` a `409` before applying, and a live drill found what that costs: the
@@ -1374,7 +1374,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
     // credential surviving revocation, which is the one thing this file may not allow.
     //
     // The refusal protected nothing, and that is the actual error rather than the wording: **a sync
-    // never touches this collie's own registry.** It replaces `standby-devices.json`, a separate file
+    // never touches this pastor's own registry.** It replaces `standby-devices.json`, a separate file
     // holding hashes the DOOR checks against — and RFC §16 decision 6's reason ("a silently renamed
     // device is one the operator cannot revoke by the name they know it by") is about the moment
     // entries ENTER `paired-devices.json` under a name. That moment is the takeover commit, and it is
@@ -1396,9 +1396,9 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
   }
 
   /**
-   * `POST /crew/v1/warrant` **at a collie that still believes it leads** — §18.12's deposition.
+   * `POST /crew/v1/warrant` **at a pastor that still believes it leads** — §18.12's deposition.
    *
-   * Four clauses, and every one of them is a question about material this collie already holds:
+   * Four clauses, and every one of them is a question about material this pastor already holds:
    *
    *   1. the caller must be the member the warrant NAMES as deputy. A warrant is public (RFC §12,
    *      F6), so anyone who ever held one could replay it; requiring the presenter to be the named
@@ -1406,12 +1406,12 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
    *      §8.6-signed member — the transport cannot pin here (§8.1), which is exactly why this route
    *      is signable;
    *   2. the warrant must be for this crew, name a deputy, and carry a generation at least this
-   *      collie's own (`isDepositionProof`);
-   *   3. it must verify against **this collie's own certificate**. A lead can verify its own
+   *      pastor's own (`isDepositionProof`);
+   *   3. it must verify against **this pastor's own certificate**. A lead can verify its own
    *      signature, and that is the whole reason the warrant is signed by the lead rather than
    *      attested by the claimant: what deposes a machine is its own past consent handed back to it,
    *      never a conclusion it drew or a claim it chose to believe (ADR 0026's rule 3);
-   *   4. the self-heal resolves the new lead out of this collie's **own roster** and refuses if the
+   *   4. the self-heal resolves the new lead out of this pastor's **own roster** and refuses if the
    *      fingerprint does not match a certificate it already pinned — so no trust is created here.
    *
    * A refusal costs no write, exactly as a warrant push's does. A failed signature is the uniform 401
@@ -1512,7 +1512,7 @@ export function createCrewRouter(deps: CrewRouterDeps): CrewHandler {
       // restarted would simply be gone. So it says so, loudly, in its own journal.
       membershipChanged();
       // The front door is NOT torn down here: publishing and unpublishing `tailscale serve` is
-      // `collie serve`/`unserve`'s business (ADR 0001's ownership record lives beside the CLI, not in
+      // `pastor serve`/`unserve`'s business (ADR 0001's ownership record lives beside the CLI, not in
       // the bridge), and no process may shell out to a tailnet on another operator's say-so. The new
       // lead prints the exact command the demoted machine's operator must run.
       return new Response(JSON.stringify({ demoted: self, roster: handover.roster }), {

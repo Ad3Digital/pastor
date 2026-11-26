@@ -26,11 +26,11 @@ export interface PushTitleTemplates {
 
 /**
  * The Cache the table lives in, named per mount (ADR 0052) for the reason the font cache is: two
- * collies mounted at two paths on one origin share one Cache Storage, and must not read each other's
+ * pastors mounted at two paths on one origin share one Cache Storage, and must not read each other's
  * language.
  */
 export function pushTitlesCacheName(mount: string): string {
-  return mount === "/" ? "collie-push-titles" : `collie-push-titles:${mount}`;
+  return mount === "/" ? "pastor-push-titles" : `pastor-push-titles:${mount}`;
 }
 
 /** The entry's key: a URL under the mount, on the given origin. Never requested. */

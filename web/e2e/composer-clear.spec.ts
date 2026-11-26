@@ -58,7 +58,7 @@ test("the belt's X clears the draft in one tap, Undo puts it back, and the pane 
   const switcher = page.getByRole("button", { name: en["chat.switcher.aria"] });
   const keys = belt.getByRole("button", { name: en["composer.controls.keys"], exact: true });
   const stored = () =>
-    page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith("collie:draft:")));
+    page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith("pastor:draft:")));
 
   await expect(switcher).toBeVisible();
   await expect(changes).toBeVisible();

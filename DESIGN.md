@@ -364,7 +364,7 @@ On a pack, `--host-0` … `--host-9` (`index.css`) tint the machine a row belong
 dashboard reads as several machines before the eye reads a name. Ten hues, chosen to avoid every
 `--status-*` hue: a tint may never be mistaken for a status. `lib/hosts.ts` `hostSlot` assigns them
 — `hash(id) % 10`, next free slot on a collision, over the sorted roster — so a machine keeps its
-colour across reloads and across a peer joining. **A solo collie gets no host colour at all**;
+colour across reloads and across a peer joining. **A solo pastor gets no host colour at all**;
 `hostSlot` returns `null` and every surface renders exactly as it did before packs existed. The
 NAME is always drawn beside the tint (WCAG 1.4.1), and health still speaks in the status palette.
 **The tint lands on the GLYPH ONLY**, never as a wash across a tag or a pill: `ui/address-tag.tsx`
@@ -435,7 +435,7 @@ full-bleed; only viewport chrome under the header bar is — the two-placement r
 **The app's face is a per-device preference with a shipped default.** Aldrich (8 KB subset)
 is that default; Space Grotesk (27 KB) and the system face are the other shipped choices, and
 an operator may add their own through `theme.toml`. It is set on the Typeface card in
-Settings, stored in `collie:design:v1`, and applied **before first paint** as a root class by
+Settings, stored in `pastor:design:v1`, and applied **before first paint** as a root class by
 `web/public/theme-init.js` — `:root.font-*` in `index.css` owns every stack, and JavaScript
 only ever swaps a class name. The default wears no class at all, so a device that never opens
 the card runs no JavaScript before its first paint.
@@ -601,7 +601,7 @@ fails loudly.
 - **Light `--background` is `oklch(0.97)` on purpose.** It rasterises to rgb(245,245,245),
   which is exactly the inverted mirror's background, so the mirror shows no seam against the
   page. It is not "off-white for taste"; moving it re-opens that seam.
-- **`components/collie-mark.tsx` is GENERATED** from the sibling `collie-brand` repo. Never
+- **`components/pastor-mark.tsx` is GENERATED** from the sibling `pastor-brand` repo. Never
   hand-edit it. Change the brand repo and regenerate.
 
 ---
@@ -730,7 +730,7 @@ the failure three call sites were shipping.
 | **Haptic buzz** | "Did the glass register my tap?" | `hooks/use-action-echo.ts`, `hooks/use-hold-repeat.ts` and `hooks/use-long-press.ts` (the tick when a hold counts) only. On the press, never on the outcome. |
 | **Per-control echo** (✓ / spinner / busy tone) | "Did the bridge accept MY action?" | every fire-and-forget user mutation, at the control it was tapped on |
 | **Floating status** (`lib/status.ts` → Event) | "What happened, and why not?" | failures ALWAYS; success only when the outcome is not visible at the point of action |
-| **Collie orbit round** | "Something happened — look up" | every status the app publishes, one round per burst |
+| **Pastor orbit round** | "Something happened — look up" | every status the app publishes, one round per burst |
 
 The orbit round is the one with a rejected alternative worth recording. It was narrowed to
 *unattended* events only — the world moving while the operator was not acting — on the argument that
@@ -738,7 +738,7 @@ a tap is already answered at the control, with the eye on the thumb rather than 
 theory, wrong eye: the send is the moment the operator looks UP, because the reply is what they are
 waiting for. The flag that carried the distinction was deleted rather than left unread. The rule is
 now the simple one — **if it was worth a notice, it is worth a round** — which also keeps the notice
-and the mark from ever disagreeing about what happened. `components/collie-home.tsx` holds the full
+and the mark from ever disagreeing about what happened. `components/pastor-home.tsx` holds the full
 argument at the line that would change.
 
 Failure is the floating status for everything, always — the one exception being a control whose
@@ -835,7 +835,7 @@ On a phone the edge swipe is history back, so the history stack must be the leve
 - **Sideways** (`nav.side`) replaces and carries `from`. Pane to pane, tab to tab, space chip to
   space chip, the machine and session switchers. `nav.open` picks down or sideways for a new pane.
 - **Up** (`nav.up(parent)`, `nav.upTo(parent)`) steps back when the entry behind is a legitimate
-  parent, else replaces onto `parent`. Every back arrow, the Collie mark inside a level, every close
+  parent, else replaces onto `parent`. Every back arrow, the Pastor mark inside a level, every close
   and every automatic exit. Never push a parent.
 - **A new route** gets its place in `ancestorsOf` and `parentChain` (`web/src/lib/nav.ts`) in the
   same change.

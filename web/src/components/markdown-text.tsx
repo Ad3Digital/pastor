@@ -116,7 +116,7 @@ const LINK_CLASS = "text-primary underline underline-offset-2";
 const InLinkContext = createContext(false);
 
 /**
- * THE CODE CHIP. The same blue the docs site draws (`collie-website/src/components/prose.tsx`): one
+ * THE CODE CHIP. The same blue the docs site draws (`pastor-website/src/components/prose.tsx`): one
  * blue at 10% fill, 20% edge and full ink. See the `code` case of `Span` for why each part is what it is.
  */
 const CHIP_CLASS =
@@ -243,7 +243,7 @@ function Span({ span }: { span: MdSpan }) {
         </em>
       );
     case "code":
-      // THE SAME CHIP THE DOCS SITE DRAWS (`collie-website/src/components/prose.tsx`): one blue at
+      // THE SAME CHIP THE DOCS SITE DRAWS (`pastor-website/src/components/prose.tsx`): one blue at
       // 10% fill, 20% edge and full ink. A flat `bg-muted` chip was grey ink on a grey wash inside
       // grey prose, so a reader scanning a paragraph for "which bit of this is a literal" had no
       // colour to search for. Same token on both sides, so a command looks like one thing wherever

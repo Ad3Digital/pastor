@@ -4,7 +4,7 @@ import { en } from "@/lib/i18n/messages/en";
 
 import { installApiStub } from "./fixtures/api";
 
-// ── The QR `collie pair` prints still lands on the pairing form ─────────────────────────────────
+// ── The QR `pastor pair` prints still lands on the pairing form ─────────────────────────────────
 //
 // `cli/pairing.ts` prints a QR for `/settings?pair=<code>`. Settings became an index of four
 // sections, and the Paired-devices card moved to System, so a scan that stopped at the index found

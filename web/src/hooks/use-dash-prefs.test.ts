@@ -172,7 +172,7 @@ describe("coerceDashPrefs", () => {
 
   it("ignores a retired `recentOpen` key from an older version's stored blob", () => {
     // The Recent fold this once toggled is gone (agent-list.tsx no longer sorts into it), so the
-    // key is dropped from DashPrefs — but a device that saved it under an older Collie must still
+    // key is dropped from DashPrefs — but a device that saved it under an older Pastor must still
     // parse today, with the rest of its stored choices intact.
     expect(
       coerceDashPrefs({ spacesOpen: true, recentOpen: false, recentDir: "oldest" }),
@@ -272,10 +272,10 @@ describe("useDashPrefs", () => {
   });
 
   it("writes the migrated blob back once, so a stored Focus does not turn the switch on again", () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "focus", recentDir: "oldest" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: "focus", recentDir: "oldest" }));
     const first = renderHook(() => useDashPrefs());
     expect(first.result.current.prefs).toMatchObject({ dashView: "dashboard", needsYouOnly: true });
-    expect(JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!)).toMatchObject({
+    expect(JSON.parse(localStorage.getItem("pastor:dash-prefs:v1")!)).toMatchObject({
       dashView: "dashboard",
       needsYouOnly: true,
       recentDir: "oldest",
@@ -287,14 +287,14 @@ describe("useDashPrefs", () => {
   });
 
   it("leaves a stored crew choice alone", () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     const { result } = renderHook(() => useDashPrefs());
     expect(result.current.prefs.dashView).toBe("crew");
-    expect(JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!)).toEqual({ dashView: "crew" });
+    expect(JSON.parse(localStorage.getItem("pastor:dash-prefs:v1")!)).toEqual({ dashView: "crew" });
   });
 
   it("reads back a corrupt stored value as the defaults instead of throwing", () => {
-    localStorage.setItem("collie:dash-prefs:v1", "{not json");
+    localStorage.setItem("pastor:dash-prefs:v1", "{not json");
     const { result } = renderHook(() => useDashPrefs());
     expect(result.current.prefs.recentDir).toBe("newest");
   });

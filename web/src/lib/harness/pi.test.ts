@@ -75,7 +75,7 @@ describe("pi adapter routing", () => {
   // commands, whose completion list stands under the editor.
   it.each([
     ["pi--omo-v5130-plain-idle.txt", null],
-    ["pi--omo-v5130-plain-draft.txt", "hello collie draft"],
+    ["pi--omo-v5130-plain-draft.txt", "hello pastor draft"],
     ["pi--omo-v5130-plain-running.txt", null],
     ["pi--omo-v5130-slash-model.txt", "/model"],
     ["pi--omo-v5130-slash-compact.txt", "/compact"],
@@ -92,7 +92,7 @@ describe("pi adapter routing", () => {
   // The side panel (#412): the editor is read from rows cropped at the panel, so no panel text
   // reaches the draft, and the write is unbound because the bridge matches whole screen rows.
   it.each([
-    ["pi--omo-v5130-panel-draft.txt", "hello collie draft"],
+    ["pi--omo-v5130-panel-draft.txt", "hello pastor draft"],
     ["pi--omo-v5130-panel-phantom.txt", null],
     ["pi--omo-v5130-panel-running.txt", null],
     ["pi--omo-v5130-panel-slash-model.txt", "/model"],
@@ -133,7 +133,7 @@ describe("pi adapter routing", () => {
   ])("keeps stock pi sendable: %s is a composer and its draft reads back", (idleName, draftName) => {
     const idle = load(idleName);
     expect(piAdapter.composerReady?.(idle)).toBe(true);
-    expect(piAdapter.extractInputDraft(load(draftName))).toBe("collie stock pi draft probe");
+    expect(piAdapter.extractInputDraft(load(draftName))).toBe("pastor stock pi draft probe");
     expect(buildBlocks(idle, { agent: "pi" }).every((block) => block.kind === "raw")).toBe(true);
   });
 

@@ -1,5 +1,5 @@
 // Fixture data for the states playground — a believable herd, four rosters, three panes, so the page
-// shows what Collie looks like on a working day instead of on a two-row test snapshot.
+// shows what Pastor looks like on a working day instead of on a two-row test snapshot.
 //
 // DEV-ONLY, like the rest of `src/playground/`: this module is only ever reached from
 // `playground.html`, which is not a build input.
@@ -95,19 +95,19 @@ export const FIXTURE_TS = 400_000;
  * Spaces as a repo and its worktrees, for the nesting card.
  *
  * `repoRoot` + `isWorktree` are what the multiplexer reports on the workspace itself, so this is the
- * real shape rather than a staged one: `collie` is the repo's own checkout, the two below it are
+ * real shape rather than a staged one: `pastor` is the repo's own checkout, the two below it are
  * worktrees of it, and `blog` sits outside any repo.
  */
 export const spacesWithWorktrees: WorkspaceView[] = [
   {
     workspaceId: "w1",
     number: 1,
-    label: "collie",
+    label: "pastor",
     focused: true,
     activeTabId: "w1:t1",
     tabCount: 3,
     paneCount: 4,
-    repoRoot: "/src/collie",
+    repoRoot: "/src/pastor",
     isWorktree: false,
   },
   {
@@ -118,7 +118,7 @@ export const spacesWithWorktrees: WorkspaceView[] = [
     activeTabId: "w2:t1",
     tabCount: 1,
     paneCount: 1,
-    repoRoot: "/src/collie",
+    repoRoot: "/src/pastor",
     isWorktree: true,
   },
   {
@@ -129,14 +129,14 @@ export const spacesWithWorktrees: WorkspaceView[] = [
     activeTabId: "w3:t1",
     tabCount: 1,
     paneCount: 2,
-    repoRoot: "/src/collie",
+    repoRoot: "/src/pastor",
     isWorktree: true,
   },
   { workspaceId: "w4", number: 4, label: "blog", focused: false, activeTabId: "w4:t1", tabCount: 2, paneCount: 2 },
 ];
 
 export const spaces: WorkspaceView[] = [
-  { workspaceId: "w1", number: 1, label: "collie", focused: true, activeTabId: "w1:t1", tabCount: 3, paneCount: 4 },
+  { workspaceId: "w1", number: 1, label: "pastor", focused: true, activeTabId: "w1:t1", tabCount: 3, paneCount: 4 },
   { workspaceId: "w2", number: 2, label: "sprqvntrs-api", focused: false, activeTabId: "w2:t1", tabCount: 3, paneCount: 4 },
   { workspaceId: "w3", number: 3, label: "nixcfg", focused: false, activeTabId: "w3:t1", tabCount: 2, paneCount: 3 },
   { workspaceId: "w4", number: 4, label: "blog", focused: false, activeTabId: "w4:t1", tabCount: 2, paneCount: 2 },
@@ -151,7 +151,7 @@ export const tabs: TabView[] = [
   { tabId: "w2:t3", workspaceId: "w2", number: 3, label: "billing-webhooks", focused: false, paneCount: 2 },
   { tabId: "w3:t1", workspaceId: "w3", number: 1, label: "flake-bump", focused: false, paneCount: 2 },
   { tabId: "w3:t2", workspaceId: "w3", number: 2, label: "hosts", focused: false, paneCount: 1 },
-  { tabId: "w4:t1", workspaceId: "w4", number: 1, label: "post/collie-launch", focused: false, paneCount: 1 },
+  { tabId: "w4:t1", workspaceId: "w4", number: 1, label: "post/pastor-launch", focused: false, paneCount: 1 },
   { tabId: "w4:t2", workspaceId: "w4", number: 2, label: "seo-pass", focused: false, paneCount: 1 },
 ];
 
@@ -171,7 +171,7 @@ export const manyTabs: TabView[] = [
   "flake-bump",
   "hosts",
   "seo-pass",
-  "post/collie-launch",
+  "post/pastor-launch",
   "feat/crew-overview",
   "nixcfg",
   "notes",
@@ -200,25 +200,25 @@ export const manyTabs: TabView[] = [
 //  • `blocked` is "needs you"; a `done` pane whose `lastActiveAt > lastSeenAt` is "ready · unseen";
 //    a `done` pane you have already opened falls to Recent.
 //  • `lastActiveAt` is the last status transition — what a Working row's "since" counts from.
-//  • `lastSeenAt` is when YOU last drove the pane through Collie — what Recent is ordered on.
+//  • `lastSeenAt` is when YOU last drove the pane through Pastor — what Recent is ordered on.
 
 /** Three panes waiting on the operator, each stuck on a different kind of question. */
 const needsYou: AgentView[] = [
   {
     paneId: "w1:p1",
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 1,
     tabId: "w1:t1",
     tabLabel: "feat/crew-overview",
     agent: "claude",
     status: "blocked",
-    cwd: "/home/you/src/collie",
+    cwd: "/home/you/src/pastor",
     focused: true,
     hasSession: true,
     sessionName: "crew overview",
     terminalTitle: "claude — crew overview",
-    hint: "waiting on a permission prompt: run `bun run build` in /home/you/src/collie",
+    hint: "waiting on a permission prompt: run `bun run build` in /home/you/src/pastor",
     lastActiveAt: TS - 90 * SEC,
     lastSeenAt: TS - 26 * MIN,
     readableLines: 400,
@@ -254,9 +254,9 @@ const needsYou: AgentView[] = [
     status: "blocked",
     cwd: "/home/you/src/nixcfg",
     focused: false,
-    // ADR 0017: recognising a password prompt changes what Collie SAYS, never what it sends. The
+    // ADR 0017: recognising a password prompt changes what Pastor SAYS, never what it sends. The
     // bridge composes this sentence; the phone prints it and offers no shortcut past it.
-    hint: "a password prompt is on screen — Collie will not type into it; tap Type to answer yourself",
+    hint: "a password prompt is on screen — Pastor will not type into it; tap Type to answer yourself",
     lastActiveAt: TS - 19 * MIN,
     lastSeenAt: TS - 3 * HOUR,
     readableLines: 400,
@@ -307,13 +307,13 @@ const working: AgentView[] = [
   {
     paneId: "w1:p2",
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 1,
     tabId: "w1:t2",
     tabLabel: "docs",
     agent: "claude",
     status: "working",
-    cwd: "/home/you/src/collie",
+    cwd: "/home/you/src/pastor",
     focused: false,
     hasSession: true,
     terminalTitle: "rewriting ARCHITECTURE.md",
@@ -363,7 +363,7 @@ const working: AgentView[] = [
     workspaceLabel: "blog",
     workspaceNumber: 4,
     tabId: "w4:t1",
-    tabLabel: "post/collie-launch",
+    tabLabel: "post/pastor-launch",
     agent: "opencode",
     status: "working",
     cwd: "/home/you/src/blog",
@@ -415,13 +415,13 @@ const resting: AgentView[] = [
   {
     paneId: "w1:p3",
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 1,
     tabId: "w1:t1",
     tabLabel: "feat/crew-overview",
     agent: "codex",
     status: "idle",
-    cwd: "/home/you/src/collie",
+    cwd: "/home/you/src/pastor",
     focused: false,
     // A title the program that printed it has already exited under: it stops being the pane's NAME
     // (see `paneName` in lib/pane-name.ts), which is a state worth being able to see.
@@ -434,13 +434,13 @@ const resting: AgentView[] = [
   {
     paneId: "w1:p4",
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 1,
     tabId: "w1:t3",
     tabLabel: "shell",
     agent: "shell",
     status: "unknown",
-    cwd: "/home/you/src/collie",
+    cwd: "/home/you/src/pastor",
     focused: false,
     kind: "shell",
     lastActiveAt: TS - 9 * HOUR,
@@ -532,7 +532,7 @@ export const rosterFive: ServerSummary[] = [
     reachable: true,
     protocol: "incompatible",
     // Verbatim, from the peer's own refusal — rendered as text, never paraphrased.
-    protocolDetail: "crew protocol 2 (this collie speaks 1)",
+    protocolDetail: "crew protocol 2 (this pastor speaks 1)",
     lastSeenAt: TS - 6 * SEC,
   },
 ];
@@ -663,7 +663,7 @@ export const censusFive: CrewStatusResponse = {
       provisional: true,
     }),
     member("garage", "incompatible", {
-      reason: "crew protocol 2 (this collie speaks 1)",
+      reason: "crew protocol 2 (this pastor speaks 1)",
       version: "0.34.0",
       secretBehind: true,
     }),
@@ -689,8 +689,8 @@ export const censusNine: CrewStatusResponse = {
 };
 
 /**
- * The loud one: `attic` believes ANOTHER collie leads this crew, under a warrant generation higher
- * than the deputy's. Two collies both convinced they are the lead is not a transient the next poll
+ * The loud one: `attic` believes ANOTHER pastor leads this crew, under a warrant generation higher
+ * than the deputy's. Two pastors both convinced they are the lead is not a transient the next poll
  * clears, so the page names it rather than folding it into "unreachable".
  */
 export const censusConflicted: CrewStatusResponse = {
@@ -802,7 +802,7 @@ export const updateRestart: UpdateInfo = {
 export const updateRelease: UpdateInfo = {
   current: "0.31.0",
   latest: "0.32.1",
-  latestUrl: "https://github.com/AltanS/collie/releases/tag/v0.32.1",
+  latestUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v0.32.1",
   releaseAvailable: true,
   majorAvailable: null,
   majorUrl: null,
@@ -813,10 +813,10 @@ export const updateRelease: UpdateInfo = {
 export const updateMajor: UpdateInfo = {
   current: "0.31.0",
   latest: "0.32.1",
-  latestUrl: "https://github.com/AltanS/collie/releases/tag/v0.32.1",
+  latestUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v0.32.1",
   releaseAvailable: false,
   majorAvailable: "1.0.0",
-  majorUrl: "https://github.com/AltanS/collie/releases/tag/v1.0.0",
+  majorUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v1.0.0",
   bridgeStale: false,
   checkedAt: TS - 6 * MIN,
 };
@@ -945,7 +945,7 @@ export const hostIncompatible: HostHealth = {
   state: "stale",
   writable: false,
   incompatible: true,
-  protocolDetail: "crew protocol 2 (this collie speaks 1)",
+  protocolDetail: "crew protocol 2 (this pastor speaks 1)",
   lastSeenAt: TS - 6 * SEC,
   lastSeenLabel: "last seen just now",
   isLead: false,
@@ -960,7 +960,7 @@ export const hostIncompatible: HostHealth = {
  *  bare shell has no grammar to pin, so there is nothing on disk to reuse. Real ANSI, hand-written. */
 const ESC = "";
 const shellPaneText = [
-  `${ESC}[1;32myou@lodge${ESC}[0m:${ESC}[1;34m~/src/collie${ESC}[0m$ bun run test`,
+  `${ESC}[1;32myou@lodge${ESC}[0m:${ESC}[1;34m~/src/pastor${ESC}[0m$ bun run test`,
   "",
   `${ESC}[32m✓${ESC}[0m web/src/lib/triage.test.ts (14 tests) 41ms`,
   `${ESC}[32m✓${ESC}[0m web/src/lib/host-health.test.ts (22 tests) 63ms`,
@@ -971,7 +971,7 @@ const shellPaneText = [
   ` Test Files  ${ESC}[31m1 failed${ESC}[0m | ${ESC}[32m3 passed${ESC}[0m (4)`,
   `      Tests  ${ESC}[31m1 failed${ESC}[0m | ${ESC}[32m55 passed${ESC}[0m (56)`,
   "",
-  `${ESC}[1;32myou@lodge${ESC}[0m:${ESC}[1;34m~/src/collie${ESC}[0m$ `,
+  `${ESC}[1;32myou@lodge${ESC}[0m:${ESC}[1;34m~/src/pastor${ESC}[0m$ `,
 ].join("\n");
 
 /** A pane, and the screen it is showing. */
@@ -1002,7 +1002,7 @@ export const paneWorking: PaneFixture = {
  * operator typing a character.
  */
 export const uploadedImagePath =
-  "/home/operator/.local/share/collie/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
+  "/home/operator/.local/share/pastor/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
 
 /**
  * Mid-tool-run, with {@link uploadedImagePath} already in the composer.
@@ -1092,13 +1092,13 @@ export function paneCache(overrides: Partial<PaneCache> & { state: PaneCache["st
 // ── The prompt-cache watch list ──────────────────────────────────────────────────────────────────
 
 /**
- * Two watched panes: one on this collie, one on a member. Enough to show both row shapes the Settings
+ * Two watched panes: one on this pastor, one on a member. Enough to show both row shapes the Settings
  * list has — the bare label, and the label with a machine under it — plus the remove button beside each.
  *
  * The ids are what the bridge would publish: eight hex characters of a hash nobody can reverse.
  */
 export const watchedPanes: CacheWatchListEntry[] = [
-  { id: "b7f1c2a9", label: "collie · next", session: "next", paneId: "%1" },
+  { id: "b7f1c2a9", label: "pastor · next", session: "next", paneId: "%1" },
   { id: "3d90ee14", label: "infra · claude", host: "minibuch", paneId: "w2:p1" },
 ];
 

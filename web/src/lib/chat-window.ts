@@ -49,7 +49,7 @@ export type ChatStatus =
   /** An ordinary empty answer: a shell pane, an agent with no session, a log that cannot be read. */
   | { kind: "unavailable"; reason: ChatUnavailableReason }
   /**
-   * A 404. This machine's Collie predates the route — NOT an empty session.
+   * A 404. This machine's Pastor predates the route — NOT an empty session.
    *
    * It carries no sentence. `api.ts` is transport and does not decide wording: an api error there
    * carries a CODE and `lib/api-error-message.ts` turns it into words. A message resolved in the

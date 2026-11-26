@@ -9,27 +9,27 @@ import {
   classifyUnlink,
   cmdLink,
   cmdUnlink,
-  isCollieBinaryPath,
+  isPastorBinaryPath,
   type LinkDeps,
   linkDir,
   linkPath,
   onPath,
   resolveLinkTarget,
 } from "./link.ts";
-import { collieBinary } from "./unit.ts";
+import { pastorBinary } from "./unit.ts";
 
-// `collie link` / `collie unlink`. The decisions are pure functions of what is at the destination
+// `pastor link` / `pastor unlink`. The decisions are pure functions of what is at the destination
 // (ADR 0021), so they are pinned directly; the two verbs are then only asserted for what they
 // actually DO with a verdict — which write happens, which does not, and what the operator reads.
 
 // Paths the code builds are spelled the way it builds them (`join`), so they hold on Windows too. The
 // fake filesystems fold their keys to POSIX, which is why a recorded op is compared through `posixKey`.
-const AT = join(HOME, ".local", "bin", "collie");
+const AT = join(HOME, ".local", "bin", "pastor");
 const DIR = join(HOME, ".local", "bin");
-/** This checkout's compiled binary — `bin/collie` on POSIX, `bin/collie.exe` on Windows. */
-const BINARY = collieBinary(ROOT);
-/** Another instance's checkout — a real collie binary, and not ours. */
-const OTHER = "/opt/collie-v1/bin/collie";
+/** This checkout's compiled binary — `bin/pastor` on POSIX, `bin/pastor.exe` on Windows. */
+const BINARY = pastorBinary(ROOT);
+/** Another instance's checkout — a real pastor binary, and not ours. */
+const OTHER = "/opt/pastor-v1/bin/pastor";
 
 const symlink = (target: string) => ({ kind: "symlink", target }) as const;
 
@@ -42,43 +42,43 @@ function deps(
 ): LinkDeps & { io: ReturnType<typeof capture>; fs: ReturnType<typeof fakeLinkFs> } {
   const io = capture();
   const fs = fakeLinkFs(over.seed);
-  const files = fakeFiles(over.built === false ? {} : { [BINARY]: "#!/bin/collie" });
+  const files = fakeFiles(over.built === false ? {} : { [BINARY]: "#!/bin/pastor" });
   return { ctx: context({ PATH: over.path ?? ["/usr/bin", DIR].join(delimiter) }), io, files, fs };
 }
 
 describe("the published name", () => {
-  test("is ~/.local/bin/collie", () => {
+  test("is ~/.local/bin/pastor", () => {
     expect(linkDir(HOME)).toBe(DIR);
     expect(linkPath(HOME)).toBe(AT);
   });
 
   test("a relative link target resolves against the link's own directory", () => {
-    expect(resolveLinkTarget(AT, "../../src/collie/bin/collie")).toBe(resolve(HOME, "src", "collie", "bin", "collie"));
+    expect(resolveLinkTarget(AT, "../../src/pastor/bin/pastor")).toBe(resolve(HOME, "src", "pastor", "bin", "pastor"));
     expect(resolveLinkTarget(AT, BINARY)).toBe(BINARY);
   });
 
-  test("a collie binary is recognised by its shape, on either separator", () => {
-    expect(isCollieBinaryPath("/opt/collie/bin/collie")).toBe(true);
-    expect(isCollieBinaryPath(OTHER)).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie")).toBe(true);
+  test("a pastor binary is recognised by its shape, on either separator", () => {
+    expect(isPastorBinaryPath("/opt/pastor/bin/pastor")).toBe(true);
+    expect(isPastorBinaryPath(OTHER)).toBe(true);
+    expect(isPastorBinaryPath("C:\\src\\pastor\\bin\\pastor")).toBe(true);
     // Near misses: the name alone, a sibling, a different tool.
-    expect(isCollieBinaryPath("/usr/local/bin/collie-helper")).toBe(false);
-    expect(isCollieBinaryPath("/opt/collie/bin/collie.new")).toBe(false);
-    expect(isCollieBinaryPath("/usr/bin/git")).toBe(false);
+    expect(isPastorBinaryPath("/usr/local/bin/pastor-helper")).toBe(false);
+    expect(isPastorBinaryPath("/opt/pastor/bin/pastor.new")).toBe(false);
+    expect(isPastorBinaryPath("/usr/bin/git")).toBe(false);
   });
 
-  test("on win32 the `collie.exe` that Bun's compiler writes is recognised, on either separator", () => {
-    expect(isCollieBinaryPath("C:\\Users\\pat\\.collie\\versions\\1.2.3\\bin\\collie.exe", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:/src/collie/bin/collie.exe", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie.exe.bak", hostFor("win32"))).toBe(false);
-    // Elsewhere the `.exe` spelling is not a name Collie publishes.
-    expect(isCollieBinaryPath("/opt/collie/bin/collie.exe", hostFor("linux"))).toBe(false);
+  test("on win32 the `pastor.exe` that Bun's compiler writes is recognised, on either separator", () => {
+    expect(isPastorBinaryPath("C:\\Users\\pat\\.pastor\\versions\\1.2.3\\bin\\pastor.exe", hostFor("win32"))).toBe(true);
+    expect(isPastorBinaryPath("C:/src/pastor/bin/pastor.exe", hostFor("win32"))).toBe(true);
+    expect(isPastorBinaryPath("C:\\src\\pastor\\bin\\pastor", hostFor("win32"))).toBe(true);
+    expect(isPastorBinaryPath("C:\\src\\pastor\\bin\\pastor.exe.bak", hostFor("win32"))).toBe(false);
+    // Elsewhere the `.exe` spelling is not a name Pastor publishes.
+    expect(isPastorBinaryPath("/opt/pastor/bin/pastor.exe", hostFor("linux"))).toBe(false);
   });
 
   test("this platform's own binary name is recognised", () => {
-    // `collieBinary` spells `collie.exe` on Windows; a link to it is a name Collie published.
-    expect(isCollieBinaryPath(collieBinary("/opt/collie-v1"))).toBe(true);
+    // `pastorBinary` spells `pastor.exe` on Windows; a link to it is a name Pastor published.
+    expect(isPastorBinaryPath(pastorBinary("/opt/pastor-v1"))).toBe(true);
   });
 });
 
@@ -129,7 +129,7 @@ describe("classifyUnlink", () => {
     expect(v.action === "refuse" && v.reason).toContain("owns the name");
   });
 
-  test("a name Collie never published → refuse, however it got there", () => {
+  test("a name Pastor never published → refuse, however it got there", () => {
     expect(classifyUnlink({ kind: "other", what: "a regular file" }, BINARY).action).toBe("refuse");
     expect(classifyUnlink(symlink("/usr/local/bin/some-tool"), BINARY).action).toBe("refuse");
   });
@@ -156,7 +156,7 @@ describe("onPath", () => {
   });
 });
 
-describe("collie link", () => {
+describe("pastor link", () => {
   test("creates the link, and says it is a pointer rather than a copy", () => {
     const d = deps();
     expect(cmdLink(d)).toBe(EXIT.OK);
@@ -231,7 +231,7 @@ describe("collie link", () => {
   });
 });
 
-describe("collie unlink", () => {
+describe("pastor unlink", () => {
   test("removes our own link, and says the checkout is untouched", () => {
     const d = deps({ seed: { [AT]: symlink(BINARY) } });
     expect(cmdUnlink(d)).toBe(EXIT.OK);

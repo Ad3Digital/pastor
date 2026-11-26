@@ -250,8 +250,8 @@ interface FactSet {
 
 /**
  * The same five facts for every option, in the same order, so they can be compared down the column.
- * A fact that depends on a provider Collie does not run (a speech service, your own command) says so
- * in general terms; nothing here names a price or a speed Collie has not measured.
+ * A fact that depends on a provider Pastor does not run (a speech service, your own command) says so
+ * in general terms; nothing here names a price or a speed Pastor has not measured.
  */
 const FACTS = {
   phone: {
@@ -386,20 +386,20 @@ export function HostCommand({ command }: { command: string }) {
  * field to edit: a key or a command the operator chose stays on the host's keyboard (ADR 0029).
  */
 export const SETUP_COMMANDS = {
-  off: "collie stt off",
-  status: "collie stt status",
-  whistleHost: "collie stt whistle --host",
-  command: "collie stt setup --provider local-cli --command <path> --args <list>",
+  off: "pastor stt off",
+  status: "pastor stt status",
+  whistleHost: "pastor stt whistle --host",
+  command: "pastor stt setup --provider local-cli --command <path> --args <list>",
   /** The docs' whisper-cli example (docs/voice-and-push.md, "Run your own command"). */
-  commandExample: `collie stt setup --provider local-cli --command whisper-cli --args '["-m", "/srv/my models/ggml-base.bin", "-nt"]'`,
-  service: "collie stt setup --provider openai-compatible --url <base-url> --model <name> --key <api-key>",
+  commandExample: `pastor stt setup --provider local-cli --command whisper-cli --args '["-m", "/srv/my models/ggml-base.bin", "-nt"]'`,
+  service: "pastor stt setup --provider openai-compatible --url <base-url> --model <name> --key <api-key>",
   codexLogin: "codex login",
   codexLoginStatus: "codex login status",
-  codexSetup: "collie stt setup --provider codex",
+  codexSetup: "pastor stt setup --provider codex",
 } as const;
 
-/** Where the docs explain your own command: the "Run your own command" section on colliepwa.dev. */
-export const COMMAND_DOCS_URL = "https://colliepwa.dev/docs/voice-and-push#run-your-own-command-the-local-cli-provider";
+/** Where the docs explain your own command: the "Run your own command" section on github.com/Ad3Digital/pastor. */
+export const COMMAND_DOCS_URL = "https://github.com/Ad3Digital/pastor/blob/main/docs/voice-and-push.md#run-your-own-command-the-local-cli-provider";
 
 /** One numbered step: its number (or a check once done), the sentence, and what it needs under it. */
 export interface StepView {

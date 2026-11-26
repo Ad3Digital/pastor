@@ -8,7 +8,7 @@ import { bytes, CAPS } from "./core/rules.ts";
 
 /** The socket path must be absolute and at most 103 bytes. */
 export function checkSocketPath(path: unknown): string {
-  if (typeof path !== "string" || !isAbsolute(path)) throw new Error("the socket path must be absolute (set COLLIE_DURABLE_SOCKET)");
+  if (typeof path !== "string" || !isAbsolute(path)) throw new Error("the socket path must be absolute (set PASTOR_DURABLE_SOCKET)");
   if (bytes(path) > CAPS.socketPath) throw new Error(`the socket path is over ${CAPS.socketPath} bytes (the sun_path limit): ${path}`);
   return path;
 }

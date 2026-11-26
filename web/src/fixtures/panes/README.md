@@ -34,11 +34,11 @@ This cohort is OmO's built-in question UI, not stock pi's optional question exte
 | `answer-editor` | Other editor open, `> ` input and changed footer; raw-only |
 | `multi` | Multi-select's toggle footer; raw-only |
 | `idle` | Empty rule/`❯`/rule composer with three styled status rows |
-| `draft` | Literal `collie composer draft probe` typed without submission |
+| `draft` | Literal `pastor composer draft probe` typed without submission |
 
 `pi--v0851-idle.txt` and `pi--v0851-draft.txt` are stock pi 0.85.1, same date, a disposable
 225-column pane in `/tmp/stock-pi-cwd` with no login: the empty editor and the literal draft
-`collie stock pi draft probe`. They pin that stock pi's editor still reads as a composer.
+`pastor stock pi draft probe`. They pin that stock pi's editor still reads as a composer.
 
 Keystroke probes, and what each pi screen reads as: [`pi/ASK_NOTES.md`](../../lib/harness/pi/ASK_NOTES.md).
 
@@ -55,14 +55,14 @@ setup does. The OmO files use LF line ends, the pi 1.1.0 files CRLF as read.
 The 113-column files are cut to the first rule of the frame (the banner's first row for
 `question-banner`); the 18-row files are whole screens; `panel-picker-tree` starts at the picker's
 header rule. Privacy: the lab's working directory was replaced with
-`/home/demo/sandbox/collie-pi-labs/omo-lab/work`, a path of the same length, and every `…`-shortened
+`/home/demo/sandbox/pastor-pi-labs/omo-lab/work`, a path of the same length, and every `…`-shortened
 copy of it with the same characters, so rule widths and the panel's column are unchanged. No user,
 host, key or token remains; `/tmp/pi110-lab/work` is the stock pi sandbox.
 
 | Fixture | State | Reads as |
 | --- | --- | --- |
 | `pi--omo-v5130-plain-idle.txt` | Empty editor; the last status row, OmO's badge and memory, has no colour | composer |
-| `pi--omo-v5130-plain-draft.txt` | `hello collie draft` typed | composer, draft read back |
+| `pi--omo-v5130-plain-draft.txt` | `hello pastor draft` typed | composer, draft read back |
 | `pi--omo-v5130-plain-running.txt` | A turn running, `── • Working …` on the top rule | composer |
 | `pi--omo-v5130-slash-model.txt` | `/model` typed: three completion rows, `  → model` then four-space rows | composer, bound |
 | `pi--omo-v5130-slash-compact.txt` | `/compact` typed: one completion row | composer, bound |
@@ -85,8 +85,8 @@ host, key or token remains; `/tmp/pi110-lab/work` is the stock pi sandbox.
 
 Byte-faithful `format:ansi` captures of **pi 1.1.0** with a pi question extension loaded (the
 contributor's own, not published; it looks like a modified copy of pi's stock `questionnaire` example),
-captured through an isolated second Collie bridge instance running on port 8788
-(`COLLIE_PORT=8788 COLLIE_STATE_DIR=<mktemp> HERDR_PLUGIN_CONFIG_DIR=<mktemp> COLLIE_INSTANCE=test COLLIE_SKIP_SERVE=1 bun run bridge/index.ts`).
+captured through an isolated second Pastor bridge instance running on port 8788
+(`PASTOR_PORT=8788 PASTOR_STATE_DIR=<mktemp> HERDR_PLUGIN_CONFIG_DIR=<mktemp> PASTOR_INSTANCE=test PASTOR_SKIP_SERVE=1 bun run bridge/index.ts`).
 Pane buffers were captured through the bridge's `GET /api/pane/:id?lines=300` API (bearer authenticated with the
 bridge's `local-secret`) via `curl` and `bun` for JSON extraction, identical to `scripts/capture-fixture.sh`.
 Keypresses and prompts were driven strictly in dedicated sandbox panes.
@@ -157,7 +157,7 @@ collide with the PR 397 corpus above.
 | Fixture | State | Reads as |
 | --- | --- | --- |
 | `pi--v0871-idle.txt`, `pi--v110-stock-idle.txt` | Empty editor, two status rows | composer |
-| `pi--v0871-draft.txt`, `pi--v110-stock-draft.txt` | `collie stock pi draft probe` typed, not sent | composer, draft read back |
+| `pi--v0871-draft.txt`, `pi--v110-stock-draft.txt` | `pastor stock pi draft probe` typed, not sent | composer, draft read back |
 | `pi--v0871-narrow-idle.txt`, `pi--v110-stock-narrow-idle.txt` | Empty editor at 50 columns | composer |
 | `pi--<v>-question-single.txt` | `question`: three options with descriptions, `4. Type something.`, `>` on 1 | walk |
 | `pi--<v>-question-single-moved.txt` | Same after Down, `>` on 2 | walk, pair |
@@ -200,7 +200,7 @@ The pi reader refuses it, because pi always paints a status row under a dialog.
 
 Byte-faithful `format:ansi` captures with one sanitization pass, every substitution
 LENGTH-PRESERVING so row padding stays byte-identical: the operator's username and hostname
-(`collie-user`, `collies-macbook-pro-1` — painted in the shell prompt line and host config
+(`pastor-user`, `pastors-macbook-pro-1` — painted in the shell prompt line and host config
 path, which no sandbox can avoid), the Darwin per-user temp-dir token
 (`sanitizedtempdirtoken000000000`), and the Codex session UUIDs from `codex resume` lines
 (`00000000-0000-7000-8000-…`). Codex's chrome is boxless: a
@@ -226,8 +226,8 @@ and the observed commands were approved with no dialog painted.
 
 ## Codex 0.150.1 corpus (captured 2026-08-28, herdr 0.8.2, Linux sandbox panes)
 
-Byte-faithful `format:ansi` captures from throwaway herdr tabs in `/tmp/collie-codex-sandbox`
-(a `git init` repo on `main`) and `/tmp/collie-codex-nogit`. **No scrubbing was needed** — no
+Byte-faithful `format:ansi` captures from throwaway herdr tabs in `/tmp/pastor-codex-sandbox`
+(a `git init` repo on `main`) and `/tmp/pastor-codex-nogit`. **No scrubbing was needed** — no
 username, hostname or home path appears in any of the five files. Every session carries the
 host's `codex_apps` MCP 401 startup warning in its transcript; that is real screen output, not
 noise added here. **The headline: 0.150.1's DEFAULT status row is two fields,
@@ -252,7 +252,7 @@ model turn could be run.
 
 ## Codex 0.151.0 capture (2026-08-29, herdr 0.8.2, Linux sandbox pane)
 
-Byte-faithful `format:ansi` capture from a throwaway herdr tab in `/tmp/collie-codex-sandbox`, with
+Byte-faithful `format:ansi` capture from a throwaway herdr tab in `/tmp/pastor-codex-sandbox`, with
 one length-preserving sanitization pass on the shell prompt the pane opened with (`user@sbox`, `$`).
 Status row is 0.150.1's two-field default, so the styled acceptor is what locates the composer here
 too. **The headline: a continuation row is NOT always two-space indented.** The gutter is two
@@ -267,7 +267,7 @@ row. That is an ordinary draft, not a dialog.
 
 ## Codex 0.156.1 corpus (captured 2026-09-26, herdr, Linux sandbox panes)
 
-Byte-faithful `format:ansi` captures from throwaway panes in `/tmp/collie-codex-debug`, each cut to
+Byte-faithful `format:ansi` captures from throwaway panes in `/tmp/pastor-codex-debug`, each cut to
 the rows its test needs, then scrubbed of the username and hostname (none survived the cut). Dialog
 captures ran with `-a on-request -s read-only -c approvals_reviewer=user`. No key was pressed on
 these screens while capturing. The new recipes (trust `Enter` / `Down, Enter`, patch `y` /
@@ -324,7 +324,7 @@ update notice above it is left out. **No scrubbing was needed**: the sandbox fol
 Byte-faithful `format:ansi` captures from the harness canary's own Herdr session (M37/03, the `busy`
 scenario), taken while Codex wrote a 500-word story. Each file is cut to the rows from the header
 box down; the update notice above it is left out. **No scrubbing was needed**: the project folder is
-`/tmp/collie-canary-project`, and no username, hostname or session UUID is on the kept rows.
+`/tmp/pastor-canary-project`, and no username, hostname or session UUID is on the kept rows.
 
 While the first turn of a thread runs, the status row ends in one more ` · ` and a braille spinner
 frame in a colour of its own. The canary saw `⠋` and `⠧`, two of the ten dots frames in the Codex
@@ -339,7 +339,7 @@ for its queue hint.
 
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
-| `codex--v0156-busy-streaming.txt` | The story mid-stream above the empty composer, over `  GPT-6-Luna low · /tmp/collie-canary-project · ⠧`. `composerReady` must be TRUE, the draft is null, no unread-dialog card, and the status strip keeps the spinner | `working` |
+| `codex--v0156-busy-streaming.txt` | The story mid-stream above the empty composer, over `  GPT-6-Luna low · /tmp/pastor-canary-project · ⠧`. `composerReady` must be TRUE, the draft is null, no unread-dialog card, and the status strip keeps the spinner | `working` |
 | `codex--v0156-busy-draft.txt` | Later in the same turn: the draft `a draft typed while codex works` in the box, and the status row replaced by `  tab to queue message … 100% context left`. The draft reads back as send evidence, the check the reply guard makes before it presses Enter | `working` |
 
 ## Codex 0.157.1 fullscreen (captured 2026-09-27, herdr 0.9.0, harness canary, #294)
@@ -347,7 +347,7 @@ for its queue hint.
 Byte-faithful `format:ansi` captures from the harness canary's own Herdr session, running Codex
 0.157.1 from a scratch npm prefix with a temporary `CODEX_HOME`. Each file is the whole screen the
 canary saved, from the header box down. **No scrubbing was needed**: the project folder is
-`/tmp/collie-canary-project`, and no username, hostname or session UUID is on the kept rows.
+`/tmp/pastor-canary-project`, and no username, hostname or session UUID is on the kept rows.
 
 **The headline: 0.157.0 turned `tui.fullscreen_transcript` on by default.** In that layout the
 status line gets a row of its own, and ONE key-hint row sits straight under it: `? for shortcuts`
@@ -361,7 +361,7 @@ indented row straight under the status row as the hint row (`isHintRow` in
 
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
-| `codex--v0157-idle.txt` | Empty composer, the status row `  GPT-6-Luna low · /tmp/collie-canary-project`, and under it `  ? for shortcuts` plus the right-aligned notice. `composerReady` must be TRUE, no card | `idle` |
+| `codex--v0157-idle.txt` | Empty composer, the status row `  GPT-6-Luna low · /tmp/pastor-canary-project`, and under it `  ? for shortcuts` plus the right-aligned notice. `composerReady` must be TRUE, no card | `idle` |
 | `codex--v0157-idle-50.txt` | The same at 50 columns: the notice shortens to `⚠ 1 · f2` | `idle` |
 | `codex--v0157-draft-notice.txt` | The two-line draft `Reply with only OK.` / `Second line of the message.`. The hint row holds only the notice, after a run of spaces. The draft reads back | `idle` |
 | `codex--v0157-busy-streaming.txt` | The first turn of a thread mid-stream: the status row ends in the spinner frame `⠋`, the hint row under it | `working` |
@@ -374,13 +374,13 @@ thread, cut to its last 33 rows. Once a thread has a title, Codex paints the sta
 carries the previous field's paint. Before the reader moved that space back onto the separator
 (`rejoinSplitSeparators` in `lib/harness/codex/markers.ts`), the row was refused, so after the first
 turn of every thread the pane had no composer, showed the unread-dialog card and refused every send.
-The project folder is `/tmp/collie-canary-project`; the model name on the status row is set to
+The project folder is `/tmp/pastor-canary-project`; the model name on the status row is set to
 `gpt-5.6-sol`, as in the other Codex captures, and the bug does not depend on it. No username,
 hostname or session id is on the kept rows.
 
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
-| `codex--v0159-task-title.txt` | `Reply with only OK.` answered `OK`, the empty composer, and the status row `  gpt-5.6-sol low · /tmp/collie-canary-project · Generate task title`. `composerReady` must be TRUE | `idle` |
+| `codex--v0159-task-title.txt` | `Reply with only OK.` answered `OK`, the empty composer, and the status row `  gpt-5.6-sol low · /tmp/pastor-canary-project · Generate task title`. `composerReady` must be TRUE | `idle` |
 
 ## Codex reporter capture (#294, 2026-09-27, macOS, Herdr 0.9.1, SCRUBBED)
 
@@ -407,12 +407,12 @@ The kept rows are byte-faithful to the reporter's file, theme colours included.
 
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
-| `codex--v0158-goal-notice.txt` | `• Working (5m 47s • esc to interrupt)`, the empty composer, and a status row whose third field carries the padding in its own purple before a right-aligned `Pursuing goal (17h 43m)` (a Codex `/goal`). `  ? for shortcuts` is the last row. Collie 1.14.x refused that row, so the pane had no composer: the unread-dialog card and every send refused. `composerReady` must be TRUE, no card | `working` |
+| `codex--v0158-goal-notice.txt` | `• Working (5m 47s • esc to interrupt)`, the empty composer, and a status row whose third field carries the padding in its own purple before a right-aligned `Pursuing goal (17h 43m)` (a Codex `/goal`). `  ? for shortcuts` is the last row. Pastor 1.14.x refused that row, so the pane had no composer: the unread-dialog card and every send refused. `composerReady` must be TRUE, no card | `working` |
 
 ## Codex mobile chrome (reconstructed 2026-09-03)
 
 **Not a capture.** This one file is RECONSTRUCTED from the two rows reported in
-[PR #144](https://github.com/AltanS/collie/pull/144), which were seen on a live Codex pane the
+[PR #144](https://github.com/Ad3Digital/pastor/pull/144), which were seen on a live Codex pane the
 contributor could reach and this repo's capture hosts could not. It carries real ESC bytes in the
 shape the report describes, and it is the ground truth for the labelled-rule clip only. It is still
 the only file carrying a `─ Worked for … ───` row and Codex's old fill-painted diff rows, so it
@@ -483,7 +483,7 @@ Grok's composer is a rounded box at the tail: `╭─…─╮` / `│ ❯ … �
 |---|---|---|
 | `grok--fresh-idle.txt` | Empty `│ ❯ │` box, status in the bottom border, idle hint row (`Shift+Tab:mode`). Byte-faithful `format:ansi` 2026-08-23 | `idle` |
 | `grok--draft-single.txt` | Stranded one-line draft `testing stuff` on the ❯ row; hint bar adds `Enter:send`. Byte-faithful `format:ansi` 2026-08-23 | `idle` |
-| `grok--draft-scrollbar.txt` | Grok Build 1.0.46 on macOS, 2026-10-08: byte-faithful composer tail from the live Collie API after pasting a 40-line test draft without submitting. Only lines 21–40 are visible, with a separately styled `█` scrollbar inside the right frame. That rail is not message text; a literal typed block glyph must remain. The prompt row is outside the bridge's six-row binding window, so the existing `composerPrompt` returns null while `composerReady` stays true | `idle` |
+| `grok--draft-scrollbar.txt` | Grok Build 1.0.46 on macOS, 2026-10-08: byte-faithful composer tail from the live Pastor API after pasting a 40-line test draft without submitting. Only lines 21–40 are visible, with a separately styled `█` scrollbar inside the right frame. That rail is not message text; a literal typed block glyph must remain. The prompt row is outside the bridge's six-row binding window, so the existing `composerPrompt` returns null while `composerReady` stays true | `idle` |
 | `grok--draft-scrollbar-partial.txt` | Grok Build 1.0.46 on macOS, 2026-10-08: byte-faithful composer tail from an isolated live bridge after the real guarded reply path pastes 40 numbered lines and a final instruction. Lines 26–40 and the instruction remain visible; the separately styled rail begins with `▁` and continues with `█`. The original full-block-only reader returns stalled without submitting. The prompt lies outside the existing bridge binding window | `done` |
 | `grok--draft-wrapped.txt` | Draft wrapped onto a continuation row inside the box | `idle` |
 | `grok--model-picker.txt` | Grok Build 1.0.46, macOS, 2026-10-08: byte-faithful `/model` completion-list tail, with the pointer on Grok 4.7, the four-row counter, composer and Enter hint. No identifying paths. The verified recipe is in [MODEL_PICKER_NOTES.md](/web/src/lib/harness/grok/MODEL_PICKER_NOTES.md) | `idle` |
@@ -515,7 +515,7 @@ Grok's composer is a rounded box at the tail: `╭─…─╮` / `│ ❯ … �
 | `grok--ask-z-parked.txt` | Esc from a focused `z`: z row repaints idle, footer says `Tab:next answer`, but inner hint reads `Enter:edit` — keyboard still on the free-text field; a digit TYPES (probed 2x). Buttons must lock. Byte-faithful `format:ansi` 2026-08-22 | `blocked` |
 | `grok--plan-tab-prompt.txt` | Plan review after `Tab:prompt`; composer empty; footer `Tab:plan` / `Esc:back` | `blocked` |
 | `grok--plan-request-changes.txt` | Same geometry after `s` (request changes = type in composer) | `blocked` |
-| `grok--reporter-294-draft-newline-hint.txt` | Grok Build 1.0.41 (macOS, Herdr 0.9.1), the reporter's `format:ansi` capture from issue #294 with the project path replaced by an equal-length `~/src/grok-demo`. A new top bar (`main <path> … 3.0K / 200K │ [Dashboard]`), a one-line draft in the box, `grok-4.7 · always-approve` in the bottom border, and a draft bar that adds `Shift+Enter/Opt+Enter:newline`. Collie 1.14.0 and earlier lost the box on that chord list, so every send from the phone failed after typing. `composerReady` must be TRUE and the draft reads back | `idle` |
+| `grok--reporter-294-draft-newline-hint.txt` | Grok Build 1.0.41 (macOS, Herdr 0.9.1), the reporter's `format:ansi` capture from issue #294 with the project path replaced by an equal-length `~/src/grok-demo`. A new top bar (`main <path> … 3.0K / 200K │ [Dashboard]`), a one-line draft in the box, `grok-4.7 · always-approve` in the bottom border, and a draft bar that adds `Shift+Enter/Opt+Enter:newline`. Pastor 1.14.0 and earlier lost the box on that chord list, so every send from the phone failed after typing. `composerReady` must be TRUE and the draft reads back | `idle` |
 | `grok--reply-table-scrollbar.txt` | Grok Build 1.0.46 (macOS, Herdr 0.9.0, 130 columns), 2026-10-08, throwaway pane: a long reply ending in a two-column table whose cells Grok wraps, with the separately styled `█` scrollbar at the end of every lower row, divider rows included. The reply's text is in `latest-reply.test.ts`. The `█` hid the divider rows from the table reorder, so the full-reply card read the reply as off-screen. Sanitized: the project path and one name in a hook warning were replaced with equal-length neutral text | `done` |
 | `grok--reply-table-highlighted.txt` | Same pane and reply minutes later, while Grok highlighted the message: a box round the whole message (`┆` at its top, `└ … ┘` at its foot) adds a vertical at each end of every table row. Rows with two more verticals than the table's own dropped out of the reorder. Same sanitization | `done` |
 
@@ -536,16 +536,16 @@ Grok's composer is a rounded box at the tail: `╭─…─╮` / `│ ❯ … �
 | `claude--plan-approval.txt` | ExitPlanMode: plan text, "…ready to execute. Would you like to proceed?", 4 options with hint sub-lines, "ctrl+g to edit in nano · <plan path>" footer | `blocked` |
 | `claude--plan-approval--numbered-body.txt` | Plan approval whose plan BODY lists numbered steps ("1. Title / 2. … / 5. TODO stub") inside the option-scan window: the menu is the trailing `1,2,3,4` suffix, body rows drop out (regression fixture for the body-list bug) | `blocked` |
 | `claude--plan-approval--feedback-focused.txt` | Plan approval with the **feedback input FOCUSED** (`❯` on `4. Tell Claude what to change`, box empty). Claude routes every digit into that field as text while it has focus, so no answer row can be pressed — the model carries `feedback.focused`, the renderer locks every button behind a banner, and `lib/prompt-action.ts` refuses to write (choreography in [`PLAN_FEEDBACK_NOTES.md`](../../lib/grammar/PLAN_FEEDBACK_NOTES.md)) | `blocked` |
-| `claude--plan-approval--feedback-typed.txt` | The same dialog after typing into that input and arrowing OFF it: row 4 reads `use a guard clause instead` — the user's own words as the label — with `❯` back on row 3. The digits answer normally here, and only the row's static `shift+tab to approve with this feedback` description keeps it from being up-levelled into a live `keys:["4"]` button carrying that sentence. Collie will not type into a non-empty box (the caret resets to position 0 on re-entry, so it would PREPEND), so the block shows the text read-only | `blocked` |
+| `claude--plan-approval--feedback-typed.txt` | The same dialog after typing into that input and arrowing OFF it: row 4 reads `use a guard clause instead` — the user's own words as the label — with `❯` back on row 3. The digits answer normally here, and only the row's static `shift+tab to approve with this feedback` description keeps it from being up-levelled into a live `keys:["4"]` button carrying that sentence. Pastor will not type into a non-empty box (the caret resets to position 0 on re-entry, so it would PREPEND), so the block shows the text read-only | `blocked` |
 | `claude--plan-approval--feedback-wrapped.txt` | A 185-character value in that input, **wrapped** onto a continuation line with `❯` arrowed off. The row re-flows rather than windowing, so the value is rebuilt from the label plus the lines above the hint — and those lines push the footer far enough from the options that `MAX_FOOTER_GAP` needs an allowance or the whole dialog stops parsing (it did, before this was measured) | `blocked` |
 | `claude--plan-approval--three-row.txt` | The same dialog on an install with `showClearContextOnPlanAccept` **off**: two answers and the input at row **3**, not 4. Pins that nothing keys on a fixed option count or a fixed feedback key | `blocked` |
 | `claude--plan-approval--three-row-focused.txt` | Its pair, captured one keystroke later — `3` was sent and nothing else. The ONLY on-screen difference is where `❯` sits, which makes the two together the real-capture proof that `coreSignature` survives the feedback flow's own first write while `signature` does not | `blocked` |
 | `claude--select-multiselect-single.txt` | **Single-question multiSelect** AskUserQuestion: checkbox `[ ]` options under a `←  ☐ Toppings  ✔ Submit  →` stepper, "Enter to select · ↑/↓ · Esc" footer. Lifted to a `multi-select` block — the verified interaction is **DIGIT N toggles option N** (pointer-independent); the closed-loop Submit macro walks the pointer to Submit and confirms | `blocked` |
 | `claude--select-multiselect-checked.txt` | Same dialog **mid-selection**: some boxes `[✔]` (Mushrooms, Olives), the stepper's question chip flipped to `☒` (answered). Exercises the checked-glyph lift (`[✔]`/`[x]`/`[✓]` → `checked: true`; terminal is source of truth) | `blocked` |
 | `claude--select-multiselect-review.txt` | The multiSelect **review/confirm** screen: `←  ☐ Toppings  ✔ Submit  →` stepper, "Ready to submit your answers?" over `❯ 1. Submit answers / 2. Cancel`, with a `⚠ You have not answered all questions` line (`incomplete`). Lifts the `review` phase (submit = key `1`, cancel = key `2`) | `blocked` |
-| `claude--workflow-view.txt` | Claude Code 2.1.285's **dynamic-workflow view**, captured 2026-09-30 at 226 columns from a throwaway `/tmp` lab run, paused with `p`. A two-pane box: five phases on the left with a partial `3 Verify the classification 1/3`, the running agent on the right with its model and token count. The lid is TITLED (`╭ Phases ───┬ Read the corpus · 1 agent ───╮`), so the floor's `┴` is what anchors the table run. The screen of [discussion #301](https://github.com/AltanS/collie/discussions/301): before [ADR 0072](../../../../.adr/0072-a-two-pane-box-pans.md) every `│ … │` row of it was CLIPPED on a phone, which is why the report shows a band of stacked rules and a `· 74…` cut off the right edge. Nothing in it is this machine's: the workflow's name, phases and agent labels were all authored for the lab | `working` |
+| `claude--workflow-view.txt` | Claude Code 2.1.285's **dynamic-workflow view**, captured 2026-09-30 at 226 columns from a throwaway `/tmp` lab run, paused with `p`. A two-pane box: five phases on the left with a partial `3 Verify the classification 1/3`, the running agent on the right with its model and token count. The lid is TITLED (`╭ Phases ───┬ Read the corpus · 1 agent ───╮`), so the floor's `┴` is what anchors the table run. The screen of [discussion #301](https://github.com/Ad3Digital/pastor/discussions/301): before [ADR 0072](../../../../.adr/0072-a-two-pane-box-pans.md) every `│ … │` row of it was CLIPPED on a phone, which is why the report shows a band of stacked rules and a `· 74…` cut off the right edge. Nothing in it is this machine's: the workflow's name, phases and agent labels were all authored for the lab | `working` |
 
-## In-flight send / self-race corpus (captured 2026-07-18, `collie-demo` sandbox pane)
+## In-flight send / self-race corpus (captured 2026-07-18, `pastor-demo` sandbox pane)
 
 Captures of the ~350ms window where the composer's own reply sits on the `❯` line before the
 bridge presses Enter — the frame `extractInputDraft` misreads as a stranded draft. The fix suppresses
@@ -694,7 +694,7 @@ reads `cols - 1` columns, which is why a `w82` rule is 81 wide), the session run
 `--permission-mode default` (2.1.291 rewrites a saved `defaultMode` to `auto` and prints a notice,
 see `idle-fresh-auto-notice`), ghost suggestions need `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=1`, and
 every capture is a `herdr pane read --source recent --lines 300 --format ansi` rather than
-`scripts/capture-fixture.sh`, because no Collie bridge sees the throwaway Herdr session.
+`scripts/capture-fixture.sh`, because no Pastor bridge sees the throwaway Herdr session.
 
 What changed on screen, and how the corpus records it:
 
@@ -747,7 +747,7 @@ when a fix lands is how the table signals the fix.
 
 Since tracker M34 every entry also declares `expected.blockKind`, the block kind a correct pipeline
 would lift from that screen, and `expected.keys` where that kind is interactive, the keystrokes the
-screen itself offers, spelled the way Collie sends them. The test asserts both against the pipeline,
+screen itself offers, spelled the way Pastor sends them. The test asserts both against the pipeline,
 so a Claude release that changes a dialog's layout turns into a red line instead of a silent raw
 mirror. An entry whose screen shows a dialog the pipeline still returns raw carries `knownRaw` with a
 reason that names the grammar which would claim it, and one whose kind is right but whose key set is
@@ -881,7 +881,7 @@ username, hostname, home path or real project path appears in any file: the sess
 ## Dialog input corpus (captured 2026-09-26, Claude Code 2.1.283, herdr 0.9.0, throwaway Herdr panes)
 
 Dialogs the phone could not read, or read wrong, found while chasing an operator report that
-"line breaks" made Collie say it cannot read a dialog. Sandbox repos under `/tmp`, scrubbed with a
+"line breaks" made Pastor say it cannot read a dialog. Sandbox repos under `/tmp`, scrubbed with a
 length-changing pass (user and host names, home paths, session ids zeroed), trimmed to the tail.
 Every key behaviour named below was sent one keystroke at a time and read back.
 
@@ -957,7 +957,7 @@ it, and Claude answered `✔ Updated 1 marketplace`.
 The "Switch model?" confirmation, the footerless screen the `/model` picker opens when the
 conversation is cached for the current model. No grammar read it, so the phone showed the
 unread-dialog card with Esc and nothing else; `harness/claude/switch-model.ts` reads it now. Made in
-a sandbox pane in `/tmp/collie-model-picker` with a one-message conversation (`reply with the single
+a sandbox pane in `/tmp/pastor-model-picker` with a one-message conversation (`reply with the single
 word ok`), then `/model`, `Up` to move onto the other model, and `s` (this session only). Down for the
 second capture of each pair, read back with `herdr pane read --ansi`, the call the bridge's
 `/api/pane` route makes. The 50-column pair was captured under `stty cols 50 rows 40`. Byte-faithful,
@@ -987,7 +987,7 @@ subject between its top edge and its question (`PromptModel.subject`), and the c
 
 Byte-faithful, CRLF, no trailing newline, 45 rows. **One sanitization pass, LENGTH-PRESERVING, on
 every row it touches:** the home path's user name (`/var/home/devel/`), and the project names in the
-command and the warning (`collie-` to `sample-`, `remix` to `forge`). The worker names and the two
+command and the warning (`pastor-` to `sample-`, `remix` to `forge`). The worker names and the two
 agent ids in the transcript above the dialog are kept.
 
 What is new in the layout, against the 2.1.283 permission screens above:
@@ -1151,7 +1151,7 @@ all. It does, and the captures below measure it.
 | `omp--draft-wrapped.txt` | A 355-char draft soft-wrapped over three rows — two `│  …  │` continuations ABOVE the bottom border, which carries the tail (`hand`). Regression fixture for the fold direction | `idle` |
 | `omp--menu-dismissed.txt` | The welcome panel (a 100-cell `╭───┴───╮` box) plus an MCP failure notice above an empty composer. Negative control: a second, narrower box on screen must not be spliced into the composer's geometry | `idle` |
 | `omp--slash-palette.txt` | `/` typed: the autocomplete renders BELOW the box, at the box's own width, with one wrapped entry (3 rows) — a `skill:…` row, which omp assembles from the capturing machine and which is therefore NOT an omp built-in. `extractInputDraft` reads `"/"` | `idle` |
-| `omp--slash-palette--filtered.txt` | `/new` typed: five palette rows below the box, all omp built-ins — but note they are everything omp fuzzy-matched for `new`, an accident of one search rather than a curated set. One of three sources for `lib/agent-commands.ts`'s `omp` catalog (collie draws its own palette for an omp pane, because the chrome strip takes omp's); the other two are the tip line and this table — see below | `idle` |
+| `omp--slash-palette--filtered.txt` | `/new` typed: five palette rows below the box, all omp built-ins — but note they are everything omp fuzzy-matched for `new`, an accident of one search rather than a curated set. One of three sources for `lib/agent-commands.ts`'s `omp` catalog (pastor draws its own palette for an omp pane, because the chrome strip takes omp's); the other two are the tip line and this table — see below | `idle` |
 | `omp--select-menu.txt` | The `ask` tool's single-choice dialog (`╭─ Ask ─╮` box, `❯ ○ Red` rows, an `○ Other (type your own)` free-text escape), footer `Enter select · n note · ↑/↓ move · Esc cancel`. Declined until 2026-10-02; **lifted** since [ADR 0077](../../../../.adr/0077-the-omp-ask-single-select-is-lifted-and-its-multi-select-is-not.md) as a pointed list (`omp/ask.ts`), `Other` included, because the screen it opens is the answer editor the phone already reads | `blocked` |
 | `omp--select-menu-moved.txt` | The same dialog with the pointer moved to Blue. Lifted: Red walks `Up` twice | `blocked` |
 | `omp--select-multi.txt` | The `ask` tool's multi-select (`☐ Cheese` rows under a `toppings / Submit` chip row), footer `Space/Enter toggle · n note · ↑/↓ move · Tab/←/→ · Esc cancel`. **Declined** ([ADR 0077](../../../../.adr/0077-the-omp-ask-single-select-is-lifted-and-its-multi-select-is-not.md)): Enter toggles here and submits in 18.4.10, and omp never numbers its options, so neither shared toggle recipe (a digit, or a digit-jump then Enter) can drive it | `blocked` |
@@ -1248,20 +1248,20 @@ Nothing is shared with the Claude harness beyond independently recognizing simil
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
 | `omp--v18-rule-idle.txt` | Empty `❯` row below the top rule, one blank gap, then the standalone status row | `idle` |
-| `omp--v18-rule-draft.txt` | The same tail with `COLLIE_RULE_DRAFT` stranded on its single prompt row | `idle` |
+| `omp--v18-rule-draft.txt` | The same tail with `PASTOR_RULE_DRAFT` stranded on its single prompt row | `idle` |
 | `omp--v18-rule-wrapped.txt` | A five-row wrapped draft whose final `s` is a styled inline suggestion, not part of the input buffer | `idle` |
 
-Live verification drove this checkout's real Collie UI against the same OMP 18.1.10 sandbox. With
-`COLLIE_RULE_18110_STALE` stranded in the rule composer, the guard bound the clear to that exact
-prompt, typed `COLLIE_RULE_18110_LIVE_ACK` with `submit:false`, read the pane back, then issued the
+Live verification drove this checkout's real Pastor UI against the same OMP 18.1.10 sandbox. With
+`PASTOR_RULE_18110_STALE` stranded in the rule composer, the guard bound the clear to that exact
+prompt, typed `PASTOR_RULE_18110_LIVE_ACK` with `submit:false`, read the pane back, then issued the
 empty `submit:true`; the pane rendered the exact marker and not the stale prefix. With `/model` open,
-the UI retained `COLLIE_RULE_18110_MODAL_GUARD`, offered the explicit override, sent no `/reply` or
+the UI retained `PASTOR_RULE_18110_MODAL_GUARD`, offered the explicit override, sent no `/reply` or
 `/keys` write, and left the modal unchanged.
 
 ## OMP tool-approval corpus (captured 2026-09-10, oh-my-pi `omp` v18.1.17, herdr 0.9.0, two sandbox panes)
 
 Three byte-faithful `pane.read format:ansi` captures from throwaway Herdr panes in
-`/tmp/collie-omp-sandbox` (a `git init` repo), taken with `scripts/capture-fixture.sh`. They close the
+`/tmp/pastor-omp-sandbox` (a `git init` repo), taken with `scripts/capture-fixture.sh`. They close the
 gap `harness/omp/index.ts` named: the tool-approval dialog, which the omp adapter declined without
 anyone ever having captured it.
 
@@ -1375,10 +1375,10 @@ half of that test: exactly one styled row with more than one segment.
 ## OMP `claude` and `borderless` composer corpus (captured 2026-10-03, oh-my-pi `omp` v18.4.10, herdr 0.9.3, throwaway Herdr pane)
 
 Eight byte-faithful `pane.read format:ansi` captures, taken with `scripts/capture-fixture.sh` from one throwaway Herdr
-pane, for [issue #343](https://github.com/AltanS/collie/issues/343): on omp 18.3.0 `composer.shape: claude` and
-`composer.shape: borderless` showed no composer to Collie, so `composerReady` was false and every Send asked
+pane, for [issue #343](https://github.com/Ad3Digital/pastor/issues/343): on omp 18.3.0 `composer.shape: claude` and
+`composer.shape: borderless` showed no composer to Pastor, so `composerReady` was false and every Send asked
 "Type anyway?". Each shape ran under a `--config` overlay that set only `composer.shape`, in a fresh `git init` sandbox
-named `collie-omp-shape-sandbox` under `/tmp`, with `PI_CODING_AGENT_DIR` pointing at a copy of the agent directory that
+named `pastor-omp-shape-sandbox` under `/tmp`, with `PI_CODING_AGENT_DIR` pointing at a copy of the agent directory that
 held nothing but `config.yml`. That keeps the operator's credentials, sessions and hint counters out of the pane, and
 it is why the status row reads `no-model` and the screen carries omp's `No models available` warning and an
 `Update Available` banner. No prompt was sent to any model: the drafts were typed into the editor and never submitted.
@@ -1406,12 +1406,12 @@ are one 313-character line wrapped over three rows at 120 columns.
 | Fixture | State / what's in it | Herdr status |
 |---|---|---|
 | `omp--v18-4-claude-idle.txt` | Welcome panel, tip, warning and update banner, then the full-width top rule, an empty `❯` row with the key hint, the bottom rule and the status row. No session title in the top rule | not recorded |
-| `omp--v18-4-claude-draft.txt` | The same tail with `COLLIE_CLAUDE_SHAPE_DRAFT` on the `❯` row | not recorded |
+| `omp--v18-4-claude-draft.txt` | The same tail with `PASTOR_CLAUDE_SHAPE_DRAFT` on the `❯` row | not recorded |
 | `omp--v18-4-claude-wrapped.txt` | A 313-character draft wrapped over three rows, the last two behind the two-space gutter | not recorded |
 | `omp--v18-4-claude-titled.txt` | After `/rename Shape lab title`: a `Session renamed to …` notice, and the title chip right-aligned in the top rule | not recorded |
-| `omp--v18-4-claude-titled-draft.txt` | The titled tail with `COLLIE_TITLED_DRAFT` on the `❯` row | not recorded |
+| `omp--v18-4-claude-titled-draft.txt` | The titled tail with `PASTOR_TITLED_DRAFT` on the `❯` row | not recorded |
 | `omp--v18-4-borderless-idle.txt` | The update banner, a blank row, an empty `❯` row with the key hint and the status row directly under it | not recorded |
-| `omp--v18-4-borderless-draft.txt` | The same tail with `COLLIE_BORDERLESS_DRAFT` on the `❯` row | not recorded |
+| `omp--v18-4-borderless-draft.txt` | The same tail with `PASTOR_BORDERLESS_DRAFT` on the `❯` row | not recorded |
 | `omp--v18-4-borderless-wrapped.txt` | The same 313-character draft wrapped over three rows above the status row | not recorded |
 
 Both locators are fail-closed: every other omp capture (each modal, the boxed, `rule` and `pi` composers) and every claude,
@@ -1433,7 +1433,7 @@ escape left untouched**, so each row keeps its byte length and its cell width:
 - **The session id.** `omp--v18-4-composer-idle.txt` printed the forked session's UUID twice, in the
   `return to original: omp --resume <id>` notice and on the wrapped row under it. Both read
   `00000000-0000-7000-8000-000000000000`.
-- **The cwd.** `~/projects/collie-workspace` became `~/projects/sample-workspace` on the composer
+- **The cwd.** `~/projects/pastor-workspace` became `~/projects/sample-workspace` on the composer
   powerline (`omp--v18-4-composer-idle.txt`), on the `/settings` preview row
   (`omp--v18-4-menu-settings.txt`) and on both meta rows of `omp--v18-4-resume-all-projects.txt`.
 
@@ -1442,7 +1442,7 @@ transcript, the welcome panel's Recent sessions and the `/tree` list as well), t
 the `GPT-6 Luna` model and the `openrouter` provider, which the older omp captures above already
 print, and the `/model` catalogue. The whole-corpus check after the pass: a UUID pattern matches only
 the zero id, and `/home/`, `/Users/`, an email, an `sk-`/`ghp_`/`AKIA`-shaped string, an OSC escape
-and `collie-workspace` match nothing.
+and `pastor-workspace` match nothing.
 
 **Five more, the same day, for the `ask` tool** ([ADR 0077](../../../../.adr/0077-the-omp-ask-single-select-is-lifted-and-its-multi-select-is-not.md)),
 from the lead's own pane at 108 columns by 210 and 284 rows. Each prompt asked omp to call `ask`
@@ -1453,7 +1453,7 @@ box is the session's own transcript (the same `Render Fancy Content in Terminal`
 captures above, its welcome splash, its earlier answered and cancelled `ask` calls) and a working row
 (`⎋ Choosing a color`). **No sanitization pass was needed**, and that is checked rather than
 assumed: a UUID pattern, `/home/`, `/Users/`, `/tmp`, an email, an `sk-`/`ghp_`/`AKIA`-shaped string,
-an OSC escape, a host name and `collie-workspace` match nothing in the five files. All five are CRLF
+an OSC escape, a host name and `pastor-workspace` match nothing in the five files. All five are CRLF
 with no trailing newline; `wc -l` is 209 for the three single-question color captures and 283 for the
 two toppings captures.
 
@@ -1490,7 +1490,7 @@ These are the evidence for the `unicode` preset: the pointer is `❯` and the fo
 keycaps, `↑/↓ navigate  ⏎ select  ⎋ cancel`, segments split by two spaces. No usage strip sits under
 the box. The pointed row's band is `rgb(0,130,179)` here and `rgb(60,56,54)` in the 18.1.17 captures,
 which is why only the glyph is read (`omp/APPROVAL_NOTES.md`). **No sanitization pass was needed**,
-and that is checked rather than assumed: the operator's user name and host names, `collie-workspace`,
+and that is checked rather than assumed: the operator's user name and host names, `pastor-workspace`,
 `/home/`, `/Users/`, `/var/home`, a UUID pattern, an email, an `sk-`/`ghp_`/`AKIA`-shaped string, a
 long hex or base64 token and an OSC escape match nothing in the five files. The only paths are the
 sandbox's. All five are CRLF with no trailing newline; `wc -l` is 299.
@@ -1512,7 +1512,7 @@ keys from the screen before it, sent with `herdr pane send-keys`. The context me
 models' windows on its own (11k against `openai/gpt-4`'s 8.2k), and for the shortened rows a few local
 `!cat` runs of random words grew it to 157k. `Enter` was never pressed on a model. **No sanitization
 pass was needed**, and that is checked rather than assumed: the operator's user name and host names,
-`collie-workspace`, `/home/`, `/Users/`, `/var/home`, a UUID pattern, an email, an `sk-`/`ghp_`/`AKIA`-
+`pastor-workspace`, `/home/`, `/Users/`, `/var/home`, a UUID pattern, an email, an `sk-`/`ghp_`/`AKIA`-
 shaped string, a long hex or base64 token and an OSC escape match nothing in the 23 files (the one
 email-shaped hit is the model id `openrouter/thinkingmachines/inkling`). Above the box is the sandbox
 session's splash and its `omp-s3/cwd` powerline. All are CRLF with no trailing newline; `wc -l` is
@@ -1559,7 +1559,7 @@ test had: omp rewrites the two detail rows under the list (the pointed model's f
 chips row) every time the pointer moves, so a `coreSignature` that kept them made every walked tap
 answer `changed`. Nothing else differs between the four pointer captures, the scrollbar thumb
 included, which the test in `omp/switch.test.ts` checks row by row. **No sanitization pass was
-needed**, and the same scan as above was run on the five (user and host names, `collie-workspace`,
+needed**, and the same scan as above was run on the five (user and host names, `pastor-workspace`,
 `/home/`, `/Users/`, `/var/home`, a UUID, an email, a key-shaped string, a long hex or base64 token,
 an OSC escape): no match. Above the box is the sandbox session's splash and its `omp-s3/cwd`
 powerline. All are CRLF with no trailing newline; `wc -l` is 45.
@@ -1629,7 +1629,7 @@ description column and a `█`/`│` scrollbar column at the right edge. `w48` i
 form; the wide capture is the unclipped one. `Enter` on this screen accepts the highlighted entry —
 verified live, where `/resume` + `Enter` opened the Resume Session picker (`omp--menu-resume.txt`).
 
-Not `scripts/capture-fixture.sh`: the panes were scratch tmux sessions, which no Collie bridge sees,
+Not `scripts/capture-fixture.sh`: the panes were scratch tmux sessions, which no Pastor bridge sees,
 read with `tmux capture-pane -p -e -S -60`. The same screen was then read from a live Herdr pane
 running the same version through `herdr pane read --format ansi` — identical rows, same markers — so
 the shape these grammars match is the shape the bridge really serves. LF throughout, no `\r`, and the
@@ -1646,7 +1646,7 @@ carry only omp's welcome panel, its `Update Available` notice and the palette.
 
 Two captures of one `ask` call: a single-select question whose three options each carry a
 `description`, Staging marked recommended. They exist for
-[issue #372](https://github.com/AltanS/collie/issues/372): the grammar declined every description row,
+[issue #372](https://github.com/Ad3Digital/pastor/issues/372): the grammar declined every description row,
 so the phone showed the unread-dialog card, with only Esc, over a plain single-select. omp prints a
 description on rows of its own under its option, six columns in, and wraps a long one at that indent
 (the 18.4.10 source already did; these are the first captures). omp draws every option's
@@ -1678,7 +1678,7 @@ it, under a three-space gutter; a blank line of the draft is a blank row there. 
 took those rows as the draft (`openDraftEnd`, `openDraftRowText` in `lib/harness/omp/`), they read
 as autocomplete, so only the first line read back and every multi-line send stalled, and a blank
 line refused the composer. CRLF line ends as read. The project folder is
-`/tmp/collie-canary-project`; the model name on the powerline is set to `GPT-6-Sol`, the same width
+`/tmp/pastor-canary-project`; the model name on the powerline is set to `GPT-6-Sol`, the same width
 as the one the canary ran. No username, hostname or session id is in any file.
 
 | Fixture | State / what's in it | Herdr status |
@@ -1751,7 +1751,7 @@ AGY renders a framed input box bounded by horizontal rules (`─`), with status 
 ## Muse corpus (captured 2026-09-18, Muse Code 1.3.0, sandbox pane)
 
 Byte-faithful `format:ansi` captures from a throwaway Herdr pane in
-`/tmp/collie-muse-sandbox`, taken through the tailnet front door (the sanctioned
+`/tmp/pastor-muse-sandbox`, taken through the tailnet front door (the sanctioned
 `scripts/capture-fixture.sh` speaks loopback, which this host's bridge 403s —
 same endpoint, same `jq -j '.text'` treatment). The session ran
 `muse --approval-mode untrusted --approval-judge off` so every eligible approval
@@ -1771,7 +1771,7 @@ an email/path/UUID/secret-shape sweep, which returns only the fabricated token.
 `muse--draft-image-chip`, `muse--draft-quoted-path`, `muse--tip-paste`,
 `muse--approval-network` and `muse--approval-network-moved`. Each starts from one of the 18
 captures above and swaps the box or dialog rows for the text the contributor saw live on Muse
-1.3.0 under Collie 1.12.1. The transcript, the rules and the statusline are the capture's bytes;
+1.3.0 under Pastor 1.12.1. The transcript, the rules and the statusline are the capture's bytes;
 the swapped rows reuse the styling of the rows they replace, so their colours are not evidence.
 
 **The headline: Muse's questions are digit-MOVES, not digit-answers, and its

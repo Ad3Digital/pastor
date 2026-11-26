@@ -33,7 +33,7 @@ const body = {
     {
       paneId: "w1:p1",
       workspaceId: "w1",
-      workspaceLabel: "collie",
+      workspaceLabel: "pastor",
       workspaceNumber: 1,
       tabId: "w1:t1",
       agent: "claude",
@@ -220,7 +220,7 @@ describe("CrewLead — a peer's sessions never vanish (§10.2)", () => {
     await h.lead.sweep();
     expect(h.lead.contributions()).toHaveLength(1);
 
-    h.roster.length = 0; // `collie leave`, a revocation, or a rotation that dropped it
+    h.roster.length = 0; // `pastor leave`, a revocation, or a rotation that dropped it
     await h.lead.sweep();
     expect(h.lead.contributions()).toEqual([]);
     expect(h.lead.merge(localBody(), NARROW_PLAN).servers).toEqual([
@@ -372,7 +372,7 @@ describe("CrewLead — what it hands the notifier", () => {
     await sweep();
     expect(gone).toEqual([]);
 
-    roster.length = 0; // `collie leave` / revocation / rotation
+    roster.length = 0; // `pastor leave` / revocation / rotation
     await sweep();
     await sweep();
     expect(gone).toEqual(["laptop"]);
@@ -1495,7 +1495,7 @@ describe("a reply from an older dial is dropped, never merged (M22/05)", () => {
 
 // ── M22/03: the lead holds one capability block per member ───────────────────
 //
-// The map of machines is Collie's, and a mux reports one machine (ADR 0036). So a member's
+// The map of machines is Pastor's, and a mux reports one machine (ADR 0036). So a member's
 // capability declaration is a fact about THAT machine, learned over the crew link and answered per
 // host. Absent is the one reading that matters most: it means "use the lead's answer", which is
 // byte for byte what the phone does today with the lead's single `/api/config` read.

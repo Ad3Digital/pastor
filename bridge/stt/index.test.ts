@@ -57,7 +57,7 @@ function tracker() {
   return { built, create };
 }
 
-/** Write one settings document and move the mtime, the way `collie stt setup` would. */
+/** Write one settings document and move the mtime, the way `pastor stt setup` would. */
 function put(io: ReturnType<typeof fakeIo>, document: Record<string, string>) {
   io.text = JSON.stringify(document);
   io.mtime_ += 1;
@@ -154,8 +154,8 @@ describe("the stt gate — which provider the settings name", () => {
     expect(provider.close).toBeUndefined();
   });
 
-  test("whistle settings build Collie's own provider, which says it takes 16 kHz WAV for 4 minutes", async () => {
-    const stateDir = mkdtempSync(join(tmpdir(), "collie-stt-gate-whistle-"));
+  test("whistle settings build Pastor's own provider, which says it takes 16 kHz WAV for 4 minutes", async () => {
+    const stateDir = mkdtempSync(join(tmpdir(), "pastor-stt-gate-whistle-"));
     const provider = createSttProvider({ provider: "whistle" }, { stateDir });
     expect(provider.id).toBe("whistle");
     expect(provider.input).toBe("wav-16k");
@@ -166,4 +166,4 @@ describe("the stt gate — which provider the settings name", () => {
   });
 });
 
-const CONTEXT = { stateDir: "/nonexistent/collie-state" };
+const CONTEXT = { stateDir: "/nonexistent/pastor-state" };

@@ -1,5 +1,5 @@
 // Wire types of the durable socket wire, version 1. They follow WIRE.md section 4 shape for shape.
-// A local copy: the SDK stays free of the collie/ import chain, which a published package could not carry.
+// A local copy: the SDK stays free of the pastor/ import chain, which a published package could not carry.
 
 export type PaneState = "working" | "waiting" | "idle";
 /** The old name, kept for the program side. */
@@ -23,8 +23,8 @@ export interface Caps {
 }
 
 export interface Hello {
-  /** MUST be exactly "collie-durable". Without it the adapter refuses the program (WIRE.md section 2). */
-  service: "collie-durable";
+  /** MUST be exactly "pastor-durable". Without it the adapter refuses the program (WIRE.md section 2). */
+  service: "pastor-durable";
   protocol: ProtocolRange;
   host: { name: string };
   epoch: string;

@@ -1,10 +1,10 @@
 // The program: the same ticket triage as ../durable-member/app.ts, in one Durable Object. Pi Durable keeps the
-// conversations in the object's SQLite (storage.ts), the SDK core serves Collie's wire (core.handle), and the
-// request ids go to a `collie_receipts` table, so a retry after a restart still runs once. The newest 1000 per pane
+// conversations in the object's SQLite (storage.ts), the SDK core serves Pastor's wire (core.handle), and the
+// request ids go to a `pastor_receipts` table, so a retry after a restart still runs once. The newest 1000 per pane
 // are kept (receipts.ts).
 //
 // The constructor runs on every start of the object: after a deploy, an eviction or a hibernation. Each start is
-// a new epoch, so Collie reads every pane again (WIRE.md section 8). An ask that waited is raised again before
+// a new epoch, so Pastor reads every pane again (WIRE.md section 8). An ask that waited is raised again before
 // the object says it is ready, under the same id, so a tap the phone sent across the wake lands.
 
 import { DurableObject } from "cloudflare:workers";
@@ -21,7 +21,7 @@ import {
   type Extension,
   Harness,
 } from "@earendil-works/pi-durable";
-import { type CollieCore, createCore } from "../../durable-member/sdk/core/index.ts";
+import { type PastorCore, createCore } from "../../durable-member/sdk/core/index.ts";
 import { PaneRegistry, riskGuard, showConversation, spawnHelperTool } from "../../durable-member/pi-durable/index.ts";
 import { INSTRUCTIONS, REAL_INSTRUCTIONS, useScriptedModel } from "../../durable-member/script.ts";
 import type { Env } from "./env.ts";
@@ -39,12 +39,12 @@ const ms = (v: string | undefined, fallback: number) => {
 };
 
 export class Member extends DurableObject<Env> {
-  private core!: CollieCore;
+  private core!: PastorCore;
   private readonly panes = new PaneRegistry();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    // No request reaches fetch() before the layout is complete, so Collie never sees a half-empty one.
+    // No request reaches fetch() before the layout is complete, so Pastor never sees a half-empty one.
     void ctx.blockConcurrencyWhile(() => this.start());
   }
 
@@ -55,7 +55,7 @@ export class Member extends DurableObject<Env> {
   private async start() {
     const { env } = this;
     const sql = this.ctx.storage.sql;
-    sql.exec("CREATE TABLE IF NOT EXISTS collie_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, note TEXT NOT NULL)");
+    sql.exec("CREATE TABLE IF NOT EXISTS pastor_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, note TEXT NOT NULL)");
     // Over TLS the token is the only gate, so this program offers Allow and Deny only: an `allow-always` option is
     // a TypeError when an ask is raised (WIRE.md 1B, ADR 0103).
     const core = createCore({ hostName: HOST_NAME, receipts: new SqliteReceiptStore(this.ctx.storage), allowAlways: false });
@@ -86,7 +86,7 @@ export class Member extends DurableObject<Env> {
       description: "Save a note about the ticket.",
       parameters: Type.Object({ note: Type.String() }),
       execute: async (args) => {
-        sql.exec("INSERT INTO collie_notes (at, note) VALUES (?, ?)", new Date().toISOString(), args.note);
+        sql.exec("INSERT INTO pastor_notes (at, note) VALUES (?, ?)", new Date().toISOString(), args.note);
         return { content: [{ type: "text", text: "note saved" }] };
       },
     });
@@ -144,6 +144,6 @@ export class Member extends DurableObject<Env> {
     const reRaised = this.panes.reRaised(risky);
     harness.resume();
     await reRaised;
-    core.ready(); // the layout is complete: only now may Collie see a snapshot
+    core.ready(); // the layout is complete: only now may Pastor see a snapshot
   }
 }

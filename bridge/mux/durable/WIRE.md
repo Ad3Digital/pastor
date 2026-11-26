@@ -1,8 +1,8 @@
 # The durable wire, version 1
 
-> **Experimental.** This wire may change in any minor release of Collie, and so may the version
+> **Experimental.** This wire may change in any minor release of Pastor, and so may the version
 > range the `durable` adapter speaks. Nothing outside this repository should depend on it yet. A
-> program and a Collie that do not share a version get a named `incompatible`, so a mismatch is
+> program and a Pastor that do not share a version get a named `incompatible`, so a mismatch is
 > visible, not silent.
 
 This document fixes the protocol between two parties:
@@ -10,7 +10,7 @@ This document fixes the protocol between two parties:
 - **The program.** A durable agent program, for example one built on Pi Durable. It owns its
   conversations, and it **listens**: on a private Unix socket on the peer's machine, or behind TLS
   at a URL the person deployed it to (section 1).
-- **The adapter.** The `durable` mux adapter in a Collie peer (`COLLIE_MUX=durable`). It **dials**
+- **The adapter.** The `durable` mux adapter in a Pastor peer (`PASTOR_MUX=durable`). It **dials**
   the program, and it maps what it reads onto the mux port (`bridge/mux/types.ts`).
 
 The decisions behind it are in [ADR 0099](../../../.adr/0099-a-durable-program-is-a-mux-with-no-screen.md)
@@ -32,7 +32,7 @@ the ETag and every error code. Only how the program is reached, and who may reac
 
 | | 1A, a private socket | 1B, TLS with a bearer token |
 | --- | --- | --- | --- |
-| Peer setting | `COLLIE_DURABLE_SOCKET` | `COLLIE_DURABLE_URL` and `COLLIE_DURABLE_TOKEN` |
+| Peer setting | `PASTOR_DURABLE_SOCKET` | `PASTOR_DURABLE_URL` and `PASTOR_DURABLE_TOKEN` |
 | Where the program runs | the peer's machine, as the same user | anywhere the person deployed it, for example a Cloudflare Worker with a Durable Object |
 | The gate | a socket only this user can open | the token, compared in constant time |
 | Descendant check | program-side, optional | does not exist |
@@ -44,19 +44,19 @@ its log, and reports `unreachable` with the same line on every read.
 
 ### 1A. A private socket
 
-The socket transport is Linux and macOS. Windows has no socket transport: a Windows peer that is given `COLLIE_DURABLE_SOCKET` dials nothing and reports `unreachable` with a detail that says so; use 1B there.
+The socket transport is Linux and macOS. Windows has no socket transport: a Windows peer that is given `PASTOR_DURABLE_SOCKET` dials nothing and reports `unreachable` with a detail that says so; use 1B there.
 
 | Rule | Value |
 | --- | --- |
 | Socket | One Unix stream socket. No TCP. |
-| Path | The adapter reads it from `COLLIE_DURABLE_SOCKET`. It MUST be absolute and at most 103 bytes, the smallest `sun_path` limit of the platforms Collie runs on, less its closing NUL. Unset, relative or too long: the adapter dials nothing and reports `unreachable` with a detail that names the variable. |
+| Path | The adapter reads it from `PASTOR_DURABLE_SOCKET`. It MUST be absolute and at most 103 bytes, the smallest `sun_path` limit of the platforms Pastor runs on, less its closing NUL. Unset, relative or too long: the adapter dials nothing and reports `unreachable` with a detail that names the variable. |
 | Program config | The program SHOULD read the same variable to choose where it listens, so one value configures both sides. |
 | Permissions | The program creates the socket with mode `0600`, in a directory with mode `0700`. It removes a stale socket file at the path before it listens, and removes its own on a clean exit. |
 | Who may dial | Only the same user. Before each connect, the adapter walks the path from `/` down with `lstat` (the rules below). Any failure: the adapter does not connect, and reports `unreachable` with detail `socket-not-private: <check>`, where `<check>` names the part that failed, for example `the folder /run/x has mode 0755, not 0700`. |
 | Authentication | None. No bearer token, no `Authorization` header. The 0600 socket is the gate. A token belongs to 1B only. |
 | Framing | HTTP/1.1 over the socket. Any `Host` header. Every path starts with `/session/v1`. That prefix is a fixed name, not the version. |
 | Bodies | JSON, UTF-8, `content-type: application/json`. A request body is one JSON object. An empty POST body reads as `{}`. |
-| Version header | `X-Collie-Session: <n>`, a decimal integer. Required on every route except `GET /hello`. |
+| Version header | `X-Pastor-Session: <n>`, a decimal integer. Required on every route except `GET /hello`. |
 | Push | None. The adapter polls (ADR 0073). No WebSocket, no server-sent events. |
 
 #### The path walk
@@ -80,7 +80,7 @@ every part of the path, not only the socket:
 
 The socket keeps out other users. It does not keep out the same user. Any process that runs as the
 same user can open the socket, read every pane and answer an ask, and that includes a tool the agent
-runs. Collie cannot tell such a process from itself.
+runs. Pastor cannot tell such a process from itself.
 
 The program owns that defence. It SHOULD refuse a caller that is its own descendant (it can read the
 peer's credentials on the socket), or run the agent's tools in a sandbox that cannot reach the
@@ -90,14 +90,14 @@ tool would let every later call through without a question.
 
 ### 1B. TLS with a bearer token
 
-For a program the person deployed themselves, behind TLS, and that Collie dials out to. The program
+For a program the person deployed themselves, behind TLS, and that Pastor dials out to. The program
 has a public URL, so the token is the whole gate.
 
 | Rule | Value |
 | --- | --- |
 | Connection | HTTPS. The adapter verifies the certificate as any client does; there is no switch to turn that off. |
-| URL | The adapter reads it from `COLLIE_DURABLE_URL`. It MUST start with `https://`, with one exception: `http://127.0.0.1:<port>` or `http://localhost:<port>`, with a port, for a local test such as `wrangler dev`. Any other `http://` is refused with the reason. At most 2048 bytes. No user name or password, no query, no fragment. An optional path prefix is kept, and the adapter appends `/session/v1/...` to it. |
-| Token | The adapter reads it from `COLLIE_DURABLE_TOKEN`. At least 32 bytes after a trim, printable ASCII with no space. It goes as `Authorization: Bearer <token>` on every request, `hello` included. The adapter never logs it, never shows it in `collie doctor` beyond "set, N bytes", and never puts it in an error. |
+| URL | The adapter reads it from `PASTOR_DURABLE_URL`. It MUST start with `https://`, with one exception: `http://127.0.0.1:<port>` or `http://localhost:<port>`, with a port, for a local test such as `wrangler dev`. Any other `http://` is refused with the reason. At most 2048 bytes. No user name or password, no query, no fragment. An optional path prefix is kept, and the adapter appends `/session/v1/...` to it. |
+| Token | The adapter reads it from `PASTOR_DURABLE_TOKEN`. At least 32 bytes after a trim, printable ASCII with no space. It goes as `Authorization: Bearer <token>` on every request, `hello` included. The adapter never logs it, never shows it in `pastor doctor` beyond "set, N bytes", and never puts it in an error. |
 | Program check | The program MUST check the token before anything else: before the version, before `hello`, before `ready`. It MUST compare in constant time. A request without the token, or with another one, gets **401** `{ "code": "unauthorized" }` and nothing else: no range, no epoch, no route. Nothing runs. |
 | Redirects | The adapter follows none. A 3xx is passed up as a status, so the token never reaches another host. |
 | Framing, bodies, version header, push | As in 1A. Any HTTP version the host speaks. |
@@ -113,9 +113,9 @@ has a public URL, so the token is the whole gate.
 - **The host sees the text.** TLS ends at the host (on Cloudflare, at Cloudflare's edge). Transcripts,
   tool output and the program's own model key sit with the host.
 - **A token does not expire by itself.** The person rotates it by deploying a new token to the
-  program and setting the same value in the peer's `COLLIE_DURABLE_TOKEN`, then restarting the
+  program and setting the same value in the peer's `PASTOR_DURABLE_TOKEN`, then restarting the
   peer. A program MAY take a second token while a rotation runs, so the peer keeps working while it
-  moves: the Cloudflare example takes `COLLIE_TOKEN` and, while it is set, `COLLIE_TOKEN_NEXT`, and
+  moves: the Cloudflare example takes `PASTOR_TOKEN` and, while it is set, `PASTOR_TOKEN_NEXT`, and
   compares both in constant time.
 - **A public URL is billed when it is hit.** Requests with a wrong token still reach the host. A
   program SHOULD refuse them before it wakes any state.
@@ -131,10 +131,10 @@ carries it is a `TypeError` when the program raises it.
    implements it reports `{ "min": 1, "max": 1 }`.
 2. The adapter first calls `GET /hello` **without** the version header. `hello` always answers 200
    to that call, ready or not.
-3. The adapter picks the highest version inside both ranges, and sends it in `X-Collie-Session` on
+3. The adapter picks the highest version inside both ranges, and sends it in `X-Pastor-Session` on
    every later call, including later `hello` calls.
 4. No overlap: the adapter calls nothing else. It reports `unreachable` with detail
-   `incompatible: program speaks <min>..<max>, this Collie speaks 1..1`. It never shows an empty
+   `incompatible: program speaks <min>..<max>, this Pastor speaks 1..1`. It never shows an empty
    census for this case.
 5. A call with a missing header (other than `hello`), a non-integer header, or a version outside
    the program's range gets **409** `{ "code": "incompatible", "range": { "min", "max" } }`. Never a
@@ -143,7 +143,7 @@ carries it is a `TypeError` when the program raises it.
    carry. The adapter reports it as `incompatible` with detail `program asks for a token`. Over TLS
    (1B) a **401** or **403** means the program refused the token: `unreachable`, detail
    `token-refused`, before any version check (section 1B).
-7. A `hello` without `service: "collie-durable"` is not a durable program: some other server
+7. A `hello` without `service: "pastor-durable"` is not a durable program: some other server
    listens at the path. The adapter calls nothing else and reports `unreachable` with detail
    `incompatible: not a durable program`.
 8. A field is additive and optional. A reader MUST ignore a field it does not know. A new required
@@ -215,8 +215,8 @@ interface ProtocolRange {
 }
 
 interface Hello {
-  /** MUST be exactly "collie-durable". Absent or other: the adapter refuses the program (section 2). */
-  service: "collie-durable";
+  /** MUST be exactly "pastor-durable". Absent or other: the adapter refuses the program (section 2). */
+  service: "pastor-durable";
   protocol: ProtocolRange;
   /** Display text only. Never an address and never an identity. */
   host: { name: string };
@@ -454,7 +454,7 @@ interface Problem {
 The adapter maps each pane onto `MuxPane.status`, which is the `AgentStatus` that reaches the phone
 on `PaneWire` (`idle | working | blocked | done | unknown`).
 
-| What the adapter sees | Collie status | Notes |
+| What the adapter sees | Pastor status | Notes |
 | --- | --- | --- |
 | `state: "working"` | `working` | |
 | `state: "waiting"` | `blocked` | The program MUST report `waiting` while any ask is open. |
@@ -736,7 +736,7 @@ abort.
   token and no handshake. Over 1B the token is the only gate, and there is no other handshake: no
   client certificate, no second factor.
 - **Other machines, except through 1B.** A program the person deployed behind TLS is reached over
-  1B. Any other program on another machine is reached through the Collie on that machine.
+  1B. Any other program on another machine is reached through the Pastor on that machine.
 - **Waking a program on purpose.** Over 1A a program that is not running is `unreachable`. Over 1B
   the host may start the program for a request (a Durable Object does), and the adapter neither
   knows nor relies on it: a new start is a new epoch (section 8).
@@ -745,7 +745,7 @@ abort.
 - **More than one program per peer.** One socket path, or one URL, per peer.
 - **Ask kinds other than `permission`**, and free-text answers beyond the optional `note`.
 - **Starters that take input**, such as a folder or a prompt.
-- **Creating, renaming or closing** workspaces, tabs or panes from Collie.
+- **Creating, renaming or closing** workspaces, tabs or panes from Pastor.
 
 ## 10. Changes from the spike
 
@@ -756,7 +756,7 @@ document. The version number stays 1; the spike's shapes are not supported.
    transport 1A. The check order there is version, `hello`, ready, route. A token came back later,
    for transport 1B only (ADR 0103): TLS required, at least 32 bytes, checked before everything else.
 2. **Plain TCP is gone.** No `tcp:` listen spec. On 1A the program listens on a Unix socket, and
-   SHOULD take its path from `COLLIE_DURABLE_SOCKET`. A program on the network is reached over TLS
+   SHOULD take its path from `PASTOR_DURABLE_SOCKET`. A program on the network is reached over TLS
    (1B), never over plain TCP.
 3. **Every id follows the id rule** (1 to 128 bytes, no whitespace or control character, no `/`,
    `?` or `#`). The spike's tab ids are `<workspace>/<tab>`, which breaks it. Use another
@@ -788,7 +788,7 @@ document. The version number stays 1; the spike's shapes are not supported.
 15. **The guard moves out of the wire.** The spike's lead-side guard (push and open caps) is the
     bridge's job now, keyed on `(host, toolCallId)`. The program sends every open ask, up to 50 per
     pane, oldest first. The guard caps pushes only: every open ask reaches the phone.
-16. **`Hello` gains `service: "collie-durable"`** (required). A server at the path that does not
+16. **`Hello` gains `service: "pastor-durable"`** (required). A server at the path that does not
     say it is refused as `incompatible: not a durable program`. Added before version 1 shipped, so
     the version stays 1.
 17. **The path cap is 103 bytes** (was 107), and the adapter walks the whole path (section 1A).

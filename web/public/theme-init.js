@@ -22,7 +22,7 @@
 // two are kept in one file because they are one job (get the root classes right before paint) and
 // because a second blocking <script> in <head> costs a round trip on the phone this app is for.
 //
-// UNLIKE THE THEME, the typeface is stored as JSON — `collie:design:v1` holds an object because it
+// UNLIKE THE THEME, the typeface is stored as JSON — `pastor:design:v1` holds an object because it
 // is the seed of theming and will grow siblings (src/lib/design.ts's header says why). So this one
 // parses defensively and validates the result against a CLOSED LIST before the string is allowed to
 // become a class name. The list is spelled here rather than derived, because this file can import
@@ -36,14 +36,14 @@
 (function () {
   var root = document.documentElement;
   try {
-    var t = localStorage.getItem("collie:theme:v1");
+    var t = localStorage.getItem("pastor:theme:v1");
     if (t === "dark" || t === "light") root.classList.add(t);
   } catch {
     // Safari private mode throws on localStorage. Falling through leaves `color-scheme: light dark`
     // in charge, which follows the OS — the right default anyway.
   }
   try {
-    var raw = localStorage.getItem("collie:design:v1");
+    var raw = localStorage.getItem("pastor:design:v1");
     if (!raw) return;
     var d = JSON.parse(raw);
     if (!d || typeof d !== "object") return;

@@ -20,11 +20,11 @@ export interface ProtocolRange {
   readonly max: number;
 }
 
-/** What this Collie speaks. This document is version 1, so the range is 1..1. */
+/** What this Pastor speaks. This document is version 1, so the range is 1..1. */
 export const SPEAKS: ProtocolRange = { min: 1, max: 1 };
 
 /** The name every durable program sends in `hello` (WIRE.md section 4). A socket without it is something else. */
-export const DURABLE_SERVICE = "collie-durable";
+export const DURABLE_SERVICE = "pastor-durable";
 
 /** The refusal detail for a `hello` that does not name {@link DURABLE_SERVICE}. */
 export const NOT_A_DURABLE_PROGRAM = "not a durable program";
@@ -39,7 +39,7 @@ export function negotiateVersion(program: ProtocolRange): number | null {
 /** The refusal detail for two ranges that do not meet. It starts with `incompatible`. */
 export function incompatibleDetail(program: ProtocolRange | null): string {
   if (program === null) return "incompatible";
-  return `incompatible: program speaks ${String(program.min)}..${String(program.max)}, this Collie speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)}`;
+  return `incompatible: program speaks ${String(program.min)}..${String(program.max)}, this Pastor speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)}`;
 }
 
 // ── The clean types ───────────────────────────────────────────────────────────
@@ -375,7 +375,7 @@ function readTab(value: Json, workspaces: ReadonlyMap<string, DurableWorkspace>)
 /**
  * A pane needs its own id, a workspace and a tab the snapshot kept (and the tab must sit in that
  * workspace), and a `turnId`. Without any of them the pane is dropped: a pane that names a tab
- * Collie does not show cannot be placed, and a pane with no turn cannot be controlled later.
+ * Pastor does not show cannot be placed, and a pane with no turn cannot be controlled later.
  */
 function readPane(
   value: Json,
@@ -867,7 +867,7 @@ export function askForWire(ask: DurableAsk): Ask {
 
 /**
  * How a pane is doing (WIRE.md section 5). An open ask wins over `state`, so a program that
- * forgets to say `waiting` still shows as needing a person. Any state Collie does not know is
+ * forgets to say `waiting` still shows as needing a person. Any state Pastor does not know is
  * `unknown`. The program never sends `done`: the bridge derives it from working then idle.
  */
 export function statusOf(pane: Pick<DurablePane, "state" | "openAsks">): AgentStatus {

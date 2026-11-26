@@ -1,7 +1,7 @@
-// ── EVERY COLLIE SETTING, DECLARED ONCE ──────────────────────────────────────
+// ── EVERY PASTOR SETTING, DECLARED ONCE ──────────────────────────────────────
 //
-// One table. The config-file reader, `collie config init`'s generated file, `collie config show`'s
-// source column, `collie config check`'s validation and `collie doctor`'s finding all read it, so a
+// One table. The config-file reader, `pastor config init`'s generated file, `pastor config show`'s
+// source column, `pastor config check`'s validation and `pastor doctor`'s finding all read it, so a
 // setting cannot exist in one of those surfaces and be missing from the others.
 //
 // This module is a DECLARATION and nothing else: no `process.env`, no filesystem, no parsing. It
@@ -9,10 +9,10 @@
 // documentation. `bridge/config-source.ts` turns a file into an environment against it, and
 // `bridge/config.ts` still does the actual reading exactly as it always did.
 //
-// **A key is derived from its environment name, mechanically**: `COLLIE_POLL_MS` is `poll_ms` in
+// **A key is derived from its environment name, mechanically**: `PASTOR_POLL_MS` is `poll_ms` in
 // the `[bridge]` section. `bridge/config-schema.test.ts` asserts that for the whole table, so a row
 // cannot invent a name. `HERDR_SOCKET_PATH` is the one row whose environment name does not start
-// with `COLLIE_`, and it declares the key it takes.
+// with `PASTOR_`, and it declares the key it takes.
 //
 // **A config file adds no environment key** (CREW_PROTOCOL.md §11). Moving these literals here does
 // not change what any process reads; `bridge/solo-baseline.test.ts` pins the same 37 names it always
@@ -59,7 +59,7 @@ export const CONFIG_SECTIONS: readonly ConfigSection[] = [
 export const SECTION_DOC = {
   bridge: "How often the bridge looks, how much it reads, and where its state lives.",
   network: "The listener, the bind address and which hosts and origins may reach it.",
-  mux: "Which multiplexer this collie mirrors and where that multiplexer lives.",
+  mux: "Which multiplexer this pastor mirrors and where that multiplexer lives.",
   access: "Who may write: the Tailscale identity gate, the device header and the audit trail.",
   push: "Web Push (VAPID). All three are needed before a phone can be notified.",
   uploads: "The attachment size cap and the extra text types the upload route accepts.",
@@ -67,8 +67,8 @@ export const SECTION_DOC = {
   crew: "The budgets a lead gives a member, and whether a peer keeps its own browser.",
   standby: "The deputy's second door: its port, its bind address and when it arms.",
   update: "Where releases come from, how many old versions stay, and the health budget.",
-  serve: "The managed front door: whether Collie publishes it, and on what.",
-  stt: "Speech-to-text, which is absent until `collie stt setup` writes it.",
+  serve: "The managed front door: whether Pastor publishes it, and on what.",
+  stt: "Speech-to-text, which is absent until `pastor stt setup` writes it.",
 } satisfies Record<ConfigSection, string>;
 
 /**
@@ -134,7 +134,7 @@ export type ConfigSetting =
 /**
  * Every setting, in file order.
  *
- * A new `COLLIE_*` name anywhere under `bridge/` or `cli/` needs a row here or a named exemption in
+ * A new `PASTOR_*` name anywhere under `bridge/` or `cli/` needs a row here or a named exemption in
  * `bridge/config-schema.test.ts`. That test greps the tree and fails with the missing name and the
  * file it found it in, so the fix is one row.
  */
@@ -142,7 +142,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── bridge ─────────────────────────────────────────────────────────────────
   {
     key: "poll_ms",
-    env: "COLLIE_POLL_MS",
+    env: "PASTOR_POLL_MS",
     section: "bridge",
     kind: "int",
     default: 1500,
@@ -152,7 +152,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "poll_idle_ms",
-    env: "COLLIE_POLL_IDLE_MS",
+    env: "PASTOR_POLL_IDLE_MS",
     section: "bridge",
     kind: "int",
     default: 12_000,
@@ -162,7 +162,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "notify_delay_ms",
-    env: "COLLIE_NOTIFY_DELAY_MS",
+    env: "PASTOR_NOTIFY_DELAY_MS",
     section: "bridge",
     kind: "int",
     default: 30_000,
@@ -172,7 +172,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "task_run_level",
-    env: "COLLIE_TASK_RUN_LEVEL",
+    env: "PASTOR_TASK_RUN_LEVEL",
     section: "bridge",
     kind: "enum",
     values: ["limited", "highest"],
@@ -181,7 +181,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "read_lines",
-    env: "COLLIE_READ_LINES",
+    env: "PASTOR_READ_LINES",
     section: "bridge",
     kind: "int",
     default: 200,
@@ -191,7 +191,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "submit_keys",
-    env: "COLLIE_SUBMIT_KEYS",
+    env: "PASTOR_SUBMIT_KEYS",
     section: "bridge",
     kind: "list",
     default: ["Enter"],
@@ -200,16 +200,16 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "multi_session",
-    env: "COLLIE_MULTI_SESSION",
+    env: "PASTOR_MULTI_SESSION",
     section: "bridge",
     kind: "bool",
     default: true,
-    doc: "Front every running session this collie discovers, not only the primary one.",
+    doc: "Front every running session this pastor discovers, not only the primary one.",
     configField: "multiSession",
   },
   {
     key: "transcript",
-    env: "COLLIE_TRANSCRIPT",
+    env: "PASTOR_TRANSCRIPT",
     section: "bridge",
     kind: "bool",
     default: true,
@@ -218,18 +218,18 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "state_dir",
-    env: "COLLIE_STATE_DIR",
+    env: "PASTOR_STATE_DIR",
     section: "bridge",
     kind: "string",
     default: "",
-    doc: "Where runtime state lives. Empty takes ~/.local/state/collie.",
+    doc: "Where runtime state lives. Empty takes ~/.local/state/pastor.",
     configField: "stateDir",
   },
 
   // ── network ────────────────────────────────────────────────────────────────
   {
     key: "port",
-    env: "COLLIE_PORT",
+    env: "PASTOR_PORT",
     section: "network",
     kind: "int",
     default: 8787,
@@ -240,7 +240,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "host",
-    env: "COLLIE_HOST",
+    env: "PASTOR_HOST",
     section: "network",
     kind: "string",
     default: "127.0.0.1",
@@ -249,7 +249,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "allow_non_loopback_bind",
-    env: "COLLIE_ALLOW_NON_LOOPBACK_BIND",
+    env: "PASTOR_ALLOW_NON_LOOPBACK_BIND",
     section: "network",
     kind: "bool",
     default: false,
@@ -258,7 +258,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "allow_any_host",
-    env: "COLLIE_ALLOW_ANY_HOST",
+    env: "PASTOR_ALLOW_ANY_HOST",
     section: "network",
     kind: "bool",
     default: false,
@@ -267,7 +267,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "allowed_origins",
-    env: "COLLIE_ALLOWED_ORIGINS",
+    env: "PASTOR_ALLOWED_ORIGINS",
     section: "network",
     kind: "list",
     default: [],
@@ -276,7 +276,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "public_hosts",
-    env: "COLLIE_PUBLIC_HOSTS",
+    env: "PASTOR_PUBLIC_HOSTS",
     section: "network",
     kind: "list",
     default: [],
@@ -285,7 +285,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "tailscale_hosts",
-    env: "COLLIE_TAILSCALE_HOSTS",
+    env: "PASTOR_TAILSCALE_HOSTS",
     section: "network",
     kind: "list",
     default: [],
@@ -294,21 +294,21 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "public_url",
-    env: "COLLIE_PUBLIC_URL",
+    env: "PASTOR_PUBLIC_URL",
     section: "network",
     kind: "string",
     default: "",
-    doc: "The URL this collie is reached at when Collie did not publish the front door itself.",
+    doc: "The URL this pastor is reached at when Pastor did not publish the front door itself.",
   },
 
   // ── mux ────────────────────────────────────────────────────────────────────
   {
     key: "mux",
-    env: "COLLIE_MUX",
+    env: "PASTOR_MUX",
     section: "mux",
     kind: "string",
     default: DEFAULT_MUX,
-    doc: "Which multiplexer this collie mirrors: herdr, tern, tmux, zellij, tuios or durable.",
+    doc: "Which multiplexer this pastor mirrors: herdr, tern, tmux, zellij, tuios or durable.",
     configField: "mux",
   },
   {
@@ -322,7 +322,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "herdr_dial",
-    env: "COLLIE_HERDR_DIAL",
+    env: "PASTOR_HERDR_DIAL",
     section: "mux",
     kind: "enum",
     values: ["auto", "net", "bun"],
@@ -332,7 +332,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "tmux_bin",
-    env: "COLLIE_TMUX_BIN",
+    env: "PASTOR_TMUX_BIN",
     section: "mux",
     kind: "string",
     default: "",
@@ -341,7 +341,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "tern_bin",
-    env: "COLLIE_TERN_BIN",
+    env: "PASTOR_TERN_BIN",
     section: "mux",
     kind: "string",
     default: "",
@@ -350,7 +350,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "zellij_bin",
-    env: "COLLIE_ZELLIJ_BIN",
+    env: "PASTOR_ZELLIJ_BIN",
     section: "mux",
     kind: "string",
     default: "",
@@ -359,7 +359,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "mux_endpoint_tmux",
-    env: "COLLIE_MUX_ENDPOINT_TMUX",
+    env: "PASTOR_MUX_ENDPOINT_TMUX",
     section: "mux",
     kind: "string",
     default: "",
@@ -368,7 +368,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "mux_endpoint_zellij",
-    env: "COLLIE_MUX_ENDPOINT_ZELLIJ",
+    env: "PASTOR_MUX_ENDPOINT_ZELLIJ",
     section: "mux",
     kind: "string",
     default: "",
@@ -377,7 +377,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "mux_endpoint_tern",
-    env: "COLLIE_MUX_ENDPOINT_TERN",
+    env: "PASTOR_MUX_ENDPOINT_TERN",
     section: "mux",
     kind: "string",
     default: "",
@@ -386,15 +386,15 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "durable_socket",
-    env: "COLLIE_DURABLE_SOCKET",
+    env: "PASTOR_DURABLE_SOCKET",
     section: "mux",
     kind: "string",
     default: "",
-    doc: "The Unix socket a durable agent program listens on, when COLLIE_MUX is durable. Absolute, and private to your user (mode 0600).",
+    doc: "The Unix socket a durable agent program listens on, when PASTOR_MUX is durable. Absolute, and private to your user (mode 0600).",
   },
   {
     key: "durable_url",
-    env: "COLLIE_DURABLE_URL",
+    env: "PASTOR_DURABLE_URL",
     section: "mux",
     kind: "string",
     default: "",
@@ -402,7 +402,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "durable_token",
-    env: "COLLIE_DURABLE_TOKEN",
+    env: "PASTOR_DURABLE_TOKEN",
     section: "mux",
     kind: "secret",
     default: "",
@@ -410,7 +410,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "mux_endpoint_tuios",
-    env: "COLLIE_MUX_ENDPOINT_TUIOS",
+    env: "PASTOR_MUX_ENDPOINT_TUIOS",
     section: "mux",
     kind: "string",
     default: "",
@@ -421,7 +421,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── access ─────────────────────────────────────────────────────────────────
   {
     key: "trusted_user",
-    env: "COLLIE_TRUSTED_USER",
+    env: "PASTOR_TRUSTED_USER",
     section: "access",
     kind: "string",
     default: "",
@@ -430,7 +430,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "trusted_user_optional",
-    env: "COLLIE_TRUSTED_USER_OPTIONAL",
+    env: "PASTOR_TRUSTED_USER_OPTIONAL",
     section: "access",
     kind: "bool",
     default: false,
@@ -439,7 +439,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "access_team",
-    env: "COLLIE_ACCESS_TEAM",
+    env: "PASTOR_ACCESS_TEAM",
     section: "access",
     kind: "string",
     default: "",
@@ -448,7 +448,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "access_aud",
-    env: "COLLIE_ACCESS_AUD",
+    env: "PASTOR_ACCESS_AUD",
     section: "access",
     kind: "list",
     default: [],
@@ -457,7 +457,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "device_header",
-    env: "COLLIE_DEVICE_HEADER",
+    env: "PASTOR_DEVICE_HEADER",
     section: "access",
     kind: "string",
     default: "",
@@ -466,7 +466,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "device_allowlist",
-    env: "COLLIE_DEVICE_ALLOWLIST",
+    env: "PASTOR_DEVICE_ALLOWLIST",
     section: "access",
     kind: "list",
     default: [],
@@ -475,7 +475,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "audit_content",
-    env: "COLLIE_AUDIT_CONTENT",
+    env: "PASTOR_AUDIT_CONTENT",
     section: "access",
     kind: "enum",
     values: ["preview", "none"],
@@ -485,7 +485,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "redact",
-    env: "COLLIE_REDACT",
+    env: "PASTOR_REDACT",
     section: "access",
     kind: "bool",
     default: true,
@@ -496,7 +496,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── push ───────────────────────────────────────────────────────────────────
   {
     key: "vapid_public",
-    env: "COLLIE_VAPID_PUBLIC",
+    env: "PASTOR_VAPID_PUBLIC",
     section: "push",
     kind: "string",
     default: "",
@@ -505,7 +505,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "vapid_private",
-    env: "COLLIE_VAPID_PRIVATE",
+    env: "PASTOR_VAPID_PRIVATE",
     section: "push",
     kind: "secret",
     default: "",
@@ -514,7 +514,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "vapid_subject",
-    env: "COLLIE_VAPID_SUBJECT",
+    env: "PASTOR_VAPID_SUBJECT",
     section: "push",
     kind: "string",
     default: "mailto:admin@example.com",
@@ -523,7 +523,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "cache_warn_seconds",
-    env: "COLLIE_CACHE_WARN_SECONDS",
+    env: "PASTOR_CACHE_WARN_SECONDS",
     section: "push",
     kind: "int",
     default: 300,
@@ -536,7 +536,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── uploads ────────────────────────────────────────────────────────────────
   {
     key: "max_upload_mb",
-    env: "COLLIE_MAX_UPLOAD_MB",
+    env: "PASTOR_MAX_UPLOAD_MB",
     section: "uploads",
     kind: "int",
     default: DEFAULT_MAX_UPLOAD_MB,
@@ -547,7 +547,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "upload_extra_types",
-    env: "COLLIE_UPLOAD_EXTRA_TYPES",
+    env: "PASTOR_UPLOAD_EXTRA_TYPES",
     section: "uploads",
     kind: "list",
     default: [],
@@ -558,7 +558,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── journal ────────────────────────────────────────────────────────────────
   {
     key: "transcript_root",
-    env: "COLLIE_TRANSCRIPT_ROOT",
+    env: "PASTOR_TRANSCRIPT_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -567,7 +567,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "codex_root",
-    env: "COLLIE_CODEX_ROOT",
+    env: "PASTOR_CODEX_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -576,7 +576,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "pi_root",
-    env: "COLLIE_PI_ROOT",
+    env: "PASTOR_PI_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -585,7 +585,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "opencode_root",
-    env: "COLLIE_OPENCODE_ROOT",
+    env: "PASTOR_OPENCODE_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -594,7 +594,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "grok_root",
-    env: "COLLIE_GROK_ROOT",
+    env: "PASTOR_GROK_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -603,7 +603,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "hermes_root",
-    env: "COLLIE_HERMES_ROOT",
+    env: "PASTOR_HERMES_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -612,7 +612,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "muse_root",
-    env: "COLLIE_MUSE_ROOT",
+    env: "PASTOR_MUSE_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -621,7 +621,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "openclaw_root",
-    env: "COLLIE_OPENCLAW_ROOT",
+    env: "PASTOR_OPENCLAW_ROOT",
     section: "journal",
     kind: "roots",
     default: [],
@@ -632,7 +632,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── crew ───────────────────────────────────────────────────────────────────
   {
     key: "crew_timeout_ms",
-    env: "COLLIE_CREW_TIMEOUT_MS",
+    env: "PASTOR_CREW_TIMEOUT_MS",
     section: "crew",
     kind: "int",
     default: 1200,
@@ -641,7 +641,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "crew_hello_timeout_ms",
-    env: "COLLIE_CREW_HELLO_TIMEOUT_MS",
+    env: "PASTOR_CREW_HELLO_TIMEOUT_MS",
     section: "crew",
     kind: "int",
     default: 5000,
@@ -650,7 +650,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "peer_browser",
-    env: "COLLIE_PEER_BROWSER",
+    env: "PASTOR_PEER_BROWSER",
     section: "crew",
     kind: "bool",
     default: false,
@@ -660,7 +660,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── standby ────────────────────────────────────────────────────────────────
   {
     key: "standby_port",
-    env: "COLLIE_STANDBY_PORT",
+    env: "PASTOR_STANDBY_PORT",
     section: "standby",
     kind: "int",
     default: 0,
@@ -670,7 +670,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "standby_host",
-    env: "COLLIE_STANDBY_HOST",
+    env: "PASTOR_STANDBY_HOST",
     section: "standby",
     kind: "string",
     default: "127.0.0.1",
@@ -678,7 +678,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "standby_arm_ms",
-    env: "COLLIE_STANDBY_ARM_MS",
+    env: "PASTOR_STANDBY_ARM_MS",
     section: "standby",
     kind: "int",
     default: 0,
@@ -689,15 +689,15 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── update ─────────────────────────────────────────────────────────────────
   {
     key: "update_repo",
-    env: "COLLIE_UPDATE_REPO",
+    env: "PASTOR_UPDATE_REPO",
     section: "update",
     kind: "string",
-    default: "AltanS/collie",
+    default: "Ad3Digital/pastor",
     doc: "The owner/repo releases are taken from. Set it only when you run a fork on purpose.",
   },
   {
     key: "github_token",
-    env: "COLLIE_GITHUB_TOKEN",
+    env: "PASTOR_GITHUB_TOKEN",
     section: "update",
     kind: "secret",
     default: "",
@@ -705,7 +705,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "keep_versions",
-    env: "COLLIE_KEEP_VERSIONS",
+    env: "PASTOR_KEEP_VERSIONS",
     section: "update",
     kind: "int",
     default: 2,
@@ -714,7 +714,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "update_health_timeout_ms",
-    env: "COLLIE_UPDATE_HEALTH_TIMEOUT_MS",
+    env: "PASTOR_UPDATE_HEALTH_TIMEOUT_MS",
     section: "update",
     kind: "int",
     default: 30_000,
@@ -725,7 +725,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── serve ──────────────────────────────────────────────────────────────────
   {
     key: "skip_serve",
-    env: "COLLIE_SKIP_SERVE",
+    env: "PASTOR_SKIP_SERVE",
     section: "serve",
     kind: "bool",
     default: false,
@@ -734,16 +734,16 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "base_path",
-    env: "COLLIE_BASE_PATH",
+    env: "PASTOR_BASE_PATH",
     section: "serve",
     kind: "string",
     default: "",
-    doc: "The path Collie is mounted under when a proxy gives it one, such as /collie. Empty means the root.",
+    doc: "The path Pastor is mounted under when a proxy gives it one, such as /pastor. Empty means the root.",
     configField: "basePath",
   },
   {
     key: "serve_mode",
-    env: "COLLIE_SERVE_MODE",
+    env: "PASTOR_SERVE_MODE",
     section: "serve",
     kind: "enum",
     values: ["https", "http"],
@@ -752,7 +752,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "serve_port",
-    env: "COLLIE_SERVE_PORT",
+    env: "PASTOR_SERVE_PORT",
     section: "serve",
     kind: "int",
     default: 443,
@@ -764,7 +764,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   // ── stt ────────────────────────────────────────────────────────────────────
   {
     key: "stt_provider",
-    env: "COLLIE_STT_PROVIDER",
+    env: "PASTOR_STT_PROVIDER",
     section: "stt",
     kind: "enum",
     values: ["openai-compatible", "codex", "local-cli"],
@@ -773,7 +773,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_url",
-    env: "COLLIE_STT_URL",
+    env: "PASTOR_STT_URL",
     section: "stt",
     kind: "string",
     default: "",
@@ -781,7 +781,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_model",
-    env: "COLLIE_STT_MODEL",
+    env: "PASTOR_STT_MODEL",
     section: "stt",
     kind: "string",
     default: "gpt-transcribe",
@@ -789,7 +789,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_key",
-    env: "COLLIE_STT_KEY",
+    env: "PASTOR_STT_KEY",
     section: "stt",
     kind: "secret",
     default: "",
@@ -797,7 +797,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_lang",
-    env: "COLLIE_STT_LANG",
+    env: "PASTOR_STT_LANG",
     section: "stt",
     kind: "string",
     default: "",
@@ -805,7 +805,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_wire_identity",
-    env: "COLLIE_STT_WIRE_IDENTITY",
+    env: "PASTOR_STT_WIRE_IDENTITY",
     section: "stt",
     kind: "enum",
     values: ["honest", "codex-cli"],
@@ -814,7 +814,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "codex_bin",
-    env: "COLLIE_CODEX_BIN",
+    env: "PASTOR_CODEX_BIN",
     section: "stt",
     kind: "string",
     default: "codex",
@@ -822,7 +822,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
   },
   {
     key: "stt_command",
-    env: "COLLIE_STT_COMMAND",
+    env: "PASTOR_STT_COMMAND",
     section: "stt",
     kind: "string",
     default: "",
@@ -864,5 +864,5 @@ export function settingByKey(section: ConfigSection, key: string): ConfigSetting
  * validation message able to say which name the key would have meant.
  */
 export function envNameFor(key: string, section: ConfigSection): string {
-  return settingByKey(section, key)?.env ?? `COLLIE_${key.toUpperCase()}`;
+  return settingByKey(section, key)?.env ?? `PASTOR_${key.toUpperCase()}`;
 }

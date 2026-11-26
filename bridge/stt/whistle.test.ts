@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { collieSelfCommand } from "../root.ts";
+import { pastorSelfCommand } from "../root.ts";
 import { childRunner, LocalCliEmptyTranscriptError } from "./local-cli.ts";
 import { SttError, type SttAudio } from "./provider.ts";
 import { encodeWav16 } from "./wav.ts";
@@ -12,9 +12,9 @@ import { createWhistleSttProvider, WHISTLE_VERB, whistleChildEnv, whistleTimeout
 import { resetWhistleModelState, whistlePaths } from "./whistle-model.ts";
 import { WHISTLE_MODEL } from "./whistle-pins.ts";
 
-// The whistle provider against a FAKE Collie: `self` is this very Bun running a small script, so the
+// The whistle provider against a FAKE Pastor: `self` is this very Bun running a small script, so the
 // child is real (the argv, the env, the temp file, the bounds) and the engine is not. The real
-// engine runs in cli/whistle-transcribe.test.ts, behind COLLIE_TEST_WHISTLE_DIR.
+// engine runs in cli/whistle-transcribe.test.ts, behind PASTOR_TEST_WHISTLE_DIR.
 
 let root: string;
 let stateDir: string;
@@ -24,10 +24,10 @@ let report: string;
 const checkout = join(import.meta.dir, "..", "..");
 
 beforeAll(() => {
-  root = mkdtempSync(join(tmpdir(), "collie-whistle-provider-"));
+  root = mkdtempSync(join(tmpdir(), "pastor-whistle-provider-"));
   stateDir = join(root, "state");
   tmpRoot = join(root, "tmp");
-  script = join(root, "fake-collie.ts");
+  script = join(root, "fake-pastor.ts");
   report = join(root, "report.json");
   for (const dir of [stateDir, tmpRoot]) mkdirSync(dir, { recursive: true });
 });
@@ -36,8 +36,8 @@ afterAll(() => {
 });
 beforeEach(() => resetWhistleModelState());
 
-/** A fake `collie` that records its argv and env, then prints `out`. */
-function fakeCollie(out: string): readonly string[] {
+/** A fake `pastor` that records its argv and env, then prints `out`. */
+function fakePastor(out: string): readonly string[] {
   writeFileSync(
     script,
     `
@@ -46,7 +46,7 @@ const argv = process.argv.slice(2);
 writeFileSync(${JSON.stringify(report)}, JSON.stringify({
   argv,
   bytes: readFileSync(argv[argv.length - 1]).length,
-  collieEnv: Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith("COLLIE_"))),
+  pastorEnv: Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith("PASTOR_"))),
 }));
 process.stdout.write(${JSON.stringify(out)});
 `,
@@ -57,38 +57,38 @@ process.stdout.write(${JSON.stringify(out)});
 const wav = (): SttAudio => ({ audio: encodeWav16(new Float32Array(1600)), mimeType: "audio/wav", filename: "recording.wav" });
 
 describe("the whistle provider", () => {
-  test("spawns Collie's own CLI with the fixed argv, and only the two COLLIE_ variables it sets", async () => {
+  test("spawns Pastor's own CLI with the fixed argv, and only the two PASTOR_ variables it sets", async () => {
     const provider = createWhistleSttProvider({
       stateDir,
       root: checkout,
-      self: fakeCollie("  hello from whistle \n"),
-      env: { PATH: process.env.PATH, COLLIE_PUSH_PRIVATE_KEY: "do-not-pass", COLLIE_STT_KEY: "nor-this", COLLIE_STATE_DIR: "/the/bridge/env/one" },
+      self: fakePastor("  hello from whistle \n"),
+      env: { PATH: process.env.PATH, PASTOR_PUSH_PRIVATE_KEY: "do-not-pass", PASTOR_STT_KEY: "nor-this", PASTOR_STATE_DIR: "/the/bridge/env/one" },
       tmpRoot,
     });
     expect(await provider.transcribe(wav())).toEqual({ text: "hello from whistle" });
 
-    // SAFETY: the fake collie's own JSON.stringify of exactly this shape.
-    const seen = JSON.parse(readFileSync(report, "utf8")) as { argv: string[]; bytes: number; collieEnv: Record<string, string> };
+    // SAFETY: the fake pastor's own JSON.stringify of exactly this shape.
+    const seen = JSON.parse(readFileSync(report, "utf8")) as { argv: string[]; bytes: number; pastorEnv: Record<string, string> };
     expect(seen.argv.slice(0, 1)).toEqual([WHISTLE_VERB]);
     expect(seen.argv).toHaveLength(2);
     expect(seen.argv[1]!.endsWith("recording.wav")).toBe(true);
     expect(seen.bytes).toBe(44 + 3200);
     // Set by the bridge from what it resolved, never copied from its own environment.
-    expect(seen.collieEnv).toEqual({ COLLIE_STATE_DIR: stateDir, COLLIE_PLUGIN_ROOT: checkout });
+    expect(seen.pastorEnv).toEqual({ PASTOR_STATE_DIR: stateDir, PASTOR_PLUGIN_ROOT: checkout });
     expect(readdirSync(tmpRoot)).toEqual([]);
   });
 
-  test("the child env drops every COLLIE_ name and keeps the rest", () => {
-    const env: Record<string, string> = whistleChildEnv({ HOME: "/h", COLLIE_X: "1", UNSET: undefined }, "/s", "/r");
+  test("the child env drops every PASTOR_ name and keeps the rest", () => {
+    const env: Record<string, string> = whistleChildEnv({ HOME: "/h", PASTOR_X: "1", UNSET: undefined }, "/s", "/r");
     expect(env).toEqual({
       HOME: "/h",
-      COLLIE_STATE_DIR: "/s",
-      COLLIE_PLUGIN_ROOT: "/r",
+      PASTOR_STATE_DIR: "/s",
+      PASTOR_PLUGIN_ROOT: "/r",
     });
   });
 
-  test("an empty transcript and a failing child are Collie's own sentences", async () => {
-    const quiet = createWhistleSttProvider({ stateDir, root: checkout, self: fakeCollie(""), tmpRoot });
+  test("an empty transcript and a failing child are Pastor's own sentences", async () => {
+    const quiet = createWhistleSttProvider({ stateDir, root: checkout, self: fakePastor(""), tmpRoot });
     await expect(quiet.transcribe(wav())).rejects.toBeInstanceOf(LocalCliEmptyTranscriptError);
     await expect(quiet.transcribe(wav())).rejects.toThrow("the Whistle engine printed no transcript");
 
@@ -123,7 +123,7 @@ describe("the whistle provider", () => {
   });
 
   test("available only with an accepted model and the engine files in place", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-whistle-status-"));
+    const dir = mkdtempSync(join(tmpdir(), "pastor-whistle-status-"));
     const provider = createWhistleSttProvider({ stateDir: dir, root: checkout, self: ["unused"] });
     expect(await provider.status()).toEqual({ available: false, reason: "the Whistle model is not on the host" });
 
@@ -136,7 +136,7 @@ describe("the whistle provider", () => {
 
     // The engine missing (a root with no web tree) is its own reason, once the model is there. The
     // real model is never committed, so this half runs only where the measured copy exists.
-    const real = process.env.COLLIE_TEST_WHISTLE_DIR;
+    const real = process.env.PASTOR_TEST_WHISTLE_DIR;
     if (real !== undefined) {
       writeFileSync(paths.model, readFileSync(join(real, "whistle.cact")));
       resetWhistleModelState();
@@ -148,24 +148,24 @@ describe("the whistle provider", () => {
   });
 });
 
-describe("collieSelfCommand — the child is this Collie", () => {
+describe("pastorSelfCommand — the child is this Pastor", () => {
   test("from source it is Bun plus the CLI entry in this module's checkout", () => {
-    expect(collieSelfCommand("/repo/bridge/root.ts", "/usr/bin/bun")).toEqual(["/usr/bin/bun", join("/repo", "cli", "main.ts")]);
+    expect(pastorSelfCommand("/repo/bridge/root.ts", "/usr/bin/bun")).toEqual(["/usr/bin/bun", join("/repo", "cli", "main.ts")]);
   });
 
   test("compiled it is the running binary alone", () => {
-    expect(collieSelfCommand("/$bunfs/root/collie", "/opt/collie/bin/collie")).toEqual(["/opt/collie/bin/collie"]);
-    expect(collieSelfCommand("B:\\~BUN\\root\\collie.exe", "C:\\collie\\bin\\collie.exe")).toEqual(["C:\\collie\\bin\\collie.exe"]);
+    expect(pastorSelfCommand("/$bunfs/root/pastor", "/opt/pastor/bin/pastor")).toEqual(["/opt/pastor/bin/pastor"]);
+    expect(pastorSelfCommand("B:\\~BUN\\root\\pastor.exe", "C:\\pastor\\bin\\pastor.exe")).toEqual(["C:\\pastor\\bin\\pastor.exe"]);
   });
 });
 
-const measured = process.env.COLLIE_TEST_WHISTLE_DIR;
+const measured = process.env.PASTOR_TEST_WHISTLE_DIR;
 
 // The whole chain with the real engine: the provider spawns this checkout's own CLI (source mode),
 // which checks the pins, loads the model from the state dir it was told about, and prints the text.
 describe.skipIf(measured === undefined)("the whistle provider — the real engine, end to end", () => {
-  test("a 13 s WAV becomes text through a real child of this Collie", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-whistle-e2e-"));
+  test("a 13 s WAV becomes text through a real child of this Pastor", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "pastor-whistle-e2e-"));
     const paths = whistlePaths(dir);
     mkdirSync(paths.dir, { recursive: true });
     writeFileSync(paths.model, readFileSync(join(measured!, "whistle.cact")));

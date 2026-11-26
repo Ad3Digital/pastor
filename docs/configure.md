@@ -1,100 +1,100 @@
 # Configure
 
-By default, Collie answers only a device you paired with `collie pair`. A paired device has full
+By default, Pastor answers only a device you paired with `pastor pair`. A paired device has full
 control, so anyone on your tailnet who can reach the URL still needs a paired phone first. Without
-`COLLIE_TRUSTED_USER`, the bridge prints a `TRUSTED_USER` warning, because every tailnet login can
+`PASTOR_TRUSTED_USER`, the bridge prints a `TRUSTED_USER` warning, because every tailnet login can
 reach the pair screen. Restrict access further:
 
 ```bash
 # in your .env
-COLLIE_TRUSTED_USER=you@example.com           # your tailnet login — Collie rejects anyone else
-COLLIE_PUBLIC_HOSTS=myhost.tail1234.ts.net    # only behind your OWN proxy; on a tailnet `collie
+PASTOR_TRUSTED_USER=you@example.com           # your tailnet login — Pastor rejects anyone else
+PASTOR_PUBLIC_HOSTS=myhost.tail1234.ts.net    # only behind your OWN proxy; on a tailnet `pastor
                                               # start` discovers this for you
 ```
 
 ## The config file
 
-Every Collie setting can be written in a TOML file. Write one with every setting and its default:
+Every Pastor setting can be written in a TOML file. Write one with every setting and its default:
 
 ```bash
-collie config init
+pastor config init
 ```
 
-That writes `~/.collie/config.toml`, the machine's own statement, and prints the path. Every key in
+That writes `~/.pastor/config.toml`, the machine's own statement, and prints the path. Every key in
 it is commented out, so the file as written changes nothing: uncomment a key and restart. Run
-`collie config init --instance` instead to write `config.toml` beside your `.env`, which overrides
+`pastor config init --instance` instead to write `config.toml` beside your `.env`, which overrides
 the machine's file for this one instance.
 
 | file | layer | how it is located |
 | --- | --- | --- |
-| `~/.collie/config.toml` | machine | your home directory, or the path in `COLLIE_CONFIG` |
+| `~/.pastor/config.toml` | machine | your home directory, or the path in `PASTOR_CONFIG` |
 | `<config-dir>/config.toml` | instance | beside the `.env` the CLI already resolves |
 
 The instance file wins key by key, never file by file: a key absent from it keeps the machine file's
 value. There is no `config.<instance>.toml`, because on a Herdr-managed install the config dir is
-already per instance, and on a binary install it is `~/.config/collie`. A second Collie on one host
+already per instance, and on a binary install it is `~/.config/pastor`. A second Pastor on one host
 therefore puts its own settings in its own config dir, see
-[docs/deployment.md → Several Collies on one host](deployment.md#several-collies-on-one-host). A
-`.collie/` inside a project directory is not read at all.
+[docs/deployment.md → Several Pastors on one host](deployment.md#several-pastors-on-one-host). A
+`.pastor/` inside a project directory is not read at all.
 
 Three verbs drive the file:
 
-1. `collie config init` writes a commented file with every setting and its default.
-2. `collie config check` validates the two files that would be read, or one file you name.
-3. `collie config show` prints both paths and every setting with its value and where it came from.
+1. `pastor config init` writes a commented file with every setting and its default.
+2. `pastor config check` validates the two files that would be read, or one file you name.
+3. `pastor config show` prints both paths and every setting with its value and where it came from.
 
-The precedence runs default, then `~/.collie/config.toml`, then `<config-dir>/config.toml`, then the
-process environment, which includes your `.env`. `collie config show` names the winner for every key
+The precedence runs default, then `~/.pastor/config.toml`, then `<config-dir>/config.toml`, then the
+process environment, which includes your `.env`. `pastor config show` names the winner for every key
 at once, so "why is my poll interval still 1500" is answered in one line.
 
 A broken key never stops the bridge. An unknown key or a wrong type is a problem that
-`collie config check` prints and `collie doctor` reports, and that key alone falls back to what the
+`pastor config check` prints and `pastor doctor` reports, and that key alone falls back to what the
 environment says. Every other key in the file still applies.
 
-Collie reads `config.toml` only during startup. Run `collie restart` after modifying it.
+Pastor reads `config.toml` only during startup. Run `pastor restart` after modifying it.
 
 > **Note.** A file holding `[push] vapid_private` or `[stt] stt_key` is held to mode 600, exactly as
-> your `.env` is. If Collie cannot tighten it, those keys alone are dropped and `collie doctor` says
+> your `.env` is. If Pastor cannot tighten it, those keys alone are dropped and `pastor doctor` says
 > so.
 
 ## The environment still wins
 
-Collie loads configuration from a `.env` file in `~/.config/collie`. If Herdr manages the
+Pastor loads configuration from a `.env` file in `~/.config/pastor`. If Herdr manages the
 installation, the CLI queries Herdr for the plugin config directory (typically
-`~/.config/herdr/plugins/config/herdr.collie`). Both paths resolve consistently across CLI commands,
+`~/.config/herdr/plugins/config/ad3.pastor`). Both paths resolve consistently across CLI commands,
 so the service reads the file seeded here:
 
 ```bash
-mkdir -p ~/.config/collie && cp .env.example ~/.config/collie/.env
+mkdir -p ~/.config/pastor && cp .env.example ~/.config/pastor/.env
 
 # on a Herdr-managed install, seed Herdr's plugin config dir instead:
-cp .env.example "$(herdr plugin config-dir herdr.collie)/.env"
+cp .env.example "$(herdr plugin config-dir ad3.pastor)/.env"
 ```
 
-Paths below use `~/.config/collie/…`. On a Herdr-managed install, replace that prefix with
-`$(herdr plugin config-dir herdr.collie)`.
+Paths below use `~/.config/pastor/…`. On a Herdr-managed install, replace that prefix with
+`$(herdr plugin config-dir ad3.pastor)`.
 
-Collie reads `.env` only during startup. Run `collie restart` after modifying it.
+Pastor reads `.env` only during startup. Run `pastor restart` after modifying it.
 
 The [`.env.example`](../.env.example) file lists all options, and so does
-`collie config init --print`.
+`pastor config init --print`.
 
-It includes `COLLIE_PORT`, `COLLIE_SERVE_MODE=http` (for Headscale or `.internal` domains), and
-`COLLIE_SERVE_PORT` (to expose HTTPS on a port other than `:443`; see
-[docs/deployment.md → Several Collies on one host](deployment.md#several-collies-on-one-host)). The
+It includes `PASTOR_PORT`, `PASTOR_SERVE_MODE=http` (for Headscale or `.internal` domains), and
+`PASTOR_SERVE_PORT` (to expose HTTPS on a port other than `:443`; see
+[docs/deployment.md → Several Pastors on one host](deployment.md#several-pastors-on-one-host)). The
 CLI reads the serve parameters to configure `tailscale serve`, rather than passing them to the
 bridge.
 
 ## What each section holds
 
 The config file groups every setting under a `[section]`. The environment name of a key is
-`COLLIE_` plus the key in capitals, so `[bridge] poll_ms` is `COLLIE_POLL_MS`.
+`PASTOR_` plus the key in capitals, so `[bridge] poll_ms` is `PASTOR_POLL_MS`.
 
 | section | what it holds |
 | --- | --- |
 | `bridge` | poll cadence, how many lines are read, where state lives |
 | `network` | the port, the bind address, allowed hosts and origins |
-| `mux` | which multiplexer this collie mirrors, and where it lives |
+| `mux` | which multiplexer this pastor mirrors, and where it lives |
 | `access` | the Tailscale identity gate, the device header, the audit trail, the secret mask |
 | `push` | the three Web Push (VAPID) values |
 | `uploads` | the attachment size cap and the extra text types accepted |
@@ -102,18 +102,18 @@ The config file groups every setting under a `[section]`. The environment name o
 | `crew` | the budgets a lead gives a member, and a peer's own browser |
 | `standby` | the deputy's second door: port, bind address, arming |
 | `update` | where releases come from, how many versions stay, a GitHub token for the release check |
-| `serve` | whether Collie publishes the front door, on what, and under which path (`base_path`) |
-| `stt` | speech-to-text, absent until `collie stt setup` runs |
+| `serve` | whether Pastor publishes the front door, on what, and under which path (`base_path`) |
+| `stt` | speech-to-text, absent until `pastor stt setup` runs |
 
 To read history from multiple agent home directories, provide a comma-separated list in
-`COLLIE_TRANSCRIPT_ROOT`.
+`PASTOR_TRANSCRIPT_ROOT`.
 
-[`docs/deployment.md`](deployment.md) covers custom domains and reverse proxies. Collie enforces a
+[`docs/deployment.md`](deployment.md) covers custom domains and reverse proxies. Pastor enforces a
 same-origin policy, so any custom hostname or external TLS terminator must be explicitly
 allowlisted:
 
 ```bash
-COLLIE_ALLOWED_ORIGINS=https://collie.example.com
+PASTOR_ALLOWED_ORIGINS=https://pastor.example.com
 ```
 
 Without this setting, the UI will load as an empty page. See
@@ -137,11 +137,11 @@ These files are unchanged by the config file. They share the instance `config.to
 directory, they keep their own formats and their own live reload, and nothing merges them into it.
 
 Any row with the flag set requires a two-tap confirmation before it fires. Edits to any of these
-files take effect without restarting the service. If Collie rejects a row, `journalctl --user -u
-collie -n 20` prints the line number and the error.
+files take effect without restarting the service. If Pastor rejects a row, `journalctl --user -u
+pastor -n 20` prints the line number and the error.
 
 ```bash
-cp commands.toml.example ~/.config/collie/commands.toml
+cp commands.toml.example ~/.config/pastor/commands.toml
 ```
 
 ```toml
@@ -169,7 +169,7 @@ To verify, open a pane and tap **/**; your rows appear on the first screen.
 row is still an ordinary palette row, so it appears on both surfaces. `bar_label` is the button's
 text and defaults to the command name without its slash.
 
-The actions row is a belt, one full-bleed band above the keyboard. Collie's own controls sit
+The actions row is a belt, one full-bleed band above the keyboard. Pastor's own controls sit
 directly on the band: Keys, Type, Quick, Agent and the display gear. The running harness's own
 commands sit beside them, in a section tinted with the harness's brand colour, so you can see at a
 glance which buttons type into the agent. A sideways drag scrolls the belt; nothing is dropped.
@@ -192,7 +192,7 @@ picker that jumps to any earlier point in the session. The same command, `/tree`
 command palette.
 
 Every harness button sends its command bare. **Model sends `/model`, and the agent's own model
-picker takes over in the pane.** Collie keeps no list of model names, because that list is the
+picker takes over in the pane.** Pastor keeps no list of model names, because that list is the
 harness's and it changes without telling us. Effort works the same way.
 
 Your bar rows replace the shipped harness segment for the panes they address, and leave it alone
@@ -222,14 +222,14 @@ device and applies the next time you open a pane.
 
 To verify, open a pane running Claude Code, Codex, pi or omp; the tinted segment sits at the right
 of the row above the keyboard. Turn that segment off per device in **Settings → Appearance → Harness shortcuts**;
-Collie's own controls stay.
+Pastor's own controls stay.
 
 ## Your own key presets
 
 You can replace the Keys tray's **Presets** row in `keys.toml`, located next to `commands.toml`:
 
 ```bash
-cp keys.toml.example ~/.config/collie/keys.toml
+cp keys.toml.example ~/.config/pastor/keys.toml
 ```
 
 ```toml
@@ -256,8 +256,8 @@ Chords use herdr's syntax, not tmux's:
 | End | — | no |
 | Delete | — | no |
 
-To verify, open a pane and tap **Keys → Presets** to view the new buttons. If Collie rejects a row,
-check `journalctl --user -u collie -n 20` for the error details.
+To verify, open a pane and tap **Keys → Presets** to view the new buttons. If Pastor rejects a row,
+check `journalctl --user -u pastor -n 20` for the error details.
 
 ## Your own key pad
 
@@ -270,8 +270,8 @@ You can rearrange the Keys pad. Open **Keys** and tap the pencil beside the labe
 The pad is a grid of 7 columns. A key sits on one cell and can be wider (1, 2 or 3 columns) and taller
 (1 or 2 rows). Select a key and tap **Width** or **Height** to resize it. It grows to the right and
 down. A size that would cover another key, or leave the pad, looks dim, and tapping it tells you which
-key is in the way. Collie never moves a second key for you. **Add row** puts a row at the bottom, up to
-eight. Changes show in the dock at once. Collie keeps your pad in this browser, so a different browser
+key is in the way. Pastor never moves a second key for you. **Add row** puts a row at the bottom, up to
+eight. Changes show in the dock at once. Pastor keeps your pad in this browser, so a different browser
 starts with the default pad until you share a layout into it. The default is the pad you had before,
 with the Space bar three cells wide and Enter at the left end of the second row:
 
@@ -298,7 +298,7 @@ a second tap, and a key your multiplexer cannot send is grey.
 | --- | --- |
 | Presets | Default, Claude Code, Prefix (Ctrl+B), Vim, Navigation. Each shows a preview and asks before it replaces your pad. |
 | Share: Copy layout | Puts a short code on the clipboard. On plain http, select the code and copy it by hand. |
-| Share: Import layout | Paste a layout code someone shared. Collie checks it, shows a preview and asks before it applies. |
+| Share: Import layout | Paste a layout code someone shared. Pastor checks it, shows a preview and asks before it applies. |
 | Restore default | Brings back the original pad, after a preview. |
 
 Codes from earlier versions still import, with every key one cell. If Esc, Enter or an arrow is not
@@ -312,7 +312,7 @@ cannot send, so they are grey on a Herdr pane
 You can customize the Quick dock phrases in `quick-replies.toml`:
 
 ```bash
-cp quick-replies.toml.example ~/.config/collie/quick-replies.toml
+cp quick-replies.toml.example ~/.config/pastor/quick-replies.toml
 ```
 
 ```toml
@@ -330,21 +330,21 @@ Use this file to run in other languages, or to send words like `approve` to spec
 Setting `scope = "shell"` targets standard shell panes, which otherwise only receive `y`/`n`.
 
 To verify, open a pane and tap **Quick** to see your groups. If a row fails to load,
-`journalctl --user -u collie -n 20` prints the error.
+`journalctl --user -u pastor -n 20` prints the error.
 
 ## Your own launchers
 
 One tap runs a command you declared, in `launchers.toml` next to `keys.toml`:
 
 ```bash
-cp launchers.toml.example ~/.config/collie/launchers.toml
+cp launchers.toml.example ~/.config/pastor/launchers.toml
 ```
 
 ```toml
 [[launchers]]
 command = "htop"             # required; the shell line, typed verbatim into the fresh shell
 label = "Top"                # optional; defaults to the first word of command
-# cwd = "~/dev/collie"       # optional; absent means "here" — see below
+# cwd = "~/dev/pastor"       # optional; absent means "here" — see below
 ```
 
 Where the row opens depends on where you start it, not on the row. From the **New page** (Shell,
@@ -396,13 +396,13 @@ appears.
 On a crew (several machines, one phone-facing lead), each machine reads its own copy of this file —
 a row launches on whichever machine's dashboard or pane you tapped it from, not on the lead.
 
-The **Agent** select on the New page is Collie's own list: Claude Code, Codex, opencode, pi, omp,
+The **Agent** select on the New page is Pastor's own list: Claude Code, Codex, opencode, pi, omp,
 Grok, Hermes, Muse and Antigravity. One that is not on the machine's login `PATH` stays in the list,
 disabled, marked "not installed". For another terminal agent, declare a row for it as above: it shows
-in the **Command** select under **Shell**, starts in a pane like any command, and Collie shows no status for it.
+in the **Command** select under **Shell**, starts in a pane like any command, and Pastor shows no status for it.
 
 To verify, reload the dashboard and look under the herd. If a row fails to load,
-`journalctl --user -u collie -n 20` prints the error.
+`journalctl --user -u pastor -n 20` prints the error.
 
 ### Launchers added from a phone
 
@@ -411,7 +411,7 @@ A phone can add its own rows on a machine. They are kept in that machine's state
 
 On the New page, tap **Add your own** under the **Agent** select or under the **Command** select.
 It opens the page `/new/add` for the machine chosen there. Pick **Agent** or **Command** at the top.
-An agent has two ways: a **recipe** (a harness, option chips, and the exact line Collie will type)
+An agent has two ways: a **recipe** (a harness, option chips, and the exact line Pastor will type)
 and **Write a command**. A command row is always written by hand. **Add** returns to the New page
 with the new row chosen. Below the form, **Added on this machine** lists every row a phone added
 there, with **Rename** and **Remove**, and the rows from `launchers.toml` with a lock and no
@@ -455,7 +455,7 @@ or paragraph separator and a bidi control in it, both when it is added and each 
 
 A machine keeps at most 20 added rows. If a row has the same line as a row in `launchers.toml`, the
 row in `launchers.toml` wins. Each added row records the paired device that added it. Revoking that
-device removes its rows, from the phone or with `collie devices revoke`, and the audit log records
+device removes its rows, from the phone or with `pastor devices revoke`, and the audit log records
 every add, rename and removal.
 
 > **Caution.** A row that skips permission prompts carries a "No prompts" badge. Each device asks
@@ -464,23 +464,23 @@ every add, rename and removal.
 
 ### Reaching a durable program (experimental)
 
-A peer that mirrors a durable agent program (`COLLIE_MUX=durable`) reaches it one of two ways. Set
+A peer that mirrors a durable agent program (`PASTOR_MUX=durable`) reaches it one of two ways. Set
 the socket, or the URL with its token, never both.
 
 | variable | example | what it means |
 | --- | --- | --- |
-| `COLLIE_DURABLE_SOCKET` | `/run/user/1000/durable/session.sock` | the program's private Unix socket on this machine. Absolute, at most 103 bytes, mode `0600` |
-| `COLLIE_DURABLE_URL` | `https://collie-durable-member.you.workers.dev` | the address of a program you deployed behind TLS. `https://` only, or `http://127.0.0.1:<port>` for `wrangler dev`. At most 2048 bytes, no query |
-| `COLLIE_DURABLE_TOKEN` | `your-32-byte-random-token-here` | the bearer token sent with every request to the URL. At least 32 bytes. A file holding it must be mode 600, and Collie never prints it |
+| `PASTOR_DURABLE_SOCKET` | `/run/user/1000/durable/session.sock` | the program's private Unix socket on this machine. Absolute, at most 103 bytes, mode `0600` |
+| `PASTOR_DURABLE_URL` | `https://pastor-durable-member.you.workers.dev` | the address of a program you deployed behind TLS. `https://` only, or `http://127.0.0.1:<port>` for `wrangler dev`. At most 2048 bytes, no query |
+| `PASTOR_DURABLE_TOKEN` | `your-32-byte-random-token-here` | the bearer token sent with every request to the URL. At least 32 bytes. A file holding it must be mode 600, and Pastor never prints it |
 
 Both set, or a URL without a token, is a config error: the peer starts and shows the program as
-unreachable with that reason. Over https every poll is a billed request, so Collie polls every 2 s
+unreachable with that reason. Over https every poll is a billed request, so Pastor polls every 2 s
 while a phone watches and every 10 s otherwise. [Multiplexers](multiplexers.md#two-ways-to-reach-a-program)
 says what each way keeps out, and what it does not.
 
 ### Starters from a durable program (experimental)
 
-A peer that mirrors a durable agent program (`COLLIE_MUX=durable`) lists the program's starters as
+A peer that mirrors a durable agent program (`PASTOR_MUX=durable`) lists the program's starters as
 rows on the New page, in the **Agent** select, on that machine. A starter is a named way to begin a
 conversation, such as a code review. It takes no text: you tap it, and the program decides what to
 start. The new conversation opens as a pane. A tap repeated with the same request id opens
@@ -490,7 +490,7 @@ change in any minor release.
 
 ### One-off commands and their history
 
-A phone can also run a command that is not a launcher, once. Collie opens a shell in the folder you
+A phone can also run a command that is not a launcher, once. Pastor opens a shell in the folder you
 name and types the line there, the same way it starts a launcher row. The line follows the same rule
 as a free line: at most 200 characters, and no control, separator or bidi character. A one-off command
 never starts on a new branch.
@@ -504,7 +504,7 @@ On the New page, switch to **Shell**. The **Command** select then ends with two 
 (or the return key, which reads **Go**). The line above **Start** says what runs and where, for
 example "Runs `htop` in ~/projects on bluefin". The worktree switch stays off for a one-off line.
 
-Before the first run, Collie asks the machine to check the line. The check runs nothing and keeps
+Before the first run, Pastor asks the machine to check the line. The check runs nothing and keeps
 nothing. If the line carries a flag that skips permission prompts, such as
 `--dangerously-skip-permissions`, this phone asks once before it starts, the same as for a row with
 the "No prompts" badge. If the line breaks the rule above, a notice says why and nothing runs.
@@ -536,9 +536,9 @@ System, Space Grotesk (the default), and Aldrich. You can add custom fonts in `t
 fourth configuration file:
 
 ```bash
-cp theme.toml.example ~/.config/collie/theme.toml
-mkdir -p ~/.config/collie/fonts
-cp departure.woff2 ~/.config/collie/fonts/
+cp theme.toml.example ~/.config/pastor/theme.toml
+mkdir -p ~/.config/pastor/fonts
+cp departure.woff2 ~/.config/pastor/fonts/
 ```
 
 ```toml
@@ -562,22 +562,22 @@ Three behaviors to note:
   at build time.
 - **Cold-load delay.** A cold load fetches the file with a brief delay; a cached client paints
   immediately.
-- **Chrome only.** The selected font applies only to Collie's chrome. The terminal mirror,
+- **Chrome only.** The selected font applies only to Pastor's chrome. The terminal mirror,
   transcript, and rendered markdown retain their own typography.
 - **Live on next reload.** Changes do not require a restart, taking effect on the next page reload.
-  Invalid configurations log errors visible via `journalctl --user -u collie -n 20`.
+  Invalid configurations log errors visible via `journalctl --user -u pastor -n 20`.
 
 ## Your own cache rules
 
 Use `cache-rules.toml` to change a prompt-cache lifetime that your provider changed.
 
 ```bash
-cp cache-rules.toml.example ~/.config/collie/cache-rules.toml
+cp cache-rules.toml.example ~/.config/pastor/cache-rules.toml
 ```
 
-Collie ships one rule per harness and provider. Collie read each rule from a vendor page on a
+Pastor ships one rule per harness and provider. Pastor read each rule from a vendor page on a
 recorded date. A vendor can change that value without notice. A gateway, a proxy that sits between
-your agent and the vendor, can change it too. Use this file to override values until Collie ships an
+your agent and the vendor, can change it too. Use this file to override values until Pastor ships an
 update.
 
 ```toml
@@ -589,7 +589,7 @@ retrieved = "2026-09-12"
 note = "our gateway sends ttl 1h on every request"
 ```
 
-Collie keeps a row only when all four rules hold. `id` must name a shipped rule. `ttl_seconds` must
+Pastor keeps a row only when all four rules hold. `id` must name a shipped rule. `ttl_seconds` must
 be an integer from 1 to 86400. `source_url` must be a non-empty string. `retrieved` must parse as a
 valid `YYYY-MM-DD` date, and it must not be later than today. Invalid rows are dropped and logged.
 The rest of the file still applies.
@@ -603,7 +603,7 @@ it, so one row covers every model on that tier.
 > **Note.** You may change a number. You may not remove its source page or retrieval date. The rule
 > catalog requires both fields.
 
-`collie doctor` checks three items. `cache-claims` warns when nobody has re-checked a shipped rule in
+`pastor doctor` checks three items. `cache-claims` warns when nobody has re-checked a shipped rule in
 180 days. `cache-rules` names every dropped row and the reason it was dropped. `cache-env` flags when
 you set `ENABLE_PROMPT_CACHING_1H` or `FORCE_PROMPT_CACHING_5M` in your shell. The bridge runs as a
 separate service and cannot read your agent's environment. Mirror these Claude Code variables here so
@@ -649,21 +649,21 @@ the rule id, the vendor source page, and the retrieval date.
 > usually measured.
 
 Some panes show no chip. This is expected. A pane shows a chip only after its agent completes one
-turn. Collie makes no assumptions before measurement. A pane shows nothing if its harness lacks a
+turn. Pastor makes no assumptions before measurement. A pane shows nothing if its harness lacks a
 journal adapter, or if its vendor publishes no lifetime data.
 
-Collie can also send push alerts to a phone before a cache expires. One variable controls the timing.
+Pastor can also send push alerts to a phone before a cache expires. One variable controls the timing.
 
 | var | default | meaning |
 | --- | --- | --- |
-| `COLLIE_CACHE_WARN_SECONDS` | `300` | how many seconds before a watched pane's cache expires the push goes out; floor 30, ceiling 3600 |
+| `PASTOR_CACHE_WARN_SECONDS` | `300` | how many seconds before a watched pane's cache expires the push goes out; floor 30, ceiling 3600 |
 
 This setting controls only the push alert. It does **not** control when the chip turns red. The
 red threshold is fixed at one-quarter of each rule's TTL. The push itself fires at whichever is
 shorter, this setting or half the pane's own cache lifetime, so a five-minute cache (Codex,
 OpenCode, pi, omp) warns about two and a half minutes before it goes cold, even though that is
 less than the configured 300 seconds. To enable warnings for specific panes or all panes, see
-[voice-and-push.md](voice-and-push.md#which-alerts-collie-sends).
+[voice-and-push.md](voice-and-push.md#which-alerts-pastor-sends).
 
 ## Attachments
 
@@ -671,18 +671,18 @@ The paperclip beside the message box uploads a file to the host and puts its pat
 
 ```bash
 # in your .env
-COLLIE_MAX_UPLOAD_MB=25              # default 10, floor 1, ceiling 512
-COLLIE_UPLOAD_EXTRA_TYPES=rb,ex,zig  # bare extensions, no dot
+PASTOR_MAX_UPLOAD_MB=25              # default 10, floor 1, ceiling 512
+PASTOR_UPLOAD_EXTRA_TYPES=rb,ex,zig  # bare extensions, no dot
 ```
 
-Collie saves the file under `<state-dir>/uploads` with owner-only permissions and appends its
+Pastor saves the file under `<state-dir>/uploads` with owner-only permissions and appends its
 absolute path to your draft. The agent reads it from that path, because a terminal cannot take a
 pasted file. Uploads are swept 48 hours after they are written.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `COLLIE_MAX_UPLOAD_MB` | `10` | Largest file accepted, in whole megabytes. Out of range or not a whole number falls back to the default and logs a warning. |
-| `COLLIE_UPLOAD_EXTRA_TYPES` | *(empty)* | Extra text types to accept, beyond the list below. Comma-separated bare extensions; a leading dot is forgiven and anything that is not letters and digits is dropped with a warning. |
+| `PASTOR_MAX_UPLOAD_MB` | `10` | Largest file accepted, in whole megabytes. Out of range or not a whole number falls back to the default and logs a warning. |
+| `PASTOR_UPLOAD_EXTRA_TYPES` | *(empty)* | Extra text types to accept, beyond the list below. Comma-separated bare extensions; a leading dot is forgiven and anything that is not letters and digits is dropped with a warning. |
 
 Two kinds of file are accepted, and they are checked differently.
 
@@ -695,10 +695,10 @@ NUL or a stray control byte is refused whatever it is called. The shipped list i
 `txt`, `json`, `jsonl`, `yaml`, `yml`, `toml`, `csv`, `tsv`, `log`, `xml`, `html`, `htm`, `css`,
 `js`, `jsx`, `mjs`, `cjs`, `ts`, `tsx`, `py`, `go`, `rs`, `sh`, `bash`, `sql`, `diff` and `patch`.
 
-> **Note.** `COLLIE_UPLOAD_EXTRA_TYPES` adds text types only. An image needs a signature to check it
+> **Note.** `PASTOR_UPLOAD_EXTRA_TYPES` adds text types only. An image needs a signature to check it
 > against, so there is no binary format you can add this way.
 
-Raising `COLLIE_MAX_UPLOAD_MB` raises two other numbers with it. The bridge reads a whole upload into
+Raising `PASTOR_MAX_UPLOAD_MB` raises two other numbers with it. The bridge reads a whole upload into
 memory before it can measure it, so a large cap plus several uploads at once is that much memory. And
 the runtime's body limit applies to every route, not only the upload one, so a large cap lets a large
 body reach any handler, where that handler's own limit then refuses it. Nothing is deleted before its
@@ -724,7 +724,7 @@ You may also type a path. `~/projects` and `/srv/www` mean what they say. A name
 `~`, such as `projects`, is a folder under your home, like `cd projects` in a fresh shell, and the
 line above Start shows the full path (`~/projects`) before you tap. A path with `..` in it is refused.
 The folder must already exist on the machine that runs the start, and it must be a directory. If it is
-not there, nothing starts and a notice above Start says "There is no folder … on this machine." Collie
+not there, nothing starts and a notice above Start says "There is no folder … on this machine." Pastor
 checks only when you tap Start, never while you type. On a crew, the machine you picked checks its own
 disk.
 
@@ -733,47 +733,47 @@ beside a row moves it to **Favourites**, up to 12, in the order you starred them
 star moves it back to the top of Recent.
 
 The list belongs to the machine, not to the phone. Each machine keeps its own in `folders.json` in
-its state directory, `~/.local/state/collie/folders.json` unless `COLLIE_STATE_DIR` moves it. Every
+its state directory, `~/.local/state/pastor/folders.json` unless `PASTOR_STATE_DIR` moves it. Every
 device you use sees the same list, and the file appears only after the first start in a folder or
 the first star. The same lists fill **Other folder** under **New worktree**, where they pick the
 folder the branch's own folder goes in.
 
 In a [crew](crew.md), each machine keeps the folders that exist on it, and the page shows the list
-of the machine you picked. A machine that runs an older Collie has no list, and the page then shows
+of the machine you picked. A machine that runs an older Pastor has no list, and the page then shows
 none for it.
 
 ## Secret masking
 
-Collie masks known secret shapes in pane text before it reaches your phone.
+Pastor masks known secret shapes in pane text before it reaches your phone.
 
 ```bash
 # in your .env; the default is on
-COLLIE_REDACT=off
+PASTOR_REDACT=off
 ```
 
 | variable | default | what it does |
 | --- | --- | --- |
-| `COLLIE_REDACT` | `on` | Masks API keys, JWTs, PEM private keys, bearer tokens and `password=` values in the mirror, Chat, History, push notifications, file bodies in Files and diffs in Changes. `off` sends them as they are. |
+| `PASTOR_REDACT` | `on` | Masks API keys, JWTs, PEM private keys, bearer tokens and `password=` values in the mirror, Chat, History, push notifications, file bodies in Files and diffs in Changes. `off` sends them as they are. |
 
 In the config file this is `[access] redact`. The mask keeps the width of what it hides, so the
 mirror's layout holds. It catches high-confidence shapes only; the limits are in
 [Security](security.md#what-leaves-the-machine-is-masked).
 
 In a crew, the lead also masks the text its members send, by its own setting. A member's text
-reaches your phone unmasked only when the lead and that member both set `COLLIE_REDACT=off`.
+reaches your phone unmasked only when the lead and that member both set `PASTOR_REDACT=off`.
 
 ## Multi-session
 
-By default, one Collie instance serves every Herdr session it finds.
+By default, one Pastor instance serves every Herdr session it finds.
 
-`COLLIE_MULTI_SESSION=on` (the default) discovers and serves every named Herdr session under your
-config root, switchable from the header. Setting `COLLIE_MULTI_SESSION=off` serves only the primary
+`PASTOR_MULTI_SESSION=on` (the default) discovers and serves every named Herdr session under your
+config root, switchable from the header. Setting `PASTOR_MULTI_SESSION=off` serves only the primary
 session. Every discovered session is accessible through the same URL, including private or sandbox
 sessions. [Security](security.md) lists this behavior as a sharp edge.
 
 ## Dark mode / light mode
 
-> **Note.** Collie follows your phone's appearance by default.
+> **Note.** Pastor follows your phone's appearance by default.
 
 To pin it, open **Settings → Appearance → Theme** and pick **System**, **Light** or **Dark**. The setting is
 stored **per device** in the browser rather than on the bridge. Your phone can remain on Dark while
@@ -794,12 +794,12 @@ This implementation has two practical consequences:
 
 - **Keep your agents configured for dark themes.** This is the default for Claude Code, codex,
   opencode and pi. If an agent uses a *light* theme, it emits dark-on-light values that become
-  illegible in Collie under both modes. This stems from the agent output rather than Collie itself.
+  illegible in Pastor under both modes. This stems from the agent output rather than Pastor itself.
 - **Diffs and highlighted rows render as dark blocks** in light mode. Contrast remains intact, but
   the visual weight is reversed.
 
 > **Note.** Installed on iOS, in light mode, the status-bar text remains white and can blend into
-> the background. iOS does not allow web apps to update this value dynamically. Run Collie directly
+> the background. iOS does not allow web apps to update this value dynamically. Run Pastor directly
 > in the browser instead of as an installed PWA to avoid this limitation.
 
 ## Zen mode
@@ -807,7 +807,7 @@ This implementation has two practical consequences:
 > **Note.** Zen mode is off by default.
 
 Enable it in **Settings → Device → Zen mode** (stored per device in the browser). This adds a **Zen mode**
-option to the pane menu, under the ⋮ beside Find and History. Tapping it hides all Collie UI
+option to the pane menu, under the ⋮ beside Find and History. Tapping it hides all Pastor UI
 elements: the header, tab and pane strips, agent statusline, and composer docks. Only the terminal
 mirror remains visible. A floating button in the top-right corner or the Escape key restores the
 interface.
@@ -835,25 +835,25 @@ the card's **Send now** button sends the whole queue to the running turn at once
 offers it, because the button presses Ctrl+Enter, the key that agent defines for this. The button is
 hidden on a read-only device and on a saved copy.
 
-One thing in Chat is known to be incomplete. Hermes can remove a turn from its log after Collie
+One thing in Chat is known to be incomplete. Hermes can remove a turn from its log after Pastor
 read it, for example when it compacts. Chat then keeps showing that turn until the session is read
 again. The terminal never has this problem.
 
-Chat reads the agent's session log, not the screen. That means a pane gets Chat only when Collie
+Chat reads the agent's session log, not the screen. That means a pane gets Chat only when Pastor
 knows which session the pane is running, and the agent has to tell the multiplexer. The pane itself
 cannot work this out.
 
 | Multiplexer | What reports the session | Chat works for |
 | --- | --- | --- |
-| Herdr | The matching Herdr integration for that agent, installed once with `herdr integration install <agent>` (for example `claude`, `codex`, `opencode`, `pi`, `omp`, `grok`, `hermes`), then restart the agent | Every agent that has an integration and a session log Collie reads |
-| tmux, zellij, Tern (experimental) | Collie's [beacon hooks](multiplexers.md#agent-beacons-optional-linux) | Claude Code only, after `collie hooks install claude` |
+| Herdr | The matching Herdr integration for that agent, installed once with `herdr integration install <agent>` (for example `claude`, `codex`, `opencode`, `pi`, `omp`, `grok`, `hermes`), then restart the agent | Every agent that has an integration and a session log Pastor reads |
+| tmux, zellij, Tern (experimental) | Pastor's [beacon hooks](multiplexers.md#agent-beacons-optional-linux) | Claude Code only, after `pastor hooks install claude` |
 | tuios | The tuios daemon | The agents the daemon reports |
 
-OpenClaw needs no Herdr integration for Chat. Herdr does not pass an OpenClaw session on, so Collie
+OpenClaw needs no Herdr integration for Chat. Herdr does not pass an OpenClaw session on, so Pastor
 reads the session name off the footer of `openclaw tui` (`agent main (main) | session work | …`) and
 opens that agent's session database under `$OPENCLAW_STATE_DIR`, or `~/.openclaw`, read-only. Set
 `openclaw_root` when the state folder is somewhere else. The pane must report itself to Herdr as
-agent `openclaw`. Collie never reads OpenClaw's config file or its gateway token.
+agent `openclaw`. Pastor never reads OpenClaw's config file or its gateway token.
 
 `herdr integration status` shows which integrations are installed. A hook is read when the agent
 starts, so an agent that was already running when you installed it needs a restart. Oh My Pi is the
@@ -869,7 +869,7 @@ question before there is anything to read, or its first turn ends and it still h
 log file to read. The terminal then shows a line that names what is missing, and the **⋮** row says
 why. A first turn that runs for a minute with nothing to read and no other sign also falls back. A pane that was already busy when you first opened it, with no session, shows the terminal at
 once. When the session or the log arrives later, the pane goes back to Chat. Chat never hides the
-row, so you can tell a missing hook from a missing feature. `collie doctor` lists those
+row, so you can tell a missing hook from a missing feature. `pastor doctor` lists those
 panes under `agent-sessions` and names the integration line (`integration-<agent>`) that fixes each.
 The [troubleshooting page](troubleshooting.md) has the steps, under **a pane has no Chat or History**.
 
@@ -878,7 +878,7 @@ The [troubleshooting page](troubleshooting.md) has the steps, under **a pane has
 When the bridge is out of reach, the phone shows the last copy it saved, and you can read it but not act on it.
 
 The phone keeps two things for each pane: the last terminal text it saw, and the newest Chat turns as
-Chat drew them. It never keeps the raw terminal screen as Chat. When you open Collie and the bridge
+Chat drew them. It never keeps the raw terminal screen as Chat. When you open Pastor and the bridge
 does not answer within about a second and a half, the phone draws this saved copy at once, and
 replaces it with live data when the bridge answers.
 
@@ -938,7 +938,7 @@ See [Which folder, and which repos](changes.md#which-folder-and-which-repos) for
 
 ## Language
 
-Collie's interface is available in twelve languages. Configure this under **Settings → Appearance → Language**.
+Pastor's interface is available in twelve languages. Configure this under **Settings → Appearance → Language**.
 
 - English
 - Deutsch
@@ -957,7 +957,7 @@ it displays the raw output from the agent, while quick replies, menu labels, and
 underlying screen or keyboard names.
 
 A notification's title follows the same choice: "claude needs you" arrives as "claude 입력 대기" on a
-device set to Korean. The device picks up a new choice the next time Collie is open on it, and until
+device set to Korean. The device picks up a new choice the next time Pastor is open on it, and until
 then its titles stay in the language it had. The body under the title is the pane's own name and
 place, and is never translated ([Web Push](voice-and-push.md#web-push-optional)).
 

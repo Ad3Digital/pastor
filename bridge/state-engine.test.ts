@@ -192,7 +192,7 @@ describe("StateEngine — transition detection", () => {
 describe("StateEngine — activity ledger binding", () => {
   test("seeds idle agents, tracks completions, and resets unread activity on agent exit", async () => {
     const { herdr, engine, poll } = makeEngine();
-    const dir = mkdtempSync(join(tmpdir(), "collie-activity-lifecycle-"));
+    const dir = mkdtempSync(join(tmpdir(), "pastor-activity-lifecycle-"));
     let now = 100;
     const activity = new ActivityLedger({ stateDir: dir }, () => now);
     trackActivity(engine, activity, "default");
@@ -235,10 +235,10 @@ describe("StateEngine — activity ledger binding", () => {
 
   // A settled pane is only "new work" when a turn ended. Herdr's own TUI moves a pane from `done`
   // to `idle` when the operator acknowledges it there, and flicker gives `unknown → idle`; neither
-  // may re-mark a pane Collie already showed as seen.
+  // may re-mark a pane Pastor already showed as seen.
   test("only a turn that ends bumps activity for a settled pane", async () => {
     const { herdr, engine, poll } = makeEngine();
-    const dir = mkdtempSync(join(tmpdir(), "collie-activity-settled-"));
+    const dir = mkdtempSync(join(tmpdir(), "pastor-activity-settled-"));
     let now = 100;
     const activity = new ActivityLedger({ stateDir: dir }, () => now);
     trackActivity(engine, activity, "default");
@@ -442,10 +442,10 @@ describe("StateEngine — the order panes arrive in", () => {
   function muxPane(fields: Partial<MuxPane> & { paneId: string }): MuxPane {
     return {
       spaceId: "w1",
-      spaceLabel: "collie",
+      spaceLabel: "pastor",
       spaceNumber: 1,
       tabId: "w1:t1",
-      cwd: "/home/dev/collie",
+      cwd: "/home/dev/pastor",
       focused: false,
       alive: true,
       agent: "claude",
@@ -782,7 +782,7 @@ describe("StateEngine — session name enrichment", () => {
     const claudePane: MuxPane = {
       paneId: "%1",
       spaceId: "$0",
-      spaceLabel: "collie",
+      spaceLabel: "pastor",
       spaceNumber: 1,
       tabId: "@0",
       cwd: "/home/you/demo",
@@ -1086,10 +1086,10 @@ describe("terminalTitleIsStale", () => {
     return {
       paneId: "%3",
       spaceId: "$0",
-      spaceLabel: "collie",
+      spaceLabel: "pastor",
       spaceNumber: 1,
       tabId: "@0",
-      cwd: "/home/dev/collie",
+      cwd: "/home/dev/pastor",
       focused: false,
       alive: true,
       agent: "shell",
@@ -1206,10 +1206,10 @@ describe("StateEngine — an expired agent's pane", () => {
   const deadAgentPane: MuxPane = {
     paneId: "%9",
     spaceId: "$0",
-    spaceLabel: "collie",
+    spaceLabel: "pastor",
     spaceNumber: 1,
     tabId: "@0",
-    cwd: "/home/dev/collie",
+    cwd: "/home/dev/pastor",
     focused: false,
     alive: true,
     // What the decorator leaves: no agent, no status claim.

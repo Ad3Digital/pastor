@@ -1,15 +1,15 @@
 # Durable member: a Pi Durable program in your crew
 
 A small Bun program built on [Pi Durable](https://www.npmjs.com/package/@earendil-works/pi-durable).
-It triages made-up support tickets with a scripted model and shows each conversation to Collie over
-the durable socket wire. A Collie peer with `COLLIE_MUX=durable` lists those conversations as panes,
+It triages made-up support tickets with a scripted model and shows each conversation to Pastor over
+the durable socket wire. A Pastor peer with `PASTOR_MUX=durable` lists those conversations as panes,
 so you can read them on the phone and answer their questions there. The wire is experimental and may
-change in any minor release of Collie ([`WIRE.md`](../../bridge/mux/durable/WIRE.md)). This folder is
+change in any minor release of Pastor ([`WIRE.md`](../../bridge/mux/durable/WIRE.md)). This folder is
 example code to read and copy. It is not a package.
 
 ## Run it
 
-You need Linux and Bun 1.4 or later. From a clone of collie:
+You need Linux and Bun 1.4 or later. From a clone of pastor:
 
 ```sh
 cd examples/durable-member
@@ -26,48 +26,48 @@ On the first start the app opens one ticket. The scripted model asks to run `wri
 ticket waits for your answer. The app keeps its conversations in `~/.local/state/durable-member/`, so
 the next start shows them again. Delete that folder to start over. Stop the app with Ctrl-C.
 
-The app installs on its own. The collie root install does not pull in Pi Durable, and this folder
+The app installs on its own. The pastor root install does not pull in Pi Durable, and this folder
 has its own `bun.lock`. Pi Durable, `chord` and `pi-ai` are pinned to exact versions.
 
-## Point a Collie peer at it
+## Point a Pastor peer at it
 
-A peer is one Collie instance, and one instance mirrors one backend. So the durable program needs a
-peer of its own, even on a host that already runs Collie with Herdr. The peer needs two settings:
-
-```sh
-COLLIE_MUX=durable
-COLLIE_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock   # the path the app printed
-```
-
-On a host that already runs Collie, make a second instance with its own port and state folder, in
-`~/.config/herdr/plugins/config/herdr.collie-durable/.env`:
+A peer is one Pastor instance, and one instance mirrors one backend. So the durable program needs a
+peer of its own, even on a host that already runs Pastor with Herdr. The peer needs two settings:
 
 ```sh
-COLLIE_INSTANCE=durable
-COLLIE_PORT=8795
-COLLIE_STATE_DIR=/home/you/.local/state/collie-durable
-COLLIE_MUX=durable
-COLLIE_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock
+PASTOR_MUX=durable
+PASTOR_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock   # the path the app printed
 ```
 
-Then run `COLLIE_INSTANCE=durable collie start`. `COLLIE_INSTANCE=durable collie doctor` checks the
+On a host that already runs Pastor, make a second instance with its own port and state folder, in
+`~/.config/herdr/plugins/config/ad3.pastor-durable/.env`:
+
+```sh
+PASTOR_INSTANCE=durable
+PASTOR_PORT=8795
+PASTOR_STATE_DIR=/home/you/.local/state/pastor-durable
+PASTOR_MUX=durable
+PASTOR_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock
+```
+
+Then run `PASTOR_INSTANCE=durable pastor start`. `PASTOR_INSTANCE=durable pastor doctor` checks the
 socket and says what is wrong when the peer cannot reach the app. The full steps are in
-[Multiple Collie instances on one host](../../docs/deployment.md#multiple-collie-instances-on-one-host),
+[Multiple Pastor instances on one host](../../docs/deployment.md#multiple-pastor-instances-on-one-host),
 and what the `durable` backend can do is in [durable notes](../../docs/multiplexers.md#durable-notes).
 
-Run the peer as the same user as the app. Keep the socket under `$XDG_RUNTIME_DIR`: the Collie service
+Run the peer as the same user as the app. Keep the socket under `$XDG_RUNTIME_DIR`: the Pastor service
 runs with a private `/tmp`, so it cannot see a socket in `/tmp`.
 
 ## Join the crew
 
-Join the peer to your crew like any other machine: `collie crew invite` on the lead, then
-`collie crew join` on this host with `COLLIE_INSTANCE=durable` set. The commands and their flags are in
+Join the peer to your crew like any other machine: `pastor crew invite` on the lead, then
+`pastor crew join` on this host with `PASTOR_INSTANCE=durable` set. The commands and their flags are in
 [Crew commands](../../docs/crew.md#two-machines-one-crew). The peer then shows up in the list as a
 machine of its own, beside your Herdr peer. With no crew, pair the phone with this instance directly.
 
 A member's name defaults to the host name. If this host already runs the lead or a Herdr peer, name
 the durable peer so the host chip can tell them apart:
-`COLLIE_INSTANCE=durable collie crew join <lead-address> --label durable`. (`collie crew rename`
+`PASTOR_INSTANCE=durable pastor crew join <lead-address> --label durable`. (`pastor crew rename`
 names the crew, not a member.) A lead older than 1.21.0 lists the pane but shows no ask card, only
 "needs you". Update the lead first.
 
@@ -101,7 +101,7 @@ opens. A real model may not follow the script, so a ticket can take a different 
 ## The trust model
 
 The socket keeps out other users. The app makes it mode `0600`, in a folder with mode `0700`, both
-owned by you. There is no token and no TCP. Before each connect, Collie checks every folder on the
+owned by you. There is no token and no TCP. Before each connect, Pastor checks every folder on the
 path and the socket itself ([`WIRE.md` section 1A](../../bridge/mux/durable/WIRE.md#1a-a-private-socket)).
 
 The socket does not keep out you. Any process that runs as your user can open it, read every
@@ -111,7 +111,7 @@ The app has one defence against that, the descendant check. It refuses an answer
 starter from itself and from any process below it in the process tree, with `403 caller-refused`.
 Reads stay open. To find the caller, the app reads its pid from the socket (`SO_PEERCRED`, through
 `bun:ffi`) and walks the parent links in `/proc`. A caller whose process is gone, or whose chain of
-parents breaks, is refused too. Collie's adapter reports the 403 as a refusal that names the code, and
+parents breaks, is refused too. Pastor's adapter reports the 403 as a refusal that names the code, and
 never retries it ([`WIRE.md` section 3, error codes](../../bridge/mux/durable/WIRE.md#error-codes)).
 
 The check has holes:
@@ -121,7 +121,7 @@ The check has holes:
   adopts it, and it is no longer below the app. The test "a process that left the tree" shows this.
 - **Every other process of your user gets through.** A shell you open, another program, a user
   service, or anything that a tool asks one of these to run.
-- **Anything that runs as you can read what you can read,** Collie's own state folder included.
+- **Anything that runs as you can read what you can read,** Pastor's own state folder included.
 
 So the check stops the simple case only. The real defence is a sandbox for the agent's tools: run them
 as another user, in a mount or network namespace that cannot reach the socket, or behind a seccomp
@@ -140,7 +140,7 @@ Every variable is optional.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `COLLIE_DURABLE_SOCKET` | `$XDG_RUNTIME_DIR/durable-member/app.sock`, or `/tmp/durable-member-<uid>/app.sock` when `XDG_RUNTIME_DIR` is not set | Where the app listens. An absolute path of at most 103 bytes. Collie reads the same variable to find it. |
+| `PASTOR_DURABLE_SOCKET` | `$XDG_RUNTIME_DIR/durable-member/app.sock`, or `/tmp/durable-member-<uid>/app.sock` when `XDG_RUNTIME_DIR` is not set | Where the app listens. An absolute path of at most 103 bytes. Pastor reads the same variable to find it. |
 | `DM_DATA` | `$XDG_STATE_HOME/durable-member`, else `~/.local/state/durable-member` | The folder for the conversations (`store/`) and the file `write_note` appends to (`notes.txt`). |
 | `DM_CALLER_CHECK` | `descendant` | `off` turns the descendant check off. Needed on any system but Linux. |
 | `DM_STEP_MS` | `400` | The pause before each scripted answer, so you can see the states change. |
@@ -160,8 +160,8 @@ The contract is [`WIRE.md`](../../bridge/mux/durable/WIRE.md). The decisions beh
 The SDK in `sdk/` is not published, and there is no package. It ships here as example code until a
 second program needs it. Copy the folder into your program. It imports nothing from Pi Durable:
 
-- `openCollie({ socket, hostName })` opens the socket and returns handles for workspaces, tabs and
-  panes. Call `ready()` once every pane is shown, so Collie never sees a half-empty layout.
+- `openPastor({ socket, hostName })` opens the socket and returns handles for workspaces, tabs and
+  panes. Call `ready()` once every pane is shown, so Pastor never sees a half-empty layout.
 - A pane takes `event()` for items, `state()` for working and idle, and `ask()`, which resolves with
   the phone's answer. `onSend()` and `onAbort()` take the phone's text and Stop.
 - `starters()` lists what the phone can start from the New page.
@@ -191,5 +191,5 @@ bun test
 The suite covers the socket rules, the hello, the request ids, the cleaning and the caps, the
 descendant check, a whole ticket, and restarts with real kills. The protocol tests run twice, over the
 socket and straight against the core. It needs no key and makes no network
-call. From the root of collie, `bun test bridge/mux/durable/example.test.ts` starts this app and
-drives it with Collie's own adapter.
+call. From the root of pastor, `bun test bridge/mux/durable/example.test.ts` starts this app and
+drives it with Pastor's own adapter.

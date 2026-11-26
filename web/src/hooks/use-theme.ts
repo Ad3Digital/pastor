@@ -20,7 +20,7 @@ import { useCallback, useSyncExternalStore } from "react";
 export type Theme = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
-const STORAGE_KEY = "collie:theme:v1";
+const STORAGE_KEY = "pastor:theme:v1";
 const DEFAULT: Theme = "system";
 
 /** Browser chrome — Android's URL bar and task-switcher card. These are --background's two halves

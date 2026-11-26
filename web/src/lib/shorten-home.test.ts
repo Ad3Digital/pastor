@@ -4,7 +4,7 @@ import { shortenHome } from "./shorten-home";
 
 describe("shortenHome", () => {
   test("a descendant of home collapses to a leading ~", () => {
-    expect(shortenHome("/home/op/dev/collie", "/home/op")).toBe("~/dev/collie");
+    expect(shortenHome("/home/op/dev/pastor", "/home/op")).toBe("~/dev/pastor");
   });
 
   test("home itself collapses to a bare ~", () => {

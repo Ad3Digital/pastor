@@ -1,5 +1,5 @@
 // The `durable` journal adapter: Chat and History for a program that has no screen and no log of
-// its own that Collie can find. It reads the bridge-owned pane log (bridge/durable/log.ts), which the
+// its own that Pastor can find. It reads the bridge-owned pane log (bridge/durable/log.ts), which the
 // durable mux adapter fills from the program's events. It is an ordinary journal adapter: the same
 // `TranscriptSource` seam, the same row reducer, the same byte-cursor live read as the harnesses that
 // write a JSONL file. There is no second reader path.

@@ -85,11 +85,11 @@ async function listening(port: number): Promise<boolean> {
 }
 
 describe.skipIf(!RUNS)("the Cloudflare example against the real adapter over HTTPS transport", () => {
-  const dir = RUNS ? mkdtempSync(join(tmpdir(), "collie-dmcf-")) : "";
+  const dir = RUNS ? mkdtempSync(join(tmpdir(), "pastor-dmcf-")) : "";
   const port = RUNS ? freePort() : 0;
   const base = `http://127.0.0.1:${String(port)}`;
   const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, "0")).join("");
-  const built = buildDurableTransport(chooseDurableTransport({ COLLIE_DURABLE_URL: base, COLLIE_DURABLE_TOKEN: token }));
+  const built = buildDurableTransport(chooseDurableTransport({ PASTOR_DURABLE_URL: base, PASTOR_DURABLE_TOKEN: token }));
   const recorder = new Recorder();
   const adapter = new DurableMux(built.transport, SYSTEM_CLOCK, recorder);
   const log: string[] = [];
@@ -117,7 +117,7 @@ describe.skipIf(!RUNS)("the Cloudflare example against the real adapter over HTT
     // 0700 folder, 0600 env file. DM_STEP_MS=0 makes the scripted answers instant; DM_SLOW_MS stays at
     // its default of ten seconds, so a follow-up leaves a run to stop.
     const envFile = join(dir, "test.env");
-    writeFileSync(envFile, `COLLIE_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
+    writeFileSync(envFile, `PASTOR_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
     const spawned = Bun.spawn(
       [
         WRANGLER,

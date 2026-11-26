@@ -192,7 +192,7 @@ function preClass(
   return cn(
     "m-0 font-mono leading-[1.25] tracking-normal text-foreground [font-variant-ligatures:none]",
     // Opt the mirror back INTO text selection, so an operator can long-press a line and Copy it
-    // straight off the phone. An installed iOS PWA (display:standalone, which Collie is) suppresses
+    // straight off the phone. An installed iOS PWA (display:standalone, which Pastor is) suppresses
     // long-press selection app-wide unless the element sets -webkit-user-select:text — the exact
     // inverse of the `select-none [-webkit-touch-callout:none]` the strip pills carry to STOP the
     // loupe. Both spellings, like those pills, so the -webkit prefix is present whatever the build
@@ -360,7 +360,7 @@ export const AnsiOutput = memo(function AnsiOutput({
   onImageClusterCount,
 }: AnsiOutputProps) {
   // The mirror is agent output and is not translated — but the two strings the image cluster
-  // renders are Collie's own words, so this subscribes for the same reason every t() caller does.
+  // renders are Pastor's own words, so this subscribes for the same reason every t() caller does.
   useLocale();
   // Built here only when the caller did not already build them (see the prop). Skipping the parse
   // too is the point: AgentChat's polling path pays for one parse per screen, not two.

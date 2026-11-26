@@ -9,10 +9,10 @@ let warned = false;
 
 export default {
   async fetch(request, env): Promise<Response> {
-    if (!(await tokenAccepted(request, env.COLLIE_TOKEN, env.COLLIE_TOKEN_NEXT))) {
-      if (!warned && (env.COLLIE_TOKEN === undefined || env.COLLIE_TOKEN.length < 32)) {
+    if (!(await tokenAccepted(request, env.PASTOR_TOKEN, env.PASTOR_TOKEN_NEXT))) {
+      if (!warned && (env.PASTOR_TOKEN === undefined || env.PASTOR_TOKEN.length < 32)) {
         warned = true;
-        console.error("COLLIE_TOKEN is not set or shorter than 32 bytes: every request is refused");
+        console.error("PASTOR_TOKEN is not set or shorter than 32 bytes: every request is refused");
       }
       return refused();
     }

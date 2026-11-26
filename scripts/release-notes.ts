@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 // The GitHub Release page's body, generated from CHANGELOG.md.
 //
-//   bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0
-//   bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0 \
+//   bun scripts/release-notes.ts --version 1.6.0 --repo Ad3Digital/pastor --tag v1.6.0
+//   bun scripts/release-notes.ts --version 1.6.0 --repo Ad3Digital/pastor --tag v1.6.0 \
 //     --previous-tag v1.5.6 --changelog CHANGELOG.md
 //
 // Prints the body to stdout. `.github/workflows/release.yml` redirects it into the file
@@ -375,7 +375,7 @@ export function checkUnreleased(changelog: string): Group[] {
  * `170-beta1---2026-10-01`.
  *
  * Verified against a live rendered page, not assumed:
- *   curl -sL https://github.com/AltanS/collie/blob/v1.5.0/CHANGELOG.md | grep -o 'user-content-150---2026-09-04'
+ *   curl -sL https://github.com/Ad3Digital/pastor/blob/v1.5.0/CHANGELOG.md | grep -o 'user-content-150---2026-09-04'
  */
 export function changelogAnchor(version: string, date: string): string {
 	return `${version.replace(/\./g, "")}---${date}`;
@@ -394,13 +394,13 @@ function updateBlock(): string[] {
 		"",
 		// Two spellings, because there are two kinds of install and neither command works on the
 		// other: a Herdr-managed checkout has plugin actions, a downloaded binary install has
-		// `collie` on PATH (M14/01 §8).
+		// `pastor` on PATH (M14/01 §8).
 		"```",
-		"collie update                                              # downloaded install (install.sh or a tarball below)",
-		"herdr plugin action invoke update --plugin herdr.collie    # Herdr plugin install",
+		"pastor update                                              # downloaded install (install.sh or a tarball below)",
+		"herdr plugin action invoke update --plugin ad3.pastor    # Herdr plugin install",
 		"```",
 		"",
-		"Check with `collie version` or `herdr plugin action invoke version --plugin herdr.collie`.",
+		"Check with `pastor version` or `herdr plugin action invoke version --plugin ad3.pastor`.",
 		// The 0.x crossing no longer rides here: `docs/upgrading.md` keeps it ("Upgrading from 0.x
 		// to 1.0"), and a release page of the 1.x line does not repeat it.
 	];
@@ -408,7 +408,7 @@ function updateBlock(): string[] {
 
 /** The by-hand checksum recipe, folded into a `<details>`. */
 function verifyBlock(repo: string, tag: string, version: string): string[] {
-	const asset = `collie-${version}-linux-x64.tar.gz`;
+	const asset = `pastor-${version}-linux-x64.tar.gz`;
 	const base = `https://github.com/${repo}/releases/download/${tag}`;
 	return [
 		"<details><summary>Verify a download by hand</summary>",
@@ -494,7 +494,7 @@ function main(argv: string[]): void {
 
 	if (!version || !repo || !tag) {
 		console.error(
-			"usage: bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0 " +
+			"usage: bun scripts/release-notes.ts --version 1.6.0 --repo Ad3Digital/pastor --tag v1.6.0 " +
 				"[--previous-tag v1.5.6] [--changelog CHANGELOG.md]",
 		);
 		process.exit(1);

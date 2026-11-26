@@ -22,7 +22,7 @@ import {
 	renderBody,
 } from "./release-notes.ts";
 
-const REPO = "AltanS/collie";
+const REPO = "Ad3Digital/pastor";
 
 // A section with all five groups, one bullet each.
 const FULL = `# Changelog
@@ -33,29 +33,29 @@ const FULL = `# Changelog
 
 ### Added
 
-- **The crew levels itself.** Every member follows the lead's tag. Thanks @someone (#12). ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The crew levels itself.** Every member follows the lead's tag. Thanks @someone (#12). ([abc1234](https://github.com/Ad3Digital/pastor/commit/abc1234))
 
 ### Changed
 
-- **The update band shows one release at a time.** It used to stack them. ([aaa0001](https://github.com/AltanS/collie/commit/aaa0001))
+- **The update band shows one release at a time.** It used to stack them. ([aaa0001](https://github.com/Ad3Digital/pastor/commit/aaa0001))
 
 ### Fixed
 
-- **\`collie doctor\` names the unit it checked.** It used to name the first one on the host. ([def5678](https://github.com/AltanS/collie/commit/def5678))
+- **\`pastor doctor\` names the unit it checked.** It used to name the first one on the host. ([def5678](https://github.com/Ad3Digital/pastor/commit/def5678))
 
 ### Packaging
 
-- **The Arch package installs to \`/opt/collie\`.** That is the layout the repository expects. ([0000111](https://github.com/AltanS/collie/commit/0000111))
+- **The Arch package installs to \`/opt/pastor\`.** That is the layout the repository expects. ([0000111](https://github.com/Ad3Digital/pastor/commit/0000111))
 
 ### Docs
 
-- **The install page names the mise route.** It sits beside Arch and Nix. ([2222333](https://github.com/AltanS/collie/commit/2222333))
+- **The install page names the mise route.** It sits beside Arch and Nix. ([2222333](https://github.com/Ad3Digital/pastor/commit/2222333))
 
 ## [2.0.0] - 2026-09-01
 
 ### Added
 
-- **The first one.** ([9999999](https://github.com/AltanS/collie/commit/9999999))
+- **The first one.** ([9999999](https://github.com/Ad3Digital/pastor/commit/9999999))
 `;
 
 const SMALL = `# Changelog
@@ -64,7 +64,7 @@ const SMALL = `# Changelog
 
 ### Added
 
-- **Collie ships.** The first release. ([1111111](https://github.com/AltanS/collie/commit/1111111))
+- **Pastor ships.** The first release. ([1111111](https://github.com/Ad3Digital/pastor/commit/1111111))
 `;
 
 describe("parseSection", () => {
@@ -83,7 +83,7 @@ describe("parseSection", () => {
 	test("a lead keeps its backticks and loses its asterisks", () => {
 		const section = parseSection(FULL, "2.1.0");
 		const fixed = section.groups.find((g) => g.name === "Fixed");
-		expect(fixed?.leads).toEqual(["`collie doctor` names the unit it checked."]);
+		expect(fixed?.leads).toEqual(["`pastor doctor` names the unit it checked."]);
 		for (const group of section.groups) {
 			for (const lead of group.leads) expect(lead).not.toContain("**");
 		}
@@ -125,7 +125,7 @@ describe("parseSection", () => {
 		const beta = SMALL.replace("## [1.0.0] - 2026-01-01", "## [1.7.0-beta.1] - 2026-10-01");
 		const section = parseSection(beta, "1.7.0-beta.1");
 		expect(section.date).toBe("2026-10-01");
-		expect(section.groups[0]?.leads).toEqual(["Collie ships."]);
+		expect(section.groups[0]?.leads).toEqual(["Pastor ships."]);
 	});
 });
 
@@ -187,11 +187,11 @@ describe("renderBody", () => {
 **Already on 1.x?** One command, then the phone updates itself within a minute.
 
 \`\`\`
-collie update                                              # downloaded install (install.sh or a tarball below)
-herdr plugin action invoke update --plugin herdr.collie    # Herdr plugin install
+pastor update                                              # downloaded install (install.sh or a tarball below)
+herdr plugin action invoke update --plugin ad3.pastor    # Herdr plugin install
 \`\`\`
 
-Check with \`collie version\` or \`herdr plugin action invoke version --plugin herdr.collie\`.
+Check with \`pastor version\` or \`herdr plugin action invoke version --plugin ad3.pastor\`.
 
 ## What changed
 
@@ -205,26 +205,26 @@ Check with \`collie version\` or \`herdr plugin action invoke version --plugin h
 
 **Fixed**
 
-- \`collie doctor\` names the unit it checked.
+- \`pastor doctor\` names the unit it checked.
 
 **Packaging**
 
-- The Arch package installs to \`/opt/collie\`.
+- The Arch package installs to \`/opt/pastor\`.
 
 **Docs**
 
 - The install page names the mise route.
 
-Full detail with commits: [2.1.0 in the changelog](https://github.com/AltanS/collie/blob/v2.1.0/CHANGELOG.md#210---2026-10-01)
+Full detail with commits: [2.1.0 in the changelog](https://github.com/Ad3Digital/pastor/blob/v2.1.0/CHANGELOG.md#210---2026-10-01)
 
-Compare: [v2.0.0...v2.1.0](https://github.com/AltanS/collie/compare/v2.0.0...v2.1.0)
+Compare: [v2.0.0...v2.1.0](https://github.com/Ad3Digital/pastor/compare/v2.0.0...v2.1.0)
 
 <details><summary>Verify a download by hand</summary>
 
 \`\`\`
-curl -fLO https://github.com/AltanS/collie/releases/download/v2.1.0/collie-2.1.0-linux-x64.tar.gz
-curl -fLO https://github.com/AltanS/collie/releases/download/v2.1.0/collie-2.1.0-linux-x64.tar.gz.sha256
-sha256sum -c collie-2.1.0-linux-x64.tar.gz.sha256   # macOS: shasum -a 256 -c
+curl -fLO https://github.com/Ad3Digital/pastor/releases/download/v2.1.0/pastor-2.1.0-linux-x64.tar.gz
+curl -fLO https://github.com/Ad3Digital/pastor/releases/download/v2.1.0/pastor-2.1.0-linux-x64.tar.gz.sha256
+sha256sum -c pastor-2.1.0-linux-x64.tar.gz.sha256   # macOS: shasum -a 256 -c
 \`\`\`
 
 A sha256 catches a corrupt or truncated download. It does not prove who built the file,
@@ -245,7 +245,7 @@ HTTPS and the pinned github.com host carry that.
 		expect(body.startsWith("## Update\n")).toBe(true);
 		// The commands a phone came here to copy are visible without a tap: only the verify recipe
 		// is folded.
-		expect(body.indexOf("collie update  ")).toBeLessThan(body.indexOf("<details>"));
+		expect(body.indexOf("pastor update  ")).toBeLessThan(body.indexOf("<details>"));
 		expect(body.match(/<details>/g)).toHaveLength(1);
 		expect(body.indexOf("## Update")).toBeLessThan(body.indexOf("## What changed"));
 	});
@@ -270,8 +270,8 @@ const CREDITS = `# Changelog
 
 ### Added
 
-- **A.** Detail. Thanks @alice (#1, fixes #2). ([aaaaaaa](https://github.com/AltanS/collie/commit/aaaaaaa))
-- **B.** Detail. Reported by @bob (#3). ([bbbbbbb](https://github.com/AltanS/collie/commit/bbbbbbb))
+- **A.** Detail. Thanks @alice (#1, fixes #2). ([aaaaaaa](https://github.com/Ad3Digital/pastor/commit/aaaaaaa))
+- **B.** Detail. Reported by @bob (#3). ([bbbbbbb](https://github.com/Ad3Digital/pastor/commit/bbbbbbb))
 - **C.** Detail. Thanks to @carol and @dave-x, and suggested by @Alice. (#4)
 - **D.** Contributed by [@erin](https://github.com/erin) (#5).
 
@@ -396,7 +396,7 @@ const URGENT = `# Changelog
 
 ### Fixed
 
-- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/Ad3Digital/pastor/commit/abc1234))
 `;
 
 describe("parseUrgent", () => {
@@ -450,7 +450,7 @@ describe("parseUrgent", () => {
 			reason: `${"a".repeat(139)}.`,
 		});
 		// No markup: neither the push body nor the card renders any.
-		expect(() => parseUrgent(withReason("Run `collie update` today."), "1.9.1")).toThrow(/backtick/);
+		expect(() => parseUrgent(withReason("Run `pastor update` today."), "1.9.1")).toThrow(/backtick/);
 		expect(() => parseUrgent(withReason("See [the notes](https://x.dev) today."), "1.9.1")).toThrow(
 			/markdown link/,
 		);

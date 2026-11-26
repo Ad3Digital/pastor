@@ -6,7 +6,7 @@ import { durableFindings } from "./durable-findings.ts";
 import { context } from "./fakes.ts";
 import type { Finding } from "./finding.ts";
 
-// `collie doctor`'s durable rows for the second transport, HTTPS with a bearer token (ADR 0103),
+// `pastor doctor`'s durable rows for the second transport, HTTPS with a bearer token (ADR 0103),
 // against the fake program served over HTTP on 127.0.0.1. The socket transport's rows are proved in
 // `cli/doctor.test.ts` ("doctor durable"); this file proves the https rows, the skips in both
 // directions, and that no row carries the token. Every token is minted at run time.
@@ -22,7 +22,7 @@ async function startHttp(token: string): Promise<FakeDurableProgram> {
   return program;
 }
 
-const onUrl = (url: string, token: string | undefined) => ({ COLLIE_MUX: "durable", COLLIE_DURABLE_URL: url, COLLIE_DURABLE_TOKEN: token });
+const onUrl = (url: string, token: string | undefined) => ({ PASTOR_MUX: "durable", PASTOR_DURABLE_URL: url, PASTOR_DURABLE_TOKEN: token });
 
 function rows(findings: Finding[]): [string, string][] {
   return findings.map((finding) => [finding.check, finding.status]);
@@ -54,7 +54,7 @@ describe("doctor durable over https", () => {
       ["durable-lead", "skipped"],
     ]);
     expect(row(findings, "durable-env").detail).toContain("transport: https with a bearer token");
-    expect(row(findings, "durable-socket").detail).toContain("this peer uses COLLIE_DURABLE_URL");
+    expect(row(findings, "durable-socket").detail).toContain("this peer uses PASTOR_DURABLE_URL");
     expect(row(findings, "durable-url").detail).toBe(`${program.url} · loopback http, for wrangler dev on this machine · ${String(program.url.length)} bytes`);
     expect(row(findings, "durable-token").detail).toBe("set, 64 bytes");
     expect(program.requests.map((request) => [request.path, request.bearer])).toEqual([["/session/v1/hello", "match"]]);
@@ -73,7 +73,7 @@ describe("doctor durable over https", () => {
       ["durable-lead", "skipped"],
     ]);
     expect(row(findings, "durable-url").detail).toContain("· https ·");
-    expect(row(findings, "durable-token").detail).toBe("COLLIE_DURABLE_TOKEN is 20 bytes; it must be at least 32 bytes, for example 64 hex characters from `openssl rand -hex 32`");
+    expect(row(findings, "durable-token").detail).toBe("PASTOR_DURABLE_TOKEN is 20 bytes; it must be at least 32 bytes, for example 64 hex characters from `openssl rand -hex 32`");
   });
 
   test("plain http off loopback fails the url row with the reason and dials nothing", async () => {
@@ -91,7 +91,7 @@ describe("doctor durable over https", () => {
     const hello = row(findings, "durable-hello");
     expect(hello.status).toBe("error");
     expect(hello.detail).toBe("the program refused the token: token-refused: the program answered 401");
-    expect(hello.remedy).toContain("COLLIE_DURABLE_TOKEN");
+    expect(hello.remedy).toContain("PASTOR_DURABLE_TOKEN");
     expect(row(findings, "durable-ready").status).toBe("skipped");
     expect(printed(findings)).not.toContain(mine);
   });
@@ -102,7 +102,7 @@ describe("doctor durable over https", () => {
     program.hello.service = undefined;
     const findings = await durableFindings({ ctx: context(onUrl(program.url, token)) });
     expect(row(findings, "durable-hello").detail).toContain("something answered at this URL");
-    expect(row(findings, "durable-hello").remedy).toContain("COLLIE_DURABLE_URL");
+    expect(row(findings, "durable-hello").remedy).toContain("PASTOR_DURABLE_URL");
   });
 
   test("a program that is not ready over https is a warning on the ready row", async () => {
@@ -115,7 +115,7 @@ describe("doctor durable over https", () => {
   });
 
   test("both transports set, or a URL without a token, fails the env row with one message and skips the rest", async () => {
-    const both = await durableFindings({ ctx: context({ COLLIE_MUX: "durable", COLLIE_DURABLE_SOCKET: "/run/user/1000/d.sock", COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: testToken() }), platform: "linux" });
+    const both = await durableFindings({ ctx: context({ PASTOR_MUX: "durable", PASTOR_DURABLE_SOCKET: "/run/user/1000/d.sock", PASTOR_DURABLE_URL: "https://x.example", PASTOR_DURABLE_TOKEN: testToken() }), platform: "linux" });
     expect(rows(both)).toEqual([
       ["durable-env", "error"],
       ["durable-socket", "skipped"],
@@ -127,19 +127,19 @@ describe("doctor durable over https", () => {
     ]);
     expect(row(both, "durable-env").detail).toContain("are both set");
     const half = await durableFindings({ ctx: context(onUrl("https://x.example", undefined)) });
-    expect(row(half, "durable-env").detail).toBe("COLLIE_DURABLE_URL is set without COLLIE_DURABLE_TOKEN; the program refuses a caller with no token");
+    expect(row(half, "durable-env").detail).toBe("PASTOR_DURABLE_URL is set without PASTOR_DURABLE_TOKEN; the program refuses a caller with no token");
   });
 
   test("on the socket transport the url and token rows are skipped with the reason", async () => {
-    const findings = await durableFindings({ ctx: context({ COLLIE_MUX: "durable", COLLIE_DURABLE_SOCKET: "/nonexistent/durable/d.sock" }), platform: "linux" });
-    expect(row(findings, "durable-url")).toMatchObject({ status: "skipped", detail: "this peer uses the socket, and COLLIE_DURABLE_URL is not set" });
+    const findings = await durableFindings({ ctx: context({ PASTOR_MUX: "durable", PASTOR_DURABLE_SOCKET: "/nonexistent/durable/d.sock" }), platform: "linux" });
+    expect(row(findings, "durable-url")).toMatchObject({ status: "skipped", detail: "this peer uses the socket, and PASTOR_DURABLE_URL is not set" });
     expect(row(findings, "durable-token")).toMatchObject({ status: "skipped" });
     expect(row(findings, "durable-socket").status).toBe("error");
   });
 });
 
 describe("doctor durable on Windows (a fake platform, so the rows are proved on every host)", () => {
-  const socketEnv = { COLLIE_MUX: "durable", COLLIE_DURABLE_SOCKET: "C:\\run\\d.sock" };
+  const socketEnv = { PASTOR_MUX: "durable", PASTOR_DURABLE_SOCKET: "C:\\run\\d.sock" };
 
   test("a socket path fails the env row with the sentence the boot line prints, and every socket row skips with the reason", async () => {
     const findings = await durableFindings({ ctx: context(socketEnv), platform: "win32" });
@@ -152,14 +152,14 @@ describe("doctor durable on Windows (a fake platform, so the rows are proved on 
       ["durable-ready", "skipped"],
       ["durable-lead", "skipped"],
     ]);
-    expect(row(findings, "durable-env").detail).toBe("the private socket transport is not available on Windows; set COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN instead");
-    expect(row(findings, "durable-env").remedy).toContain("set COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN");
+    expect(row(findings, "durable-env").detail).toBe("the private socket transport is not available on Windows; set PASTOR_DURABLE_URL and PASTOR_DURABLE_TOKEN instead");
+    expect(row(findings, "durable-env").remedy).toContain("set PASTOR_DURABLE_URL and PASTOR_DURABLE_TOKEN");
     expect(row(findings, "durable-socket").detail).toBe("Windows has no socket transport");
   });
 
   test("nothing set points at the URL and the token only", async () => {
-    const findings = await durableFindings({ ctx: context({ COLLIE_MUX: "durable" }), platform: "win32" });
-    expect(row(findings, "durable-env").remedy).toContain("COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN");
+    const findings = await durableFindings({ ctx: context({ PASTOR_MUX: "durable" }), platform: "win32" });
+    expect(row(findings, "durable-env").remedy).toContain("PASTOR_DURABLE_URL and PASTOR_DURABLE_TOKEN");
     expect(row(findings, "durable-env").remedy).not.toContain("absolute path");
   });
 

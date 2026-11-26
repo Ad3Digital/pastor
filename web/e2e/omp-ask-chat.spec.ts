@@ -110,7 +110,7 @@ test.beforeEach(async ({ page }, testInfo) => {
   // Show the journal card too; with tool calls hidden it is normally folded to a summary.
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      "collie:dash-prefs:v1",
+      "pastor:dash-prefs:v1",
       JSON.stringify({ paneView: "chat", showToolCalls: true }),
     );
   });

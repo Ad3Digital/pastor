@@ -366,7 +366,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   const tabNames = () => within(footer()).getAllByRole("button").map((b) => b.textContent);
   const NEEDS = { name: "Show only panes that need you" };
   const needsSwitch = () => screen.getByRole("button", NEEDS);
-  const stored = () => JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!);
+  const stored = () => JSON.parse(localStorage.getItem("pastor:dash-prefs:v1")!);
 
   it("opens on Dashboard, with every workspace listed and the switch off", async () => {
     renderHome(solo());
@@ -374,10 +374,10 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "pastor" })).toBeInTheDocument();
   });
 
-  it("a solo Collie has two tabs, Dashboard and Files, and no Crew", async () => {
+  it("a solo Pastor has two tabs, Dashboard and Files, and no Crew", async () => {
     renderHome(solo());
     await settled();
     expect(tabNames()).toHaveLength(2);
@@ -437,13 +437,13 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   });
 
   it("the Crew tab still draws its body when the crew has no pane anywhere", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     renderHome(homeData({ servers: fixtureServers, sessions: [] }));
     expect(await screen.findByTestId("crew-tab")).toBeInTheDocument();
   });
 
   it("a stored crew tab with no crew shows the Dashboard and leaves the stored value alone", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     renderHome(solo());
     await settled();
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
@@ -454,19 +454,19 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   it("opens on the Dashboard with the switch on when a device's stored tab was Focus (ADR 0085)", async () => {
     // "focus" is the tab's name since ADR 0068; "needs" and "attention" are the names before it.
     for (const old of ["focus", "needs", "attention"]) {
-      localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: old }));
+      localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: old }));
       renderHome(solo());
       await settled();
       expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
       expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
-      expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "pastor" })).not.toBeInTheDocument();
       expect(stored()).toMatchObject({ dashView: "dashboard", needsYouOnly: true });
       cleanup();
     }
   });
 
   it("opens on the Dashboard when a device's stored tab was the old Panes", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "panes" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ dashView: "panes" }));
     renderHome(solo());
     await settled();
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
@@ -525,20 +525,20 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await userEvent.click(needsSwitch());
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "pastor" })).not.toBeInTheDocument();
     // The select still offers every workspace: the filter removes rows, never places.
     const select = screen.getByRole("combobox", { name: "Workspace" });
-    expect(within(select).getByRole("option", { name: /^collie/ })).toBeInTheDocument();
+    expect(within(select).getByRole("option", { name: /^pastor/ })).toBeInTheDocument();
     expect(stored().needsYouOnly).toBe(true);
     // A new mount reads it back.
     cleanup();
     renderHome(solo());
     await settled();
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "pastor" })).not.toBeInTheDocument();
     // And off again brings the workspace back.
     await userEvent.click(needsSwitch());
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "pastor" })).toBeInTheDocument();
     expect(stored().needsYouOnly).toBe(false);
   });
 
@@ -549,7 +549,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await userEvent.click(needsSwitch());
     expect(screen.getByText("Nothing needs you")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "pastor" })).not.toBeInTheDocument();
   });
 
   it("the order select stays in the control row in both states", async () => {
@@ -567,17 +567,17 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
       "All workspaces",
       expect.stringMatching(/^webapp/),
-      expect.stringMatching(/^collie/),
+      expect.stringMatching(/^pastor/),
     ]);
-    await userEvent.selectOptions(select, within(select).getByRole("option", { name: /^collie/ }));
+    await userEvent.selectOptions(select, within(select).getByRole("option", { name: /^pastor/ }));
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
-    expect(stored().isolatedSpace).toEqual(expect.stringContaining("collie"));
+    expect(screen.getByRole("heading", { name: "pastor" })).toBeInTheDocument();
+    expect(stored().isolatedSpace).toEqual(expect.stringContaining("pastor"));
     // A new mount reads it back, and "All workspaces" clears it.
     cleanup();
     renderHome(solo());
     const again = await settled();
-    expect(within(again).getByRole("option", { name: /^collie/ })).toHaveProperty("selected", true);
+    expect(within(again).getByRole("option", { name: /^pastor/ })).toHaveProperty("selected", true);
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
     await userEvent.selectOptions(again, "all");
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
@@ -652,7 +652,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await within(list).findByText("5 files");
     await within(list).findByText("No folder");
     const rows = within(list).getAllByRole("button");
-    expect(rows.map((r) => r.textContent)).toEqual(["webapp5 files+10 −2", "collieNo folder"]);
+    expect(rows.map((r) => r.textContent)).toEqual(["webapp5 files+10 −2", "pastorNo folder"]);
     await userEvent.click(rows[0]!);
     await waitFor(() => expect(url(router)).toBe("/space/w1/changes"));
   });

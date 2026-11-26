@@ -74,7 +74,7 @@ describe("parseHermesTranscript", () => {
 
 describe("HermesTranscriptSource", () => {
   test("resolves and reads one session from state.db read-only", async () => {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-"));
+    const root = await mkdtemp(join(tmpdir(), "pastor-hermes-"));
     const db = new Database(join(root, "state.db"));
     db.run("create table sessions (id text primary key, source text, started_at real, parent_session_id text)");
     db.run("create table messages (id integer primary key, session_id text, role text, content text, tool_call_id text, tool_calls text, tool_name text, timestamp real, reasoning text, reasoning_content text, active integer default 1, compacted integer default 0, display_kind text)");
@@ -101,7 +101,7 @@ describe("HermesTranscriptSource — readSince", () => {
 
   /** A temp `state.db` holding one session, plus the two verbs these tests drive it with. */
   async function lab(parent: string | null = null) {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-since-"));
+    const root = await mkdtemp(join(tmpdir(), "pastor-hermes-since-"));
     const db = new Database(join(root, "state.db"));
     for (const ddl of SCHEMA) db.run(ddl);
     db.run("insert into sessions (id, source, started_at, parent_session_id) values (?, 'tui', 1, ?)", [SID, parent]);

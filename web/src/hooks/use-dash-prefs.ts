@@ -116,7 +116,7 @@ export interface DashPrefs {
   paneView: PaneView;
 }
 
-const STORAGE_KEY = "collie:dash-prefs:v1";
+const STORAGE_KEY = "pastor:dash-prefs:v1";
 
 /** The depths the Changes setting offers. The bridge clamps to the same range on its side. */
 export const CHANGES_DEPTHS = [1, 2, 3, 4] as const;

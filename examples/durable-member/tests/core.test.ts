@@ -24,7 +24,7 @@ protocolSuite({
   name: "against the core",
   async open({ hostName, caps }) {
     const core = createCore({ hostName, caps });
-    return { collie: { ...core, ready: () => core.ready(), close: async () => {} }, dial: { handler: (r) => core.handle(r), version: 1 } };
+    return { pastor: { ...core, ready: () => core.ready(), close: async () => {} }, dial: { handler: (r) => core.handle(r), version: 1 } };
   },
 });
 

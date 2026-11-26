@@ -5,12 +5,12 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, statSync, symlinkSync, wri
 import { join } from "node:path";
 import { api } from "./client.ts";
 import { Receipts } from "../sdk/core/receipts.ts";
-import { type AskInput, cut, openCollie, type PaneHandle } from "../sdk/index.ts";
+import { type AskInput, cut, openPastor, type PaneHandle } from "../sdk/index.ts";
 import { withNarrowUmask } from "../sdk/socket.ts";
 import { cleanup, tmp, waitFor } from "./util.ts";
 
 afterAll(cleanup);
-const open = (socket: string, more: object = {}) => openCollie({ callerCheck: "off", socket, hostName: "t", ...more });
+const open = (socket: string, more: object = {}) => openPastor({ callerCheck: "off", socket, hostName: "t", ...more });
 const withUmask = async <T>(mask: number, fn: () => Promise<T>) => {
   const before = process.umask(mask);
   try {
@@ -23,11 +23,11 @@ const modeOf = (p: string) => lstatSync(p).mode & 0o7777;
 
 describe("hello and the path", () => {
   // Refusing a server that does not say it is the adapter's job: bridge/mux/durable/protocol.test.ts.
-  test("hello carries service collie-durable", async () => {
+  test("hello carries service pastor-durable", async () => {
     const c = await open(join(tmp(), "s.sock"));
     c.ready();
     const hello = (await api.hello({ socket: c.address, version: 1 })).body;
-    expect(hello.service).toBe("collie-durable");
+    expect(hello.service).toBe("pastor-durable");
     await c.close();
   });
 

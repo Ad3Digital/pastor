@@ -43,7 +43,7 @@ let scripts: string;
 let report: string;
 
 beforeAll(() => {
-  root = mkdtempSync(join(tmpdir(), "collie-local-cli-test-"));
+  root = mkdtempSync(join(tmpdir(), "pastor-local-cli-test-"));
   tmpRoot = join(root, "tmp");
   scripts = join(root, "scripts");
   report = join(root, "report.json");
@@ -73,7 +73,7 @@ writeFileSync(${JSON.stringify(report)}, JSON.stringify({
   bytes: [...readFileSync(file)],
   fileMode: statSync(file).mode & 0o777,
   dirMode: statSync(dirname(file)).mode & 0o777,
-  collieEnv: Object.keys(process.env).filter((k) => k.startsWith("COLLIE_")),
+  pastorEnv: Object.keys(process.env).filter((k) => k.startsWith("PASTOR_")),
   marker: process.env.LOCAL_CLI_MARKER ?? null,
 }));
 process.stdout.write(${JSON.stringify(out)});
@@ -85,7 +85,7 @@ interface Report {
   bytes: number[];
   fileMode: number;
   dirMode: number;
-  collieEnv: string[];
+  pastorEnv: string[];
   marker: string | null;
 }
 
@@ -136,7 +136,7 @@ describe("local-cli — a transcript", () => {
     const seen = readReport();
     expect(seen.argv.slice(0, 3)).toEqual(["transcribe", "--lang", "en"]);
     expect(seen.argv).toHaveLength(4);
-    expect(seen.argv[3]!.startsWith(join(tmpRoot, "collie-stt-"))).toBe(true);
+    expect(seen.argv[3]!.startsWith(join(tmpRoot, "pastor-stt-"))).toBe(true);
     expect(seen.argv[3]!.endsWith("recording.webm")).toBe(true);
     expect(seen.bytes).toEqual([1, 2, 3, 4]);
     if (posix) {
@@ -163,12 +163,12 @@ describe("local-cli — a transcript", () => {
     expect(path.endsWith("recording.bin")).toBe(true);
   });
 
-  test("no COLLIE_* variable reaches the child; the rest of the environment does", async () => {
+  test("no PASTOR_* variable reaches the child; the rest of the environment does", async () => {
     const settings = fakeCommand("env", recorder("ok"));
-    const env = { ...process.env, COLLIE_STT_KEY: "sk-secret", COLLIE_VAPID_PRIVATE: "x", LOCAL_CLI_MARKER: "kept" };
+    const env = { ...process.env, PASTOR_STT_KEY: "sk-secret", PASTOR_VAPID_PRIVATE: "x", LOCAL_CLI_MARKER: "kept" };
     await createLocalCliSttProvider(settings, deps({ env })).transcribe(clip());
     const seen = readReport();
-    expect(seen.collieEnv).toEqual([]);
+    expect(seen.pastorEnv).toEqual([]);
     expect(seen.marker).toBe("kept");
   });
 });
@@ -280,7 +280,7 @@ describe("local-cli — status", () => {
 
   test("a bare name is looked up on the child's PATH", async () => {
     const status = await createLocalCliSttProvider(
-      { provider: "local-cli", command: "collie-no-such-command-anywhere", args: [] },
+      { provider: "local-cli", command: "pastor-no-such-command-anywhere", args: [] },
       deps(),
     ).status();
     expect(status.available).toBe(false);
@@ -296,8 +296,8 @@ describe("local-cli — the small pure helpers", () => {
     expect(extensionOf("x.toolongext")).toBe("bin");
   });
 
-  test("childEnv drops COLLIE_* and unset values", () => {
-    expect(childEnv({ PATH: "/bin", COLLIE_STT_KEY: "k", HOME: undefined })).toEqual({ PATH: "/bin" });
+  test("childEnv drops PASTOR_* and unset values", () => {
+    expect(childEnv({ PATH: "/bin", PASTOR_STT_KEY: "k", HOME: undefined })).toEqual({ PATH: "/bin" });
   });
 });
 

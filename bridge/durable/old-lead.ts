@@ -4,7 +4,7 @@ import { compareSemver } from "../update.ts";
 // chat-only Terminal tab both live on the phone the LEAD serves. A lead below 1.21.0 merges the peer's
 // durable panes into its list like any other pane, so the phone shows them without the card, and its
 // Terminal tab polls a pane that has no terminal. Nothing on the peer can fix that, so the peer says
-// it: one log line per lead release it hears, and a `collie doctor` row (`durable-lead`) read from the
+// it: one log line per lead release it hears, and a `pastor doctor` row (`durable-lead`) read from the
 // runtime marker.
 //
 // The lead's release is the `X-Crew-Lead-Release` header its sweep already sends (crew/follow.ts). It

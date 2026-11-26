@@ -47,7 +47,7 @@ import {
 import { EXIT } from "./io.ts";
 import type { PairedDevice } from "../bridge/pairing.ts";
 import { POWERSHELL_UTF8 } from "./sys.ts";
-import { collieBinary } from "./unit.ts";
+import { pastorBinary } from "./unit.ts";
 import {
   configFilePaths,
   readConfigFilesSync,
@@ -55,7 +55,7 @@ import {
   type ConfigFileReader,
 } from "../bridge/config-source.ts";
 
-// `collie doctor`, against fakes for every seam. Like cli/crew.test.ts, NOTHING here reaches a
+// `pastor doctor`, against fakes for every seam. Like cli/crew.test.ts, NOTHING here reaches a
 // service manager, a tailnet, a real trust store or a network — and unlike it, there is nothing to
 // reach even in principle: `DoctorDeps` names no verb that could change something, so a test that
 // wanted to assert "doctor wrote nothing" is asserting a type, not a behaviour. It is asserted
@@ -63,16 +63,16 @@ import {
 // this verb is safe to run on a machine that is already misbehaving.
 
 const HANDLER = `${CONFIG}/tailscale-managed-handler`;
-/** The name `collie link` publishes, and the directory it lives in (ADR 0021). Built with `join`, as the code builds it. */
+/** The name `pastor link` publishes, and the directory it lives in (ADR 0021). Built with `join`, as the code builds it. */
 const LINK_DIR = join(HOME, ".local", "bin");
-const LINK_AT = join(LINK_DIR, "collie");
-/** This checkout's compiled binary: `bin/collie` on POSIX, `bin/collie.exe` on Windows. */
-const OWN_BINARY = collieBinary(ROOT);
+const LINK_AT = join(LINK_DIR, "pastor");
+/** This checkout's compiled binary: `bin/pastor` on POSIX, `bin/pastor.exe` on Windows. */
+const OWN_BINARY = pastorBinary(ROOT);
 const SOCKET = "/home/pat/.config/herdr/herdr.sock";
 const HOSTPORT = "laptop.tail.ts.net:443";
 const PROXY = "http://127.0.0.1:8787";
 
-/** A `tailscale serve status --json` in which Collie's own root mount is live. */
+/** A `tailscale serve status --json` in which Pastor's own root mount is live. */
 const SERVE_OK = JSON.stringify({
   TCP: { "443": { HTTPS: true } },
   Web: { [HOSTPORT]: { Handlers: { "/": { Proxy: PROXY } } } },
@@ -107,7 +107,7 @@ const HEALTHY_ANSWERS: Scripted["answers"] = [
   ["herdr --version", { stdout: "herdr 0.9.3\n" }],
   // A healthy checkout can say where it came from: `update` asserts `origin` against the configured
   // update source before it fetches, so an origin-less checkout is a real (reported) problem.
-  [`git -C ${ROOT} remote get-url origin`, { stdout: "https://github.com/AltanS/collie.git\n" }],
+  [`git -C ${ROOT} remote get-url origin`, { stdout: "https://github.com/Ad3Digital/pastor.git\n" }],
   [`git -C ${ROOT} symbolic-ref --short HEAD`, { stdout: "main\n" }],
   ["herdr integration status", { stdout: INTEGRATION_OK }],
   [
@@ -267,11 +267,11 @@ function harness(
     files?: Record<string, string>;
     answers?: Scripted["answers"];
     absent?: string[];
-    /** What is at `~/.local/bin/collie`; absent — nothing linked — is the default. */
+    /** What is at `~/.local/bin/pastor`; absent — nothing linked — is the default. */
     link?: Record<string, LinkProbe>;
     /** The beacon directory this host has right now; empty is the default. */
     beacons?: FakeBeacon[];
-    /** The plugin root this Collie resolved — a staged checkout's is a worktree under `versions/`. */
+    /** The plugin root this Pastor resolved — a staged checkout's is a worktree under `versions/`. */
     root?: string;
     /** The two `config.toml` files this run read. No file at all is the default. */
     configLayer?: ConfigFileLayer;
@@ -294,7 +294,7 @@ function harness(
     deps: {
       // As in cli/crew.test.ts: the peer client races the fake fetch against a REAL timer, so the
       // budget is set far above anything this process could stall for.
-      ctx: context({ COLLIE_CREW_TIMEOUT_MS: "60000", ...over.env }, contextOver(over)),
+      ctx: context({ PASTOR_CREW_TIMEOUT_MS: "60000", ...over.env }, contextOver(over)),
       host: HOST,
       io: out,
       exec,
@@ -380,13 +380,13 @@ function without(files: SeededFiles, path: string): SeededFiles {
 
 // ── The contract ─────────────────────────────────────────────────────────────
 
-describe("collie doctor — the contract", () => {
+describe("pastor doctor — the contract", () => {
   test("a healthy solo install passes everything it can run, and exits 0", async () => {
     const h = harness(null);
     const { code, byCheck, raw } = await findings(h);
     expect(code).toBe(EXIT.OK);
     expect([...byCheck.keys()]).toEqual([
-      "collie",
+      "pastor",
       "config-file",
       "web-dist",
       "path-link",
@@ -427,10 +427,10 @@ describe("collie doctor — the contract", () => {
     expect(raw.filter((f) => f.status !== "ok" && f.status !== "skipped")).toEqual([]);
   });
 
-  test("the FIRST finding is `collie`'s own version and platform — self-identifying, always ok", async () => {
+  test("the FIRST finding is `pastor`'s own version and platform — self-identifying, always ok", async () => {
     const h = harness(null);
     const { raw } = await findings(h);
-    expect(raw[0]?.check).toBe("collie");
+    expect(raw[0]?.check).toBe("pastor");
     expect(raw[0]?.status).toBe("ok");
     expect(raw[0]?.remedy).toBeNull();
     // "v1.0.0-beta.49 · linux-x64" (or "win32-x64") — a version and a platform, nothing else.
@@ -438,7 +438,7 @@ describe("collie doctor — the contract", () => {
 
     const code = await cmdDoctor(h.deps, []);
     expect(code).toBe(EXIT.OK);
-    const first = h.io.stdout.find((l) => l.includes("collie") && l.trim().startsWith("✓"));
+    const first = h.io.stdout.find((l) => l.includes("pastor") && l.trim().startsWith("✓"));
     expect(first).toBeDefined();
     expect(first).toMatch(/v\S+ · [a-z0-9]+-[a-z0-9]+/);
   });
@@ -466,15 +466,15 @@ describe("collie doctor — the contract", () => {
       if (line.startsWith("  ✓") || !line.startsWith("  ")) continue;
       // Every warn/error/skipped line carries its remedy, and every remedy names something runnable.
       expect(line).toContain("→");
-      expect(/`collie |`herdr |`tailscale |`timedatectl |`python3|`ls |COLLIE_/.test(line)).toBe(true);
+      expect(/`pastor |`herdr |`tailscale |`timedatectl |`python3|`ls |PASTOR_/.test(line)).toBe(true);
     }
   });
 
   test("warnings alone exit 0; one error is enough to exit 1", async () => {
-    // The hatch rides along because a wildcard bind on a SOLO collie is an ERROR without it (the
+    // The hatch rides along because a wildcard bind on a SOLO pastor is an ERROR without it (the
     // bridge refuses to start) — and this test needs a run whose worst finding is a warning.
     const warned = harness(null, [], {
-      env: { COLLIE_HOST: "0.0.0.0", COLLIE_ALLOW_NON_LOOPBACK_BIND: "1" },
+      env: { PASTOR_HOST: "0.0.0.0", PASTOR_ALLOW_NON_LOOPBACK_BIND: "1" },
     });
     const warnRun = await findings(warned);
     expect(warnRun.byCheck.get("bind-wildcard")?.status).toBe("warn");
@@ -517,12 +517,12 @@ describe("collie doctor — the contract", () => {
 
 // ── Sections ─────────────────────────────────────────────────────────────────
 
-describe("collie doctor — the section sets", () => {
+describe("pastor doctor — the section sets", () => {
   test("solo prints ONE `no crew` line, never a column of padded skipped crew checks", async () => {
     const h = harness(null);
     await cmdDoctor(h.deps, []);
     const text = h.io.stdout.join("\n");
-    expect(text).toContain("crew: none — this collie is not in a crew.");
+    expect(text).toContain("crew: none — this pastor is not in a crew.");
     expect(text).toContain("mode solo");
     expect(text).not.toContain("member-reach");
     expect(text).not.toContain("store-drift");
@@ -536,7 +536,7 @@ describe("collie doctor — the section sets", () => {
     const peer = peerStore();
     const asPeer = await findings(
       harness(peer, [hello({ memberId: "desk" })], {
-        env: { COLLIE_HOST: "laptop.tail.ts.net" },
+        env: { PASTOR_HOST: "laptop.tail.ts.net" },
         files: without({ ...healthyFiles(), ...markerFile(peer) }, HANDLER),
       }),
     );
@@ -546,7 +546,7 @@ describe("collie doctor — the section sets", () => {
 
   // ── ADR 0050 ──────────────────────────────────────────────────────────────
   // The renderer has always drawn these as two sections; the stamp is what lets a READER make the
-  // same split. `collie update --check` is the reader that needs it: a fault on another machine is
+  // same split. `pastor update --check` is the reader that needs it: a fault on another machine is
   // not an answer to "can this machine take a new version".
   test("every crew finding is stamped `scope: crew`, and every local one is not", async () => {
     const lead = await findings(harness(LEAD, [hello()], { files: { ...healthyFiles(), ...markerFile(LEAD) } }));
@@ -556,7 +556,7 @@ describe("collie doctor — the section sets", () => {
     }
     // Absent, not `"local"`: absent is what every check answered before the field existed, and a
     // reader that does not know the field must keep reading those as this machine's.
-    expect(scopeOf("collie")).toBeUndefined();
+    expect(scopeOf("pastor")).toBeUndefined();
     expect(scopeOf("web-dist")).toBeUndefined();
   });
 
@@ -587,7 +587,7 @@ describe("collie doctor — the section sets", () => {
 
   // `store-drift` is RENDERED in the crew section and is NOT a crew fact. It compares this machine's
   // running bridge to this machine's own trust store, needs no answer from anywhere else, and its
-  // remedy is `collie restart` here. Stamping it `crew` would make the preflight amber on a fault
+  // remedy is `pastor restart` here. Stamping it `crew` would make the preflight amber on a fault
   // that is entirely local, and would print "the crew reports: store-drift" when nothing did.
   test("`store-drift` is rendered with the crew and is not stamped as one", async () => {
     const lead = await findings(harness(LEAD, [hello()], { files: { ...healthyFiles(), ...markerFile(LEAD) } }));
@@ -598,15 +598,15 @@ describe("collie doctor — the section sets", () => {
 
 // ── The local checks ─────────────────────────────────────────────────────────
 
-describe("collie doctor — the local checks", () => {
-  test("web-dist: absent is an error naming `collie build`", async () => {
+describe("pastor doctor — the local checks", () => {
+  test("web-dist: absent is an error naming `pastor build`", async () => {
     const files = healthyFiles();
     delete files[`${ROOT}/web/dist/index.html`];
     delete files[`${ROOT}/web/dist/assets/app.js`];
     delete files[`${ROOT}/web/dist/build-info.json`];
     const { code, byCheck } = await findings(harness(null, [], { files }));
     expect(byCheck.get("web-dist")?.status).toBe("error");
-    expect(byCheck.get("web-dist")?.remedy).toContain("collie build");
+    expect(byCheck.get("web-dist")?.remedy).toContain("pastor build");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -643,14 +643,14 @@ describe("collie doctor — the local checks", () => {
     expect(f?.remedy).toContain(LINK_DIR);
   });
 
-  test("path-link: another checkout's link warns, naming the checkout a bare `collie` reaches", async () => {
+  test("path-link: another checkout's link warns, naming the checkout a bare `pastor` reaches", async () => {
     const h = harness(null, [], {
-      link: { [LINK_AT]: { kind: "symlink", target: "/opt/collie-v1/bin/collie" } },
+      link: { [LINK_AT]: { kind: "symlink", target: "/opt/pastor-v1/bin/pastor" } },
     });
     const f = (await findings(h)).byCheck.get("path-link");
     expect(f?.status).toBe("warn");
-    expect(f?.detail).toContain("/opt/collie-v1/bin/collie");
-    expect(f?.remedy).toContain("collie link");
+    expect(f?.detail).toContain("/opt/pastor-v1/bin/pastor");
+    expect(f?.remedy).toContain("pastor link");
   });
 
   test("path-link: anything else at the name warns and is left alone", async () => {
@@ -670,7 +670,7 @@ describe("collie doctor — the local checks", () => {
     expect(byCheck.get("herdr-socket")?.remedy).toContain("herdr status");
   });
 
-  test("bind: a PEER on loopback is the #1 trap — an error naming the COLLIE_HOST to set", async () => {
+  test("bind: a PEER on loopback is the #1 trap — an error naming the PASTOR_HOST to set", async () => {
     const peer = peerStore();
     const { code, byCheck } = await findings(
       harness(peer, [hello({ memberId: "desk" })], {
@@ -681,7 +681,7 @@ describe("collie doctor — the local checks", () => {
     expect(bind?.status).toBe("error");
     expect(bind?.detail).toContain("PEER");
     // The tailnet name this host answers with is the address it suggests — not a placeholder.
-    expect(bind?.remedy).toContain("COLLIE_HOST=laptop.tail.ts.net");
+    expect(bind?.remedy).toContain("PASTOR_HOST=laptop.tail.ts.net");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -695,23 +695,23 @@ describe("collie doctor — the local checks", () => {
   test("bind-wildcard: a wildcard warns, and a warning never fails the run", async () => {
     // With the hatch set, so the only thing this run has to say about the bind is the warning.
     const { code, byCheck } = await findings(
-      harness(null, [], { env: { COLLIE_HOST: "", COLLIE_ALLOW_NON_LOOPBACK_BIND: "1" } }),
+      harness(null, [], { env: { PASTOR_HOST: "", PASTOR_ALLOW_NON_LOOPBACK_BIND: "1" } }),
     );
     expect(byCheck.get("bind-wildcard")?.status).toBe("warn");
     expect(code).toBe(EXIT.OK);
   });
 
   // The gate main brought (#129) and the crew carve-out that keeps it honest: a wide bind stops a
-  // SOLO collie from starting at all, so doctor says the same thing the bridge would — while a peer
+  // SOLO pastor from starting at all, so doctor says the same thing the bridge would — while a peer
   // binds wide by construction and hears only the wildcard warning (ADR 0013).
   test("bind: a wide bind is an ERROR on solo, cleared by the hatch, and never one on a peer", async () => {
-    const solo = await findings(harness(null, [], { env: { COLLIE_HOST: "10.0.0.4" } }));
+    const solo = await findings(harness(null, [], { env: { PASTOR_HOST: "10.0.0.4" } }));
     expect(solo.byCheck.get("bind")?.status).toBe("error");
-    expect(solo.byCheck.get("bind")?.remedy).toContain("COLLIE_ALLOW_NON_LOOPBACK_BIND=1");
+    expect(solo.byCheck.get("bind")?.remedy).toContain("PASTOR_ALLOW_NON_LOOPBACK_BIND=1");
     expect(solo.code).toBe(EXIT.FAIL);
 
     const hatched = await findings(
-      harness(null, [], { env: { COLLIE_HOST: "10.0.0.4", COLLIE_ALLOW_NON_LOOPBACK_BIND: "1" } }),
+      harness(null, [], { env: { PASTOR_HOST: "10.0.0.4", PASTOR_ALLOW_NON_LOOPBACK_BIND: "1" } }),
     );
     expect(hatched.byCheck.get("bind")?.status).toBe("ok");
   });
@@ -766,21 +766,21 @@ describe("collie doctor — the local checks", () => {
   });
 
   // ADR 0052: the door and the app must name one mount.
-  test("front-door: a door at the root while COLLIE_BASE_PATH mounts the app elsewhere warns", async () => {
-    const { byCheck } = await findings(harness(null, [], { env: { COLLIE_BASE_PATH: "/collie" } }));
+  test("front-door: a door at the root while PASTOR_BASE_PATH mounts the app elsewhere warns", async () => {
+    const { byCheck } = await findings(harness(null, [], { env: { PASTOR_BASE_PATH: "/pastor" } }));
     expect(byCheck.get("front-door")?.status).toBe("warn");
-    expect(byCheck.get("front-door")?.detail).toContain("COLLIE_BASE_PATH");
-    expect(byCheck.get("front-door")?.remedy).toContain("collie serve");
+    expect(byCheck.get("front-door")?.detail).toContain("PASTOR_BASE_PATH");
+    expect(byCheck.get("front-door")?.remedy).toContain("pastor serve");
   });
 
   test("front-door: a door published at the mount the app is served under passes, and names it", async () => {
     const files = healthyFiles();
     const handler = Object.keys(files).find((p) => p.endsWith("tailscale-managed-handler"));
     expect(handler).toBeDefined();
-    const mountedFiles = { ...files, [handler ?? ""]: `https:443|${HOSTPORT}|http://127.0.0.1:8787|/collie/\n` };
+    const mountedFiles = { ...files, [handler ?? ""]: `https:443|${HOSTPORT}|http://127.0.0.1:8787|/pastor/\n` };
     const { byCheck } = await findings(
       harness(null, [], {
-        env: { COLLIE_BASE_PATH: "/collie" },
+        env: { PASTOR_BASE_PATH: "/pastor" },
         files: mountedFiles,
         answers: [
           ["tailscale status --json", { stdout: CERTS_ONLY }],
@@ -789,7 +789,7 @@ describe("collie doctor — the local checks", () => {
             {
               stdout: JSON.stringify({
                 TCP: { "443": { HTTPS: true } },
-                Web: { [HOSTPORT]: { Handlers: { "/collie/": { Proxy: "http://127.0.0.1:8787" } } } },
+                Web: { [HOSTPORT]: { Handlers: { "/pastor/": { Proxy: "http://127.0.0.1:8787" } } } },
               }),
             },
           ],
@@ -798,7 +798,7 @@ describe("collie doctor — the local checks", () => {
       }),
     );
     expect(byCheck.get("front-door")?.status).toBe("ok");
-    expect(byCheck.get("front-door")?.detail).toContain("at /collie/");
+    expect(byCheck.get("front-door")?.detail).toContain("at /pastor/");
   });
 
   test("front-door: a tailnet with no HTTPS certificates warns with the console pointer (#172)", async () => {
@@ -816,7 +816,7 @@ describe("collie doctor — the local checks", () => {
     expect(byCheck.get("front-door")?.remedy).toContain("https://login.tailscale.com/admin/dns");
   });
 
-  test("front-door: on a Windows host the no-certificates remedy names the by-hand command, not `collie serve` (#172)", async () => {
+  test("front-door: on a Windows host the no-certificates remedy names the by-hand command, not `pastor serve` (#172)", async () => {
     const answers: NonNullable<Scripted["answers"]> = [
       ["tailscale status --json", { stdout: JSON.stringify({ Self: { DNSName: "laptop.tail.ts.net." } }) }],
       ["tailscale serve status --json", { stdout: SERVE_OK }],
@@ -832,16 +832,16 @@ describe("collie doctor — the local checks", () => {
     expect(winFinding.remedy).toContain(`tailscale serve --bg --http=80 --set-path=/ ${win.deps.ctx.port}`);
     expect(winFinding.remedy).toContain("pair a device");
     expect(winFinding.remedy).toContain("docs/windows.md");
-    expect(winFinding.remedy).not.toContain("collie serve");
+    expect(winFinding.remedy).not.toContain("pastor serve");
 
     const posix = harness(null, [], { answers });
     posix.deps = { ...posix.deps, host: hostFor("linux") };
     const posixFinding = (await findings(posix)).byCheck.get("front-door")!;
-    expect(posixFinding.remedy).toContain("collie serve");
+    expect(posixFinding.remedy).toContain("pastor serve");
     expect(posixFinding.remedy).not.toContain("tailscale serve --bg");
   });
 
-  test("front-door: on a Windows host a solo collie with no mapping is told the by-hand command, not `collie serve`", async () => {
+  test("front-door: on a Windows host a solo pastor with no mapping is told the by-hand command, not `pastor serve`", async () => {
     const files = healthyFiles();
     delete files[HANDLER];
     const answers: NonNullable<Scripted["answers"]> = [
@@ -855,15 +855,15 @@ describe("collie doctor — the local checks", () => {
     expect(winFinding.status).toBe("warn");
     expect(winFinding.remedy).toContain(`tailscale serve --bg --set-path=/ ${win.deps.ctx.port}`);
     expect(winFinding.remedy).toContain("pair a device");
-    expect(winFinding.remedy).toContain("COLLIE_SKIP_SERVE=1");
-    expect(winFinding.remedy).not.toContain("collie serve");
+    expect(winFinding.remedy).toContain("PASTOR_SKIP_SERVE=1");
+    expect(winFinding.remedy).not.toContain("pastor serve");
 
     const posix = harness(null, [], { files, answers });
     posix.deps = { ...posix.deps, host: hostFor("linux") };
-    expect((await findings(posix)).byCheck.get("front-door")?.remedy).toContain("`collie serve` here");
+    expect((await findings(posix)).byCheck.get("front-door")?.remedy).toContain("`pastor serve` here");
   });
 
-  test("front-door: on a Windows host a hand-made root mount that proxies to this collie passes; a POSIX host still warns", async () => {
+  test("front-door: on a Windows host a hand-made root mount that proxies to this pastor passes; a POSIX host still warns", async () => {
     const files = healthyFiles();
     delete files[HANDLER];
     const answers: NonNullable<Scripted["answers"]> = [
@@ -882,7 +882,7 @@ describe("collie doctor — the local checks", () => {
     posix.deps = { ...posix.deps, host: hostFor("linux") };
     const posixFinding = (await findings(posix)).byCheck.get("front-door")!;
     expect(posixFinding.status).toBe("warn");
-    expect(posixFinding.remedy).toContain("`collie serve` here");
+    expect(posixFinding.remedy).toContain("`pastor serve` here");
   });
 
   test("front-door: on a Windows host a hand-made HTTP mount on :80 passes on a tailnet with no certificates (Headscale)", async () => {
@@ -924,7 +924,7 @@ describe("collie doctor — the local checks", () => {
     expect(posixFinding.detail).toContain("no HTTPS certificates");
   });
 
-  test("front-door: a LEAD with no mapping and no COLLIE_SKIP_SERVE is an error", async () => {
+  test("front-door: a LEAD with no mapping and no PASTOR_SKIP_SERVE is an error", async () => {
     const files = { ...healthyFiles(), ...markerFile(LEAD) };
     delete files[HANDLER];
     const lead = harness(LEAD, [hello()], {
@@ -935,11 +935,11 @@ describe("collie doctor — the local checks", () => {
         ...netmapAnswers(NETMAP_OPEN),
       ],
     });
-    // The remedy names `collie serve` on a POSIX host only; a Windows host is told the by-hand command.
+    // The remedy names `pastor serve` on a POSIX host only; a Windows host is told the by-hand command.
     lead.deps = { ...lead.deps, host: hostFor("linux") };
     const { code, byCheck } = await findings(lead);
     expect(byCheck.get("front-door")?.status).toBe("error");
-    expect(byCheck.get("front-door")?.remedy).toContain("collie serve");
+    expect(byCheck.get("front-door")?.remedy).toContain("pastor serve");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -947,21 +947,21 @@ describe("collie doctor — the local checks", () => {
     const peer = peerStore();
     const { byCheck } = await findings(
       harness(peer, [hello({ memberId: "desk" })], {
-        env: { COLLIE_HOST: "laptop.tail.ts.net" },
+        env: { PASTOR_HOST: "laptop.tail.ts.net" },
         files: { ...healthyFiles(), ...markerFile(peer) },
       }),
     );
     expect(byCheck.get("front-door")?.status).toBe("error");
-    expect(byCheck.get("front-door")?.remedy).toContain("collie unserve");
+    expect(byCheck.get("front-door")?.remedy).toContain("pastor unserve");
   });
 
-  test("front-door: COLLIE_SKIP_SERVE=1 with a leftover record warns; without one it passes", async () => {
+  test("front-door: PASTOR_SKIP_SERVE=1 with a leftover record warns; without one it passes", async () => {
     const files = healthyFiles();
-    const withRecord = await findings(harness(null, [], { env: { COLLIE_SKIP_SERVE: "1" }, files }));
+    const withRecord = await findings(harness(null, [], { env: { PASTOR_SKIP_SERVE: "1" }, files }));
     expect(withRecord.byCheck.get("front-door")?.status).toBe("warn");
 
     delete files[HANDLER];
-    const clean = await findings(harness(null, [], { env: { COLLIE_SKIP_SERVE: "1" }, files }));
+    const clean = await findings(harness(null, [], { env: { PASTOR_SKIP_SERVE: "1" }, files }));
     expect(clean.byCheck.get("front-door")?.status).toBe("ok");
   });
 
@@ -970,12 +970,12 @@ describe("collie doctor — the local checks", () => {
     const f = byCheck.get("restart-pending");
     expect(f?.status).toBe("skipped");
     expect(f?.detail).toContain("records no version");
-    expect(f?.remedy).toContain("collie restart");
+    expect(f?.remedy).toContain("pastor restart");
     expect(code).toBe(EXIT.OK);
   });
 
   // ── install / update-source (M14/01 §4.3) ──────────────────────────────────
-  // Reported, never repaired, from the SAME classifier `collie update` forks on — so the two verbs
+  // Reported, never repaired, from the SAME classifier `pastor update` forks on — so the two verbs
   // cannot disagree about what they are looking at.
 
   test("install: a linked clone names its branch and its origin", async () => {
@@ -983,7 +983,7 @@ describe("collie doctor — the local checks", () => {
     expect(f?.status).toBe("ok");
     expect(f?.detail).toContain("linked clone");
     expect(f?.detail).toContain("branch main");
-    expect(f?.detail).toContain("AltanS/collie");
+    expect(f?.detail).toContain("Ad3Digital/pastor");
   });
 
   test("install: a Herdr-managed checkout is named as one", async () => {
@@ -999,7 +999,7 @@ describe("collie doctor — the local checks", () => {
     });
     const { byCheck, code } = await findings(h);
     expect(byCheck.get("install")?.status).toBe("warn");
-    expect(byCheck.get("install")?.detail).toContain("cannot tell how this Collie was installed");
+    expect(byCheck.get("install")?.detail).toContain("cannot tell how this Pastor was installed");
     expect(byCheck.get("install")?.remedy).toContain("docs/install.md");
     // A warning, never an error: an install doctor cannot name still runs.
     expect(code).toBe(EXIT.OK);
@@ -1013,9 +1013,9 @@ describe("collie doctor — the local checks", () => {
   const STAGED = `${ROOT}/versions/v1.1.0`;
   const stagedFiles = (over: SeededFiles = {}): SeededFiles => ({
     ...healthyFiles(),
-    [`${ROOT}/versions/v1.1.0/.collie-build`]: JSON.stringify({ version: "1.1.0", commit: "abc1234" }),
-    [`${ROOT}/versions/v1.0.0/.collie-build`]: JSON.stringify({ version: "1.0.0", commit: "0000000" }),
-    [`${ROOT}/versions/v0.9.0/.collie-build`]: JSON.stringify({ version: "0.9.0", commit: "1111111" }),
+    [`${ROOT}/versions/v1.1.0/.pastor-build`]: JSON.stringify({ version: "1.1.0", commit: "abc1234" }),
+    [`${ROOT}/versions/v1.0.0/.pastor-build`]: JSON.stringify({ version: "1.0.0", commit: "0000000" }),
+    [`${ROOT}/versions/v0.9.0/.pastor-build`]: JSON.stringify({ version: "0.9.0", commit: "1111111" }),
     ...over,
   });
   const worktrees = (...paths: string[]): NonNullable<Scripted["answers"]> => [
@@ -1090,35 +1090,35 @@ describe("collie doctor — the local checks", () => {
     const h = harness(null, [], {
       answers: [
         ...HEALTHY_ANSWERS.filter(([prefix]) => !prefix.includes("remote get-url")),
-        [`git -C ${ROOT} remote get-url origin`, { stdout: "git@github.com:youngsecurity/collie.git\n" }],
+        [`git -C ${ROOT} remote get-url origin`, { stdout: "git@github.com:youngsecurity/pastor.git\n" }],
       ],
     });
     const { byCheck, code } = await findings(h);
     const f = byCheck.get("update-source");
     expect(f?.status).toBe("error");
-    expect(f?.detail).toContain("youngsecurity/collie");
+    expect(f?.detail).toContain("youngsecurity/pastor");
     expect(f?.remedy).toContain("docs/upgrading.md");
     expect(code).toBe(EXIT.FAIL);
   });
 
   test("update-source: a fork the operator chose is a warning, not a failure", async () => {
     const h = harness(null, [], {
-      env: { COLLIE_UPDATE_REPO: "youngsecurity/collie" },
+      env: { PASTOR_UPDATE_REPO: "youngsecurity/pastor" },
       answers: [
         ...HEALTHY_ANSWERS.filter(([prefix]) => !prefix.includes("remote get-url")),
-        [`git -C ${ROOT} remote get-url origin`, { stdout: "git@github.com:youngsecurity/collie.git\n" }],
+        [`git -C ${ROOT} remote get-url origin`, { stdout: "git@github.com:youngsecurity/pastor.git\n" }],
       ],
     });
     const { byCheck, code } = await findings(h);
     expect(byCheck.get("update-source")?.status).toBe("warn");
-    expect(byCheck.get("update-source")?.detail).toContain("COLLIE_UPDATE_REPO");
+    expect(byCheck.get("update-source")?.detail).toContain("PASTOR_UPDATE_REPO");
     expect(code).toBe(EXIT.OK);
   });
 });
 
 // ── The clock ────────────────────────────────────────────────────────────────
 
-describe("collie doctor — the clock (§8.6's ±5m window)", () => {
+describe("pastor doctor — the clock (§8.6's ±5m window)", () => {
   const withDate = (delta: number) =>
     harness(LEAD, [hello({ date: T0 + delta })], { files: { ...healthyFiles(), ...markerFile(LEAD) } });
 
@@ -1171,8 +1171,8 @@ describe("collie doctor — the clock (§8.6's ±5m window)", () => {
 
 // ── The crew checks ──────────────────────────────────────────────────────────
 
-describe("collie doctor — the crew checks", () => {
-  test("store-drift: a roster the running bridge never wired is an error naming `collie restart`", async () => {
+describe("pastor doctor — the crew checks", () => {
+  test("store-drift: a roster the running bridge never wired is an error naming `pastor restart`", async () => {
     // The marker was written when this lead had NO peers; the store now has one.
     const stale = markerFor(leadStore(), T0, 42);
     const { code, byCheck } = await findings(
@@ -1182,7 +1182,7 @@ describe("collie doctor — the crew checks", () => {
     );
     expect(byCheck.get("store-drift")?.status).toBe("error");
     expect(byCheck.get("store-drift")?.detail).toContain("laptop");
-    expect(byCheck.get("store-drift")?.remedy).toContain("collie restart");
+    expect(byCheck.get("store-drift")?.remedy).toContain("pastor restart");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -1197,12 +1197,12 @@ describe("collie doctor — the crew checks", () => {
       harness(behind, [hello()], { files: { ...healthyFiles(), ...markerFile(behind) } }),
     );
     expect(byCheck.get("secret-generation")?.status).toBe("warn");
-    expect(byCheck.get("secret-generation")?.remedy).toContain("collie crew rotate");
+    expect(byCheck.get("secret-generation")?.remedy).toContain("pastor crew rotate");
     expect(code).toBe(EXIT.OK);
     expect(CREW.secretGeneration).toBe(1);
   });
 
-  test("member-reach: an unreachable member is an error naming `collie crew set-address`", async () => {
+  test("member-reach: an unreachable member is an error naming `pastor crew set-address`", async () => {
     const { code, byCheck } = await findings(
       harness(LEAD, [new Error("connection refused")], { files: { ...healthyFiles(), ...markerFile(LEAD) } }),
     );
@@ -1210,8 +1210,8 @@ describe("collie doctor — the crew checks", () => {
     expect(f?.status).toBe("error");
     expect(f?.detail).toContain("laptop");
     // The lead's verb: it refuses an address the crew cannot dial, where `reconnect` takes anything.
-    expect(f?.remedy).toContain("collie crew set-address <member> <host:port>");
-    expect(f?.remedy).not.toContain("collie reconnect");
+    expect(f?.remedy).toContain("pastor crew set-address <member> <host:port>");
+    expect(f?.remedy).not.toContain("pastor reconnect");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -1224,9 +1224,9 @@ describe("collie doctor — the crew checks", () => {
     expect(f?.detail).toContain(
       "laptop at 100.64.0.9 — ",
     );
-    expect(f?.detail).toContain("→ `collie crew set-address laptop 100.64.0.9:8787` (8787 unless that machine set COLLIE_PORT)");
+    expect(f?.detail).toContain("→ `pastor crew set-address laptop 100.64.0.9:8787` (8787 unless that machine set PASTOR_PORT)");
     // The generic remedy is still there for the rest.
-    expect(f?.remedy).toContain("collie crew set-address <member> <host:port>");
+    expect(f?.remedy).toContain("pastor crew set-address <member> <host:port>");
   });
 
   test("member-reach: a silent peer at host:port, with a scheme or an IPv6 literal gets no suggestion", async () => {
@@ -1239,17 +1239,17 @@ describe("collie doctor — the crew checks", () => {
     }
   });
 
-  test("lead-reach: an unreachable lead keeps `collie reconnect`, the verb that runs on a peer", async () => {
+  test("lead-reach: an unreachable lead keeps `pastor reconnect`, the verb that runs on a peer", async () => {
     const peer = peerStore();
     const { byCheck } = await findings(
       harness(peer, [new Error("connection refused")], {
-        env: { COLLIE_HOST: "laptop.tail.ts.net" },
+        env: { PASTOR_HOST: "laptop.tail.ts.net" },
         files: without({ ...healthyFiles(), ...markerFile(peer) }, HANDLER),
       }),
     );
     const f = byCheck.get("lead-reach");
     expect(f?.status).toBe("error");
-    expect(f?.remedy).toContain("collie reconnect <address>");
+    expect(f?.remedy).toContain("pastor reconnect <address>");
     expect(f?.remedy).not.toContain("set-address");
   });
 
@@ -1265,9 +1265,9 @@ describe("collie doctor — the crew checks", () => {
     const f = byCheck.get("member-reach");
     expect(f?.status).toBe("error");
     expect(f?.detail).toContain("served no data");
-    expect(f?.remedy).toContain("COLLIE_CREW_TIMEOUT_MS");
-    expect(f?.remedy).toContain("COLLIE_POLL_MS");
-    expect(f?.remedy).not.toContain("collie reconnect");
+    expect(f?.remedy).toContain("PASTOR_CREW_TIMEOUT_MS");
+    expect(f?.remedy).toContain("PASTOR_POLL_MS");
+    expect(f?.remedy).not.toContain("pastor reconnect");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -1277,7 +1277,7 @@ describe("collie doctor — the crew checks", () => {
   test("lead-reach: a peer asks its lead `hello` and nothing else", async () => {
     const peer = peerStore();
     const h = harness(peer, [hello({ memberId: "desk" })], {
-      env: { COLLIE_HOST: "laptop.tail.ts.net" },
+      env: { PASTOR_HOST: "laptop.tail.ts.net" },
       files: without({ ...healthyFiles(), ...markerFile(peer) }, HANDLER),
     });
     const { byCheck } = await findings(h);
@@ -1307,7 +1307,7 @@ describe("collie doctor — the crew checks", () => {
   // rather than a secret, and the bridge already takes it from any caller that reaches the port.
   test("the bridge's own snapshot is read with the configured tailnet login", async () => {
     const h = harness(LEAD, [hello(), hello()], {
-      env: { COLLIE_TRUSTED_USER: "pat@example.com" },
+      env: { PASTOR_TRUSTED_USER: "pat@example.com" },
       files: { ...healthyFiles(), ...markerFile(LEAD) },
     });
     await findings(h);
@@ -1362,7 +1362,7 @@ describe("collie doctor — the crew checks", () => {
     expect(f?.status).toBe("warn");
     expect(f?.detail).toContain("1.0.0-alpha.9");
     expect(f?.detail).toContain("1.0.0-alpha.12");
-    expect(f?.remedy).toContain("collie crew update");
+    expect(f?.remedy).toContain("pastor crew update");
     expect(code).toBe(EXIT.OK);
   });
 
@@ -1435,11 +1435,11 @@ function beacon(pid: number, alive: boolean): FakeBeacon {
 const TMUX_BIN = "/usr/bin/tmux";
 /** Where zellij's own installer puts it — the first candidate `zellijBinaryCandidates` probes. */
 const ZELLIJ_BIN = `${HOME}/.local/bin/zellij`;
-const TMUX_SOCKET = "/run/collie-tmux.sock";
-/** The env of a collie driving tmux on a named socket path (`-S`, per `tmuxServerArgs`). */
-const ON_TMUX = { COLLIE_MUX: "tmux", COLLIE_MUX_ENDPOINT_TMUX: TMUX_SOCKET };
-/** The env of a collie driving one named zellij session. */
-const ON_ZELLIJ = { COLLIE_MUX: "zellij", COLLIE_MUX_ENDPOINT_ZELLIJ: "work" };
+const TMUX_SOCKET = "/run/pastor-tmux.sock";
+/** The env of a pastor driving tmux on a named socket path (`-S`, per `tmuxServerArgs`). */
+const ON_TMUX = { PASTOR_MUX: "tmux", PASTOR_MUX_ENDPOINT_TMUX: TMUX_SOCKET };
+/** The env of a pastor driving one named zellij session. */
+const ON_ZELLIJ = { PASTOR_MUX: "zellij", PASTOR_MUX_ENDPOINT_ZELLIJ: "work" };
 
 /** tmux's single joined invocation: the version on the first line, one session per line after it. */
 const tmuxAnswers = (stdout: string, code = 0): Scripted["answers"] => [
@@ -1457,21 +1457,21 @@ const zellijAnswers = (stdout: string, code = 0): Scripted["answers"] => [
 
 describe("mux", () => {
   test("herdr states the name and defers — the socket is `herdr-socket`'s question, asked once", async () => {
-    const { byCheck, code } = await findings(harness(null, [], { env: { COLLIE_MUX: "herdr" } }));
+    const { byCheck, code } = await findings(harness(null, [], { env: { PASTOR_MUX: "herdr" } }));
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("ok");
-    expect(finding.detail).toBe("herdr — see herdr-socket · set by COLLIE_MUX");
+    expect(finding.detail).toBe("herdr — see herdr-socket · set by PASTOR_MUX");
     expect(finding.remedy).toBeNull();
     expect(code).toBe(EXIT.OK);
   });
 
-  // Since M14/03 an unset COLLIE_MUX is not silently "herdr" — `collie start` probes and decides, so
+  // Since M14/03 an unset PASTOR_MUX is not silently "herdr" — `pastor start` probes and decides, so
   // `doctor` names the multiplexer that decision would land on, and the evidence for it.
   test("with nothing configured it names what `start` would pick, and why", async () => {
     const { byCheck, code } = await findings(harness(null));
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("ok");
-    expect(finding.detail).toContain("no COLLIE_MUX");
+    expect(finding.detail).toContain("no PASTOR_MUX");
     expect(finding.detail).toContain(`a Herdr socket at ${SOCKET}`);
     expect(code).toBe(EXIT.OK);
   });
@@ -1482,7 +1482,7 @@ describe("mux", () => {
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
     expect(finding.detail).toContain("no multiplexers are running");
-    expect(finding.remedy).toContain("COLLIE_MUX=<durable|herdr|tern|tmux|tuios|zellij> collie start");
+    expect(finding.remedy).toContain("PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start");
   });
 
   test("nothing configured and two multiplexers running is an error naming both", async () => {
@@ -1507,7 +1507,7 @@ describe("mux", () => {
     const { byCheck, code } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("ok");
-    expect(finding.detail).toBe(`tmux 3.6b · socket ${TMUX_SOCKET} · 2 sessions · set by COLLIE_MUX`);
+    expect(finding.detail).toBe(`tmux 3.6b · socket ${TMUX_SOCKET} · 2 sessions · set by PASTOR_MUX`);
     // One invocation, not two: the version and the listing are `;`-joined as the adapter joins its own.
     expect(h.calls.filter((c) => c.startsWith(TMUX_BIN))).toEqual([
       `${TMUX_BIN} -S ${TMUX_SOCKET} display-message -p -F #{version} ; list-sessions -F #{session_name}`,
@@ -1515,13 +1515,13 @@ describe("mux", () => {
     expect(code).toBe(EXIT.OK);
   });
 
-  test("tmux: no binary is an error naming COLLIE_TMUX_BIN, and PATH is never the answer", async () => {
+  test("tmux: no binary is an error naming PASTOR_TMUX_BIN, and PATH is never the answer", async () => {
     const h = harness(null, [], { env: ON_TMUX, answers: HEALTHY_ANSWERS });
     const { byCheck, code } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
     expect(finding.detail).toContain("no tmux binary to run");
-    expect(finding.remedy).toContain("COLLIE_TMUX_BIN");
+    expect(finding.remedy).toContain("PASTOR_TMUX_BIN");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -1529,14 +1529,14 @@ describe("mux", () => {
     const h = harness(null, [], {
       env: ON_TMUX,
       files: { ...healthyFiles(), [TMUX_BIN]: "" },
-      answers: tmuxAnswers("no server running on /run/collie-tmux.sock", 1),
+      answers: tmuxAnswers("no server running on /run/pastor-tmux.sock", 1),
     });
     const { byCheck, code } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
     expect(finding.detail).toContain("no server answered");
-    expect(finding.remedy).toContain("tmux -S /run/collie-tmux.sock new -d");
-    expect(finding.remedy).toContain("COLLIE_MUX_ENDPOINT_TMUX");
+    expect(finding.remedy).toContain("tmux -S /run/pastor-tmux.sock new -d");
+    expect(finding.remedy).toContain("PASTOR_MUX_ENDPOINT_TMUX");
     expect(code).toBe(EXIT.FAIL);
   });
 
@@ -1547,7 +1547,7 @@ describe("mux", () => {
     );
     expect(live.byCheck.get("mux")?.status).toBe("ok");
     expect(live.byCheck.get("mux")?.detail).toBe(
-      "zellij · session work · 1 running of 2 listed · set by COLLIE_MUX",
+      "zellij · session work · 1 running of 2 listed · set by PASTOR_MUX",
     );
     expect(live.code).toBe(EXIT.OK);
 
@@ -1560,11 +1560,11 @@ describe("mux", () => {
   });
 
   test("an unknown mux name is an error naming the ones this build drives", async () => {
-    const h = harness(null, [], { env: { COLLIE_MUX: "screen" } });
+    const h = harness(null, [], { env: { PASTOR_MUX: "screen" } });
     const { byCheck, code } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
-    expect(finding.detail).toContain('COLLIE_MUX="screen"');
+    expect(finding.detail).toContain('PASTOR_MUX="screen"');
     for (const name of ["herdr", "tmux", "zellij"]) expect(finding.remedy).toContain(name);
     expect(code).toBe(EXIT.FAIL);
     // And it does NOT stack a second red line on the same typo: the hooks check reads the unknown
@@ -1574,10 +1574,10 @@ describe("mux", () => {
 });
 
 // ── The finding set is scoped by the CHOSEN multiplexer ──────────────────────
-// Collie mirrors ONE multiplexer per install. On tmux or zellij, Herdr's socket, its build and its
+// Pastor mirrors ONE multiplexer per install. On tmux or zellij, Herdr's socket, its build and its
 // per-agent `integration` hooks drive nothing here — the bridge never dials that socket, and the
-// hook that names an agent is Collie's own. Those checks are ABSENT rather than a hollow `ok`, and
-// a healthy host exits 0: `collie doctor` failing on a working tmux install is the bug these pin.
+// hook that names an agent is Pastor's own. Those checks are ABSENT rather than a hollow `ok`, and
+// a healthy host exits 0: `pastor doctor` failing on a working tmux install is the bug these pin.
 
 /** The checks that only mean something under Herdr — none of them may appear on another mux. */
 const isHerdrCheck = (check: string): boolean =>
@@ -1594,14 +1594,14 @@ const tmuxOnly = () => ({
 // ── Pairing is always on (M46 spec 03, ADR 0086) ────────────────────────────
 // A bridge with no paired device answers only `/api/health` and `/api/pair`. `doctor` says so, and
 // names the one command that fixes it.
-describe("pairing — doctor points to collie pair", () => {
-  test("no device paired: a warning that names collie pair", async () => {
+describe("pairing — doctor points to pastor pair", () => {
+  test("no device paired: a warning that names pastor pair", async () => {
     const { code, byCheck } = await findings(harness(null, [], { files: without(healthyFiles(), PAIRED_DEVICES) }));
     const pairing = byCheck.get("pairing");
     expect(pairing?.status).toBe("warn");
     expect(pairing?.detail).toContain("no device paired yet");
     expect(pairing?.detail).toContain("device not paired");
-    expect(pairing?.remedy).toContain("`collie pair`");
+    expect(pairing?.remedy).toContain("`pastor pair`");
     // A warning, so a fresh install still exits clean: it is the state every install starts in.
     expect(code).toBe(EXIT.OK);
   });
@@ -1616,16 +1616,16 @@ describe("pairing — doctor points to collie pair", () => {
       expect(pairing?.detail).toContain("cannot be read");
       expect(pairing?.detail).toContain("pairing unavailable");
       expect(pairing?.detail).not.toContain("no device paired");
-      expect(pairing?.remedy).toContain("`collie pair`");
+      expect(pairing?.remedy).toContain("`pastor pair`");
     }
   });
 
-  test("every pairing expired: a warning that names collie pair", async () => {
+  test("every pairing expired: a warning that names pastor pair", async () => {
     const files = { ...healthyFiles(), [PAIRED_DEVICES]: pairedRegistry([{ label: "old", expiresAt: 1 }]) };
     const pairing = (await findings(harness(null, [], { files }))).byCheck.get("pairing");
     expect(pairing?.status).toBe("warn");
     expect(pairing?.detail).toContain("expired");
-    expect(pairing?.remedy).toContain("`collie pair`");
+    expect(pairing?.remedy).toContain("`pastor pair`");
   });
 
   test("one live device: ok, counted", async () => {
@@ -1634,11 +1634,11 @@ describe("pairing — doctor points to collie pair", () => {
     expect(pairing?.detail).toBe("1 device(s) paired");
   });
 
-  test("a peer is skipped and pointed at the lead's collie pair", async () => {
+  test("a peer is skipped and pointed at the lead's pastor pair", async () => {
     const h = harness(peerStore(), [], { files: without(healthyFiles(), PAIRED_DEVICES) });
     const pairing = (await findings(h)).byCheck.get("pairing");
     expect(pairing?.status).toBe("skipped");
-    expect(pairing?.remedy).toContain("`collie pair` on the lead");
+    expect(pairing?.remedy).toContain("`pastor pair` on the lead");
   });
 });
 
@@ -1649,7 +1649,7 @@ describe("the finding set is scoped by the chosen multiplexer", () => {
     expect(raw.filter((f) => isHerdrCheck(f.check))).toEqual([]);
     // The whole set, so a Herdr-flavoured check added later cannot slip in unnoticed.
     expect([...byCheck.keys()]).toEqual([
-      "collie",
+      "pastor",
       "config-file",
       "web-dist",
       "path-link",
@@ -1689,7 +1689,7 @@ describe("the finding set is scoped by the chosen multiplexer", () => {
   });
 
   // Presence is not relevance: a Herdr on PATH, with its socket right there, still drives nothing on
-  // a tmux install — so it buys back no check and no red line (the reading `collie`'s config-dir
+  // a tmux install — so it buys back no check and no red line (the reading `pastor`'s config-dir
   // resolution already takes).
   test("a Herdr installed alongside tmux buys back nothing", async () => {
     const h = harness(null, [], {
@@ -1717,10 +1717,10 @@ describe("the finding set is scoped by the chosen multiplexer", () => {
     }
   });
 
-  // Zero regression on the mux Collie defaults to: every Herdr check still runs, and still fails.
+  // Zero regression on the mux Pastor defaults to: every Herdr check still runs, and still fails.
   test("under Herdr nothing is scoped away — a missing socket is still the error it was", async () => {
     const h = harness(null, [], {
-      env: { COLLIE_MUX: "herdr" },
+      env: { PASTOR_MUX: "herdr" },
       files: without(healthyFiles(), SOCKET),
     });
     const { code, byCheck } = await findings(h);
@@ -1754,7 +1754,7 @@ describe("beacon-hooks-claude", () => {
     const { byCheck, code } = await findings(h);
     const finding = byCheck.get("beacon-hooks-claude")!;
     expect(finding.status).toBe("error");
-    expect(finding.remedy).toContain("collie hooks install claude");
+    expect(finding.remedy).toContain("pastor hooks install claude");
     // What it costs, in the operator's own symptoms — and what an install would pin to.
     expect(finding.detail).toContain("reads as a shell");
     expect(finding.detail).toContain("notification");
@@ -1792,20 +1792,20 @@ describe("beacon-hooks-claude", () => {
     const finding = byCheck.get("beacon-hooks-claude")!;
     expect(finding.status).toBe("warn");
     expect(finding.detail).toContain("v0");
-    expect(finding.remedy).toContain("collie hooks install claude");
+    expect(finding.remedy).toContain("pastor hooks install claude");
     expect(code).toBe(EXIT.OK);
   });
 
-  test("a hook pinned to a path that is gone is its own warn, and names `collie link`", async () => {
+  test("a hook pinned to a path that is gone is its own warn, and names `pastor link`", async () => {
     // The silent failure: valid JSON, our marker, and a command that can never run.
-    const moved = `${HOME}/old-checkout/bin/collie`;
+    const moved = `${HOME}/old-checkout/bin/pastor`;
     const files = { ...healthyFiles(), [SETTINGS]: settingsWith(hookCommand(moved)) };
     const { byCheck, code } = await findings(harness(null, [], { files }));
     const finding = byCheck.get("beacon-hooks-claude")!;
     expect(finding.status).toBe("warn");
     expect(finding.detail).toContain(moved);
-    expect(finding.remedy).toContain("collie link");
-    expect(finding.remedy).toContain("collie hooks install claude");
+    expect(finding.remedy).toContain("pastor link");
+    expect(finding.remedy).toContain("pastor hooks install claude");
     expect(code).toBe(EXIT.OK);
   });
 
@@ -1835,7 +1835,7 @@ describe("beacons", () => {
     const { byCheck } = await findings(harness(null, [], { files: without(healthyFiles(), SETTINGS) }));
     const finding = byCheck.get("beacons")!;
     expect(finding.status).toBe("skipped");
-    expect(finding.remedy).toContain("collie hooks install claude");
+    expect(finding.remedy).toContain("pastor hooks install claude");
   });
 
   test("an empty directory WITH an install points at the agent, not at the installer", async () => {
@@ -1902,8 +1902,8 @@ async function plainFindings(): Promise<Finding[]> {
 // other findings key on install kind, and each fell through to a line that is false on this one.
 // Every case here is one of those, so the omission cannot come back quietly.
 
-describe("collie doctor — a packaged install", () => {
-  /** A Collie with a manifest, no `.git`, in a folder a package manager owns. */
+describe("pastor doctor — a packaged install", () => {
+  /** A Pastor with a manifest, no `.git`, in a folder a package manager owns. */
   function systemOwned(
     link: Record<string, LinkProbe> = {},
     answers: Scripted["answers"] = [],
@@ -1912,9 +1912,9 @@ describe("collie doctor — a packaged install", () => {
     const h = harness(null, replies, {
       link,
       answers: [...answers, [`git -C ${ROOT} rev-parse --show-prefix`, { code: 128 }], ...(HEALTHY_ANSWERS ?? [])],
-      // The manifest is what makes this a Collie at all — `hasMarker` is asked before ownership, so
+      // The manifest is what makes this a Pastor at all — `hasMarker` is asked before ownership, so
       // without it the tree classifies `no-marker` and none of these findings would be exercised.
-      files: { ...healthyFiles(), [`${ROOT}/herdr-plugin.toml`]: 'id = "herdr.collie"\nversion = "1.5.2"\n' },
+      files: { ...healthyFiles(), [`${ROOT}/herdr-plugin.toml`]: 'id = "ad3.pastor"\nversion = "1.5.2"\n' },
     });
     h.files.rootOwned.add(ROOT);
     return h;
@@ -1932,14 +1932,14 @@ describe("collie doctor — a packaged install", () => {
 
   test("the symlink is named when one points into this root, and its absence is stated", async () => {
     const h = systemOwned();
-    // `/opt/collie` is the fake's root; a PATH name pointing into it is what a package installs.
+    // `/opt/pastor` is the fake's root; a PATH name pointing into it is what a package installs.
     expect((await findings(h)).byCheck.get("install")?.detail ?? "").toContain("no PATH name points at it");
-    const linked = systemOwned({ "/usr/bin/collie": { kind: "symlink", target: OWN_BINARY } });
-    expect((await findings(linked)).byCheck.get("install")?.detail ?? "").toContain("via /usr/bin/collie");
+    const linked = systemOwned({ "/usr/bin/pastor": { kind: "symlink", target: OWN_BINARY } });
+    expect((await findings(linked)).byCheck.get("install")?.detail ?? "").toContain("via /usr/bin/pastor");
   });
 
   test("`versions` no longer promises a staging that will never happen", async () => {
-    // The regression the review found: the generic branch says "the next `collie update` stages
+    // The regression the review found: the generic branch says "the next `pastor update` stages
     // one", three lines under an install line saying this install does not update itself.
     const f = (await findings(systemOwned())).byCheck.get("versions");
     expect(f?.status).toBe("skipped");
@@ -1953,25 +1953,25 @@ describe("collie doctor — a packaged install", () => {
   });
 
   // ── restart-pending, the check this kind is the whole reason for ───────────
-  // `pacman -U` replaces `bin/collie` under a live service and restarts nothing. Everything below
+  // `pacman -U` replaces `bin/pastor` under a live service and restarts nothing. Everything below
   // is that machine: a pid from the unit, and an executable that either is or is not the installed
   // one. The old skip reason claimed "whatever installs the new version restarts it", which is
   // exactly what a package manager does not do.
 
-  const MAIN_PID = "systemctl --user show collie --property=MainPID --value";
+  const MAIN_PID = "systemctl --user show pastor --property=MainPID --value";
   const PID = 4242;
   const EXE = `/proc/${String(PID)}/exe`;
   const BINARY = OWN_BINARY;
   const supervised = (link: Record<string, LinkProbe> = {}) =>
     systemOwned(link, [[MAIN_PID, { stdout: `${String(PID)}\n` }]]);
 
-  test("`restart-pending` fires when the running collie was unlinked under the service", async () => {
+  test("`restart-pending` fires when the running pastor was unlinked under the service", async () => {
     const h = supervised();
     h.files.links.set(EXE, `${BINARY} (deleted)`);
     const f = (await findings(h)).byCheck.get("restart-pending");
     expect(f?.status).toBe("warn");
     expect(f?.detail ?? "").toContain(BINARY);
-    expect(f?.remedy).toContain("collie restart");
+    expect(f?.remedy).toContain("pastor restart");
   });
 
   test("`restart-pending` fires on a same-version rebuild, where no version string moved", async () => {
@@ -1983,7 +1983,7 @@ describe("collie doctor — a packaged install", () => {
     h.files.stats.set(BINARY, { inode: 222, mtimeMs: 0 });
     const f = (await findings(h)).byCheck.get("restart-pending");
     expect(f?.status).toBe("warn");
-    expect(f?.remedy).toContain("collie restart");
+    expect(f?.remedy).toContain("pastor restart");
   });
 
   test("`restart-pending` passes when the process and the file are one inode", async () => {
@@ -2002,7 +2002,7 @@ describe("collie doctor — a packaged install", () => {
     expect(f?.status).toBe("skipped");
     expect(f?.detail ?? "").toContain("no pid");
     expect(f?.detail ?? "").not.toContain("restarts it");
-    expect(f?.remedy).toContain("collie restart");
+    expect(f?.remedy).toContain("pastor restart");
   });
 
   // ── The bridge's own verdict comes first (issue #238, second half) ─────────
@@ -2020,12 +2020,12 @@ describe("collie doctor — a packaged install", () => {
     });
 
   test("`restart-pending` takes the bridge's own word that it was replaced, with the command it spells", async () => {
-    const h = systemOwned({}, [], [ownSnapshot({ restartNeeded: true, restartCommand: "systemctl --user restart collie" })]);
+    const h = systemOwned({}, [], [ownSnapshot({ restartNeeded: true, restartCommand: "systemctl --user restart pastor" })]);
     const f = (await findings(h)).byCheck.get("restart-pending");
     expect(f?.status).toBe("warn");
     expect(f?.detail ?? "").toContain(BINARY);
     expect(f?.detail ?? "").toContain("nothing restarted it");
-    expect(f?.remedy).toBe("`systemctl --user restart collie`");
+    expect(f?.remedy).toBe("`systemctl --user restart pastor`");
     // No pid was ever asked for: the bridge answered, so the process was not read from outside.
     expect(h.calls.some((c) => c.includes("MainPID"))).toBe(false);
   });
@@ -2061,7 +2061,7 @@ describe("collie doctor — a packaged install", () => {
     h.files.stats.set(BINARY, { inode: 111, mtimeMs: 0 });
     const f = (await findings(h)).byCheck.get("restart-pending");
     expect(f?.status).toBe("warn");
-    expect(f?.remedy).toBe("`collie restart`");
+    expect(f?.remedy).toBe("`pastor restart`");
   });
 
   test("a checkout ignores the bridge's verdict: there `bridgeStale` is the answer, and this stays skipped", async () => {
@@ -2081,7 +2081,7 @@ describe("collie doctor — a packaged install", () => {
 // ── The config file (ADR 0040) ───────────────────────────────────────────────
 
 describe("the config-file finding", () => {
-  const HOME_FILE = join(HOME, ".collie", "config.toml");
+  const HOME_FILE = join(HOME, ".pastor", "config.toml");
   const INSTANCE_FILE = join(CONFIG, "config.toml");
 
   /** A layer over seeded text, optionally with a file the process cannot make owner-only. */
@@ -2103,7 +2103,7 @@ describe("the config-file finding", () => {
     expect(f.detail).toContain(HOME_FILE);
     expect(f.detail).toContain(INSTANCE_FILE);
     expect(f.detail).toContain("absent");
-    expect(f.remedy).toBe("`collie config init`");
+    expect(f.remedy).toBe("`pastor config init`");
   });
 
   test("config-file is ok when a file parsed clean", async () => {
@@ -2122,7 +2122,7 @@ describe("the config-file finding", () => {
     const f = byCheck.get("config-file")!;
     expect(f.status).toBe("warn");
     expect(f.detail).toContain("1 problem");
-    expect(f.remedy).toBe("`collie config check`");
+    expect(f.remedy).toBe("`pastor config check`");
   });
 
   test("config-file is bad when a secret was dropped for permissions", async () => {
@@ -2134,7 +2134,7 @@ describe("the config-file finding", () => {
     const { code, byCheck } = await findings(h);
     const f = byCheck.get("config-file")!;
     expect(f.status).toBe("error");
-    expect(f.detail).toContain("COLLIE_VAPID_PRIVATE");
+    expect(f.detail).toContain("PASTOR_VAPID_PRIVATE");
     expect(f.detail).not.toContain('"x"');
     expect(f.remedy).toContain("chmod 600");
     // A dropped secret is a real failure, so the verb's exit code says so.
@@ -2148,7 +2148,7 @@ describe("the config-file finding", () => {
     h.deps = { ...h.deps, host: hostFor("win32") };
     const f = (await findings(h)).byCheck.get("config-file")!;
     expect(f.status).toBe("error");
-    expect(f.remedy).toBe("run the `icacls` line the warning above names for that file, then `collie restart`");
+    expect(f.remedy).toBe("run the `icacls` line the warning above names for that file, then `pastor restart`");
   });
 
   test("solo on a Windows host says it cannot join or lead, and suggests no verb that refuses", async () => {
@@ -2156,7 +2156,7 @@ describe("the config-file finding", () => {
     h.deps = { ...h.deps, host: hostFor("win32") };
     await cmdDoctor(h.deps, []);
     const lines = h.io.stdout;
-    const at = lines.indexOf("crew: none — this collie is not in a crew.");
+    const at = lines.indexOf("crew: none — this pastor is not in a crew.");
     expect(at).toBeGreaterThan(-1);
     expect(lines[at + 1]).toBe("  A Windows machine cannot join or lead a crew in this release.");
     expect(lines.join("\n")).not.toContain("crew invite");
@@ -2167,30 +2167,30 @@ describe("the config-file finding", () => {
     h.deps = { ...h.deps, host: hostFor("linux") };
     await cmdDoctor(h.deps, []);
     const lines = h.io.stdout;
-    const at = lines.indexOf("crew: none — this collie is not in a crew.");
-    expect(lines[at + 1]).toBe("  `collie crew invite` here makes it a lead; `collie join …` makes it a peer.");
+    const at = lines.indexOf("crew: none — this pastor is not in a crew.");
+    expect(lines[at + 1]).toBe("  `pastor crew invite` here makes it a lead; `pastor join …` makes it a peer.");
   });
 
-  test("a typo'd COLLIE_CONFIG shows as an absent path rather than as silence", async () => {
+  test("a typo'd PASTOR_CONFIG shows as an absent path rather than as silence", async () => {
     const reader: ConfigFileReader = { read: () => ({ text: null, error: null }) };
     const typo = readConfigFilesSync(
       reader,
-      configFilePaths({ COLLIE_CONFIG: "/etc/collie-tpyo.toml" }, HOME, CONFIG),
+      configFilePaths({ PASTOR_CONFIG: "/etc/pastor-tpyo.toml" }, HOME, CONFIG),
       () => {},
       { home: HOME },
     );
     const { byCheck } = await findings(
-      harness(null, [], { configLayer: typo, env: { COLLIE_CONFIG: "/etc/collie-tpyo.toml" } }),
+      harness(null, [], { configLayer: typo, env: { PASTOR_CONFIG: "/etc/pastor-tpyo.toml" } }),
     );
-    expect(byCheck.get("config-file")!.detail).toContain("/etc/collie-tpyo.toml (absent)");
+    expect(byCheck.get("config-file")!.detail).toContain("/etc/pastor-tpyo.toml (absent)");
   });
 });
 
 // ── Windows: who the Task Scheduler task belongs to (M43 spec 05) ─────────────
 
 describe("hook-python3 on Windows (M43 spec 08)", () => {
-  // The rehearsal found `collie doctor` exiting 1 on every fresh Windows install without Python, and
-  // `collie update --check` red with it, which turned the phone's Update button off.
+  // The rehearsal found `pastor doctor` exiting 1 on every fresh Windows install without Python, and
+  // `pastor update --check` red with it, which turned the phone's Update button off.
   test("is no finding at all on Windows, where Herdr's hooks are PowerShell; elsewhere still an error", async () => {
     const win = harness(null, [], { absent: ["python3"] });
     win.deps = { ...win.deps, host: hostFor("win32") };
@@ -2216,7 +2216,7 @@ describe("windows-long-paths", () => {
         : { stdout: `\r\n${LONG_PATHS_KEY}\r\n    LongPathsEnabled    REG_DWORD    ${value}\r\n\r\n` },
     ],
   ];
-  const SHORT = "C:\\Users\\pat\\AppData\\Local\\collie\\versions\\1.16.0";
+  const SHORT = "C:\\Users\\pat\\AppData\\Local\\pastor\\versions\\1.16.0";
   const run = (value: string | null, root = SHORT) =>
     windowsLongPaths({ ctx: context({}, { root }), exec: fakeExec({ answers: reg(value) }) });
 
@@ -2240,7 +2240,7 @@ describe("windows-long-paths", () => {
     const f = run("0x1", deep);
     expect(f.status).toBe("warn");
     expect(f.detail).toContain(`is ${deep.length} characters long`);
-    expect(f.remedy).toContain("COLLIE_DIR");
+    expect(f.remedy).toContain("PASTOR_DIR");
   });
 
   test("a value it cannot read is skipped, never a failure", () => {
@@ -2250,8 +2250,8 @@ describe("windows-long-paths", () => {
 
 describe("secrets-private (M43 spec 04)", () => {
   const WIN = hostFor("win32");
-  const WIN_STATE = `${WIN_HOME}\\.local\\state\\collie`;
-  const WIN_CONFIG = `${WIN_HOME}\\AppData\\Roaming\\herdr\\plugins\\config\\herdr.collie`;
+  const WIN_STATE = `${WIN_HOME}\\.local\\state\\pastor`;
+  const WIN_CONFIG = `${WIN_HOME}\\AppData\\Roaming\\herdr\\plugins\\config\\ad3.pastor`;
   const ENV = `${WIN_CONFIG}\\.env`;
   // A folder made under C:\ (VM): Users read it, Authenticated Users change it.
   const DRIVE = (name: string) =>
@@ -2263,30 +2263,30 @@ describe("secrets-private (M43 spec 04)", () => {
   test("ok: both folders private, in the words a person reads", () => {
     const f = run({});
     expect(f.status).toBe("ok");
-    expect(f.detail).toBe("the Collie state folder and the Collie config folder are private to your account, SYSTEM and Administrators");
+    expect(f.detail).toBe("the Pastor state folder and the Pastor config folder are private to your account, SYSTEM and Administrators");
   });
 
   test("a loose state folder is an error: who, the path on its own line, and the fix", () => {
-    const f = run({ [WIN_STATE]: DRIVE("collie") });
+    const f = run({ [WIN_STATE]: DRIVE("pastor") });
     expect(f.status).toBe("error");
     expect(f.detail).toBe(
-      `the Collie state folder can be read by other accounts (Users [S-1-5-32-545], Authenticated Users [S-1-5-11]).\n${WIN_STATE}`,
+      `the Pastor state folder can be read by other accounts (Users [S-1-5-32-545], Authenticated Users [S-1-5-11]).\n${WIN_STATE}`,
     );
     expect(f.remedy).toBe(
-      `Fix: restart Collie, or run: icacls "${WIN_STATE}" /grant:r "*${WIN_SID}:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" ` +
+      `Fix: restart Pastor, or run: icacls "${WIN_STATE}" /grant:r "*${WIN_SID}:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" ` +
         `"*S-1-5-32-544:(OI)(CI)F" /inheritance:r /remove:g *S-1-5-32-545 *S-1-5-11`,
     );
   });
 
   test("an Everyone grant on .env names the file inside the folder, and the one reset that fixes it", () => {
-    const tree = `${PRIVATE("herdr.collie")}herdr.collie\\.env\r\nD:AI(A;;FR;;;WD)(A;ID;FA;;;BA)(A;ID;FA;;;SY)(A;ID;FA;;;${WIN_SID})\r\n`;
+    const tree = `${PRIVATE("ad3.pastor")}ad3.pastor\\.env\r\nD:AI(A;;FR;;;WD)(A;ID;FA;;;BA)(A;ID;FA;;;SY)(A;ID;FA;;;${WIN_SID})\r\n`;
     const f = run({ [WIN_CONFIG]: tree });
     expect(f.status).toBe("error");
-    expect(f.detail).toBe(`the Collie config folder holds files other accounts can read (Everyone [S-1-1-0]): .env.\n${WIN_CONFIG}`);
-    expect(f.remedy).toBe(`Fix: restart Collie, or run: icacls "${ENV}" /reset`);
+    expect(f.detail).toBe(`the Pastor config folder holds files other accounts can read (Everyone [S-1-1-0]): .env.\n${WIN_CONFIG}`);
+    expect(f.remedy).toBe(`Fix: restart Pastor, or run: icacls "${ENV}" /reset`);
   });
 
-  test("a custom folder Collie does not own: the fix is the icacls line alone, never 'restart'", () => {
+  test("a custom folder Pastor does not own: the fix is the icacls line alone, never 'restart'", () => {
     const custom = "D:\\Projects";
     const f = run({ [custom]: DRIVE("Projects") }, { lists: { [custom]: ["src", "crew-trust.json"] } }, custom);
     expect(f.status).toBe("error");
@@ -2297,7 +2297,7 @@ describe("secrets-private (M43 spec 04)", () => {
     const f = run({ [WIN_STATE]: ACL_TIMED_OUT });
     expect(f.status).toBe("warn");
     expect(f.detail).toBe(
-      `cannot confirm who can read the Collie state folder: icacls did not answer within 10 seconds\n${WIN_STATE}`,
+      `cannot confirm who can read the Pastor state folder: icacls did not answer within 10 seconds\n${WIN_STATE}`,
     );
     // FAT, exFAT or a share (simulated: icacls writes no list there).
     expect(run({ [WIN_STATE]: ACL_NO_LIST }).detail).toContain("FAT, exFAT and network drives have none");
@@ -2328,12 +2328,12 @@ describe("secrets-private (M43 spec 04)", () => {
       ...loose.deps,
       host: WIN,
       ctx: { ...loose.deps.ctx, stateDir: WIN_STATE, configDir: WIN_CONFIG },
-      ownerOnly: fakeOwnerOnly({ [WIN_STATE]: DRIVE("collie") }),
+      ownerOnly: fakeOwnerOnly({ [WIN_STATE]: DRIVE("pastor") }),
     };
     await cmdDoctor(loose.deps, []);
     const out = loose.io.stdout.join("\n");
-    expect(out).toContain(`secrets-private       the Collie state folder can be read by other accounts`);
-    expect(out).toContain(`\n${" ".repeat(33)}${WIN_STATE} → Fix: restart Collie, or run: icacls`);
+    expect(out).toContain(`secrets-private       the Pastor state folder can be read by other accounts`);
+    expect(out).toContain(`\n${" ".repeat(33)}${WIN_STATE} → Fix: restart Pastor, or run: icacls`);
   });
 });
 
@@ -2341,7 +2341,7 @@ describe("windows-task", () => {
   const WIN = hostFor("win32");
   // The query opens with the UTF-8 line (`POWERSHELL_UTF8`), so a non-ASCII path comes back whole.
   const QUERY = `powershell -NoProfile -NonInteractive -Command ${POWERSHELL_UTF8}$t = Get-ScheduledTask`;
-  const BIN = collieBinary(ROOT, WIN);
+  const BIN = pastorBinary(ROOT, WIN);
   const answer = (args: string): Scripted["answers"] => [
     [QUERY, { stdout: `Running\r\nC:\\WINDOWS\\system32\\conhost.exe\r\n${args}\r\n` }],
   ];
@@ -2349,50 +2349,50 @@ describe("windows-task", () => {
     windowsTask({ ctx: context(), exec: fakeExec({ answers, absent }), host: WIN, link: fakeLinkFs() });
 
   test("names the program the task runs when it is this install's launcher", () => {
-    const f = run(answer(`--headless ${BIN} _supervise COLLIE_PORT=8787`));
+    const f = run(answer(`--headless ${BIN} _supervise PASTOR_PORT=8787`));
     expect(f.status).toBe("ok");
-    expect(f.detail).toBe(`Task herdr.collie runs ${BIN} (Running)`);
+    expect(f.detail).toBe(`Task ad3.pastor runs ${BIN} (Running)`);
   });
 
   test("a task that still runs the old script says so in one line, with the one command that fixes it", () => {
-    const f = run(answer(`--headless "C:\\ps\\powershell.exe" -File "${ROOT}\\contrib\\windows\\collie-ctl.ps1" _exec-bridge`));
+    const f = run(answer(`--headless "C:\\ps\\powershell.exe" -File "${ROOT}\\contrib\\windows\\pastor-ctl.ps1" _exec-bridge`));
     expect(f.status).toBe("warn");
-    expect(f.detail).toContain("Task herdr.collie still runs the old script");
-    expect(f.remedy).toBe("Run: collie restart");
+    expect(f.detail).toContain("Task ad3.pastor still runs the old script");
+    expect(f.remedy).toBe("Run: pastor restart");
   });
 
   // The gate for M43 spec 06/08: a binary install's task registered on a version folder keeps
   // relaunching that version after an update moves `current`.
   test("a binary install whose task runs a version folder, not `current`, is a warning", () => {
-    const install = "C:\\Users\\pat\\.collie";
+    const install = "C:\\Users\\pat\\.pastor";
     const root = `${install}\\versions\\1.16.0`;
     const link = fakeLinkFs({ [`${install}\\current`]: { kind: "symlink", target: `${install}\\versions\\1.16.0` } });
     const exec = fakeExec({
-      answers: [[QUERY, { stdout: `Running\r\nC:\\conhost.exe\r\n--headless ${collieBinary(root, WIN)} _supervise\r\n` }]],
+      answers: [[QUERY, { stdout: `Running\r\nC:\\conhost.exe\r\n--headless ${pastorBinary(root, WIN)} _supervise\r\n` }]],
     });
     const f = windowsTask({ ctx: context({}, { root }), exec, host: WIN, link });
     expect(f.status).toBe("warn");
-    expect(f.detail).toContain(`runs ${collieBinary(root, WIN)}, not ${install}\\current\\bin\\collie.exe`);
-    expect(f.remedy).toBe("run `collie start` once: it registers the task on `current`");
+    expect(f.detail).toContain(`runs ${pastorBinary(root, WIN)}, not ${install}\\current\\bin\\pastor.exe`);
+    expect(f.remedy).toBe("run `pastor start` once: it registers the task on `current`");
   });
 
-  test("a binary install whose task runs `current\\bin\\collie.exe` reads ok, whichever version runs", () => {
-    const install = "C:\\Users\\pat\\.collie";
+  test("a binary install whose task runs `current\\bin\\pastor.exe` reads ok, whichever version runs", () => {
+    const install = "C:\\Users\\pat\\.pastor";
     const root = `${install}\\versions\\1.16.0`;
     const link = fakeLinkFs({ [`${install}\\current`]: { kind: "symlink", target: `${install}\\versions\\1.16.0` } });
-    const program = `${install}\\current\\bin\\collie.exe`;
+    const program = `${install}\\current\\bin\\pastor.exe`;
     const exec = fakeExec({
-      answers: [[QUERY, { stdout: `Running\r\nC:\\conhost.exe\r\n--headless ${program} _supervise "COLLIE_PLUGIN_ROOT=${install}\\current"\r\n` }]],
+      answers: [[QUERY, { stdout: `Running\r\nC:\\conhost.exe\r\n--headless ${program} _supervise "PASTOR_PLUGIN_ROOT=${install}\\current"\r\n` }]],
     });
     const f = windowsTask({ ctx: context({}, { root }), exec, host: WIN, link });
     expect(f.status).toBe("ok");
-    expect(f.detail).toBe(`Task herdr.collie runs ${program} (Running)`);
+    expect(f.detail).toBe(`Task ad3.pastor runs ${program} (Running)`);
   });
 
   test("another install's task is named, and no task or no PowerShell is a skip", () => {
-    const other = run(answer('--headless "D:\\other\\bin\\collie.exe" _supervise'));
+    const other = run(answer('--headless "D:\\other\\bin\\pastor.exe" _supervise'));
     expect(other.status).toBe("warn");
-    expect(other.detail).toContain("D:\\other\\bin\\collie.exe, another Collie install");
+    expect(other.detail).toContain("D:\\other\\bin\\pastor.exe, another Pastor install");
     expect(run([[QUERY, { code: 1 }]]).status).toBe("skipped");
     expect(run([], ["powershell"]).status).toBe("skipped");
   });
@@ -2414,7 +2414,7 @@ describe("POSIX parity (M43 spec 04)", () => {
   // A config.toml secret that could not be made private: the POSIX `config-file` remedy is pinned too.
   const blocked = (): Parameters<typeof harness>[2] => ({
     configLayer: readConfigFilesSync(
-      { read: (p) => ({ text: p === join(HOME, ".collie", "config.toml") ? '[push]\nvapid_private = "x"\n' : null, error: null }) },
+      { read: (p) => ({ text: p === join(HOME, ".pastor", "config.toml") ? '[push]\nvapid_private = "x"\n' : null, error: null }) },
       configFilePaths({}, HOME, CONFIG),
       () => {},
       { home: HOME, perms: { mode: () => 0o644, tighten: () => false } },
@@ -2446,7 +2446,7 @@ describe("stt.whistle-model", () => {
   const PIN = { url: "https://models.invalid/whistle.cact", revision: "ca5287601bef25af", sha256: SHA, bytes: MODEL.byteLength };
 
   async function run(setup: (stateDir: string) => void, files: (stateDir: string) => Record<string, string> = () => ({})) {
-    const stateDir = mkdtempSync(join(tmpdir(), "collie-doctor-whistle-"));
+    const stateDir = mkdtempSync(join(tmpdir(), "pastor-doctor-whistle-"));
     try {
       setup(stateDir);
       const h = harness(null, [], { files: { ...healthyFiles(), ...files(stateDir) } });
@@ -2482,7 +2482,7 @@ describe("stt.whistle-model", () => {
     const f = byCheck.get("stt.whistle-model");
     expect(f?.status).toBe("warn");
     expect(f?.detail).toContain("does not match this release");
-    expect(f?.remedy).toContain("collie stt whistle");
+    expect(f?.remedy).toContain("pastor stt whistle");
     expect(code).toBe(EXIT.OK);
   });
 
@@ -2507,7 +2507,7 @@ describe("stt.whistle-model", () => {
 
   test("the host engine is Whistle and the model is missing: a warning naming the verb", async () => {
     const { byCheck } = await run(() => undefined, (dir) => ({ [join(dir, "stt.json")]: JSON.stringify({ provider: "whistle" }) }));
-    expect(byCheck.get("stt.whistle-model")).toMatchObject({ status: "warn", remedy: "run `collie stt whistle`" });
+    expect(byCheck.get("stt.whistle-model")).toMatchObject({ status: "warn", remedy: "run `pastor stt whistle`" });
   });
 });
 
@@ -2531,7 +2531,7 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
     started.push(made);
     return made;
   }
-  const onDurable = (socket: string | undefined) => ({ COLLIE_MUX: "durable", COLLIE_DURABLE_SOCKET: socket });
+  const onDurable = (socket: string | undefined) => ({ PASTOR_MUX: "durable", PASTOR_DURABLE_SOCKET: socket });
   const durableRows = (run: JsonRun): [string, string][] =>
     run.raw.filter((f) => f.check.startsWith("durable-")).map((f) => [f.check, f.status]);
 
@@ -2550,13 +2550,13 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
     expect(run.byCheck.get("durable-env")!.detail).toContain("transport: private socket");
     expect(run.byCheck.get("durable-url")!.detail).toContain("this peer uses the socket");
     expect(run.byCheck.get("durable-hello")!.detail).toContain("speaks 1..1");
-    expect(run.byCheck.get("mux")).toMatchObject({ status: "ok", detail: "durable, see the durable-* lines · set by COLLIE_MUX" });
+    expect(run.byCheck.get("mux")).toMatchObject({ status: "ok", detail: "durable, see the durable-* lines · set by PASTOR_MUX" });
     expect(run.byCheck.get("beacon-hooks-claude")!.status).toBe("ok");
     expect(fake.requests.every((r) => r.path === "/session/v1/hello")).toBe(true);
   });
 
   test("a mux other than durable gets no durable rows", async () => {
-    const run = await findings(harness(null, [], { env: { COLLIE_MUX: "herdr", COLLIE_DURABLE_SOCKET: "/tmp/x.sock" } }));
+    const run = await findings(harness(null, [], { env: { PASTOR_MUX: "herdr", PASTOR_DURABLE_SOCKET: "/tmp/x.sock" } }));
     expect(durableRows(run)).toEqual([]);
   });
 
@@ -2573,8 +2573,8 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
         ["durable-lead", "skipped"],
       ]);
       const row = run.byCheck.get("durable-env")!;
-      expect(row.detail).toContain("COLLIE_DURABLE_SOCKET");
-      expect(row.remedy).toContain("COLLIE_DURABLE_SOCKET");
+      expect(row.detail).toContain("PASTOR_DURABLE_SOCKET");
+      expect(row.remedy).toContain("PASTOR_DURABLE_SOCKET");
       expect(run.code).toBe(EXIT.FAIL);
     }
   });
@@ -2641,7 +2641,7 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
     const row = run.byCheck.get("durable-hello")!;
     expect(row.status).toBe("error");
     expect(row.detail).toContain("not a durable program");
-    expect(row.remedy).toContain("COLLIE_DURABLE_SOCKET");
+    expect(row.remedy).toContain("PASTOR_DURABLE_SOCKET");
     expect(run.byCheck.get("durable-ready")!.status).toBe("skipped");
   });
 
@@ -2653,7 +2653,7 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
     const run = await findings(harness(null, [], { env: onDurable(fake.socketPath) }));
     const row = run.byCheck.get("durable-hello")!;
     expect(row.status).toBe("error");
-    expect(row.detail).toContain("program speaks 2..3, this Collie speaks 1..1");
+    expect(row.detail).toContain("program speaks 2..3, this Pastor speaks 1..1");
     expect(run.byCheck.get("durable-socket")!.status).toBe("ok");
     expect(run.byCheck.get("durable-ready")!.status).toBe("skipped");
   });
@@ -2682,7 +2682,7 @@ describe.skipIf(SOCKET_ONLY_SKIP)("doctor durable", () => {
       ["durable-ready", "warn"],
       ["durable-lead", "skipped"],
     ]);
-    expect(run.byCheck.get("durable-ready")!.remedy).toContain("collie doctor");
+    expect(run.byCheck.get("durable-ready")!.remedy).toContain("pastor doctor");
     expect(run.code).toBe(EXIT.OK);
   });
 });

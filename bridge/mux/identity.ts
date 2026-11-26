@@ -13,7 +13,7 @@
 //  2. **Stable while the pane lives.** The same pane keeps its id across a reconnect of the adapter,
 //     a restart of the multiplexer process, a rename, and a move between tabs or spaces. An id
 //     derived from anything the operator can change (a label, a title, a position) breaks this.
-//  3. **Unique within one collie.** Across every space and tab of the configured target. NOT across
+//  3. **Unique within one pastor.** Across every space and tab of the configured target. NOT across
 //     machines — a crew address is `(host, session, paneId)` and the host half is the lead's job
 //     (CREW_PROTOCOL.md §4), so an adapter must not try to make its ids globally unique.
 //  4. **Never recycled onto a different pane** for the lifetime of the bridge process. A
@@ -26,7 +26,7 @@
 // suite. Both halves are the contract.
 
 /**
- * Longest id Collie will carry. Generous next to every real multiplexer (Herdr's longest observed
+ * Longest id Pastor will carry. Generous next to every real multiplexer (Herdr's longest observed
  * is single digits) and short enough that an id can never be a payload in disguise.
  */
 export const MUX_ID_MAX_LENGTH = 128;
@@ -35,7 +35,7 @@ export const MUX_ID_MAX_LENGTH = 128;
 const UNSAFE_ID_CHAR = /[\p{C}\s/?#]/u;
 
 /**
- * Whether `id` is a well-formed Collie mux id (rule 5).
+ * Whether `id` is a well-formed Pastor mux id (rule 5).
  *
  * Rejects: empty, over-long, anything carrying a control character, whitespace, `/`, `?` or `#`.
  * The last three are the URL rule: the id is one path segment of `/api/pane/:id`, read back with

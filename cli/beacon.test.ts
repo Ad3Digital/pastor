@@ -9,7 +9,7 @@ import { EXIT } from "./io.ts";
 import type { Environment } from "./context.ts";
 import type { JsonObject } from "../bridge/json.ts";
 
-// `collie beacon emit`. Everything here is driven through the two seams (`cli/sys.ts`), so no test
+// `pastor beacon emit`. Everything here is driven through the two seams (`cli/sys.ts`), so no test
 // reads a real `/proc`, writes a real state dir, or touches stdin.
 //
 // The load-bearing assertion in this file is the boring one: EVERY path returns `EXIT.OK`. A hook
@@ -73,7 +73,7 @@ describe("the environment gate", () => {
     ]);
   });
 
-  test("records BOTH when the pane is nested — the emitter cannot know which one Collie drives", () => {
+  test("records BOTH when the pane is nested — the emitter cannot know which one Pastor drives", () => {
     expect(readEnvMarkers({ ...TMUX, ZELLIJ_PANE_ID: "3", ZELLIJ_SESSION_NAME: "herd" })).toHaveLength(2);
   });
 
@@ -245,7 +245,7 @@ describe("it never fails, and it never speaks", () => {
   test("a context that cannot even be resolved is exit 0", async () => {
     expect(
       await runBeaconEmit(() => {
-        throw new Error('COLLIE_INSTANCE="v1" needs an explicit COLLIE_PORT');
+        throw new Error('PASTOR_INSTANCE="v1" needs an explicit PASTOR_PORT');
       }),
     ).toBe(EXIT.OK);
   });

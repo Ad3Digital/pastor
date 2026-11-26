@@ -1,6 +1,6 @@
 set -eu
 umask 077
-collie_tool() {
+pastor_tool() {
   _n=$1
   if _p=$(command -v "$_n" 2>/dev/null); then
     case $_p in
@@ -13,24 +13,24 @@ collie_tool() {
   done
   return 1
 }
-CURL=$(collie_tool curl) || { echo "error: no curl on this machine" >&2; exit 20; }
-TAR=$(collie_tool tar) || { echo "error: no tar on this machine" >&2; exit 21; }
-SHA=$(collie_tool sha256sum) || SHA=$(collie_tool shasum) || { echo "error: no sha256 tool on this machine" >&2; exit 22; }
+CURL=$(pastor_tool curl) || { echo "error: no curl on this machine" >&2; exit 20; }
+TAR=$(pastor_tool tar) || { echo "error: no tar on this machine" >&2; exit 21; }
+SHA=$(pastor_tool sha256sum) || SHA=$(pastor_tool shasum) || { echo "error: no sha256 tool on this machine" >&2; exit 22; }
 PATH="$(dirname "$CURL"):$(dirname "$TAR"):$(dirname "$SHA"):$PATH"
 export PATH
-DIR='/home/pat/.local/share/collie'
+DIR='/home/pat/.local/share/pastor'
 EXPECT='1.2.3'
-WORK=$(mktemp -d "${TMPDIR:-/tmp}/collie-add.XXXXXX")
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/pastor-add.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT INT TERM
-cat > "$WORK/install.sh" <<'__COLLIE_PAYLOAD__'
-#__COLLIE_STDIN__
-__COLLIE_PAYLOAD__
-COLLIE_DIR="$DIR" COLLIE_UPDATE_REPO='AltanS/collie' COLLIE_TAG='v1.2.3' /bin/sh "$WORK/install.sh" 1>&2
+cat > "$WORK/install.sh" <<'__PASTOR_PAYLOAD__'
+#__PASTOR_STDIN__
+__PASTOR_PAYLOAD__
+PASTOR_DIR="$DIR" PASTOR_UPDATE_REPO='Ad3Digital/pastor' PASTOR_TAG='v1.2.3' /bin/sh "$WORK/install.sh" 1>&2
 ROOT="$DIR/current"
-[ -x "$ROOT/bin/collie" ] || { echo "error: the install left no binary at $ROOT/bin/collie" >&2; exit 25; }
-VERSION=$("$ROOT/bin/collie" version | head -n 1)
+[ -x "$ROOT/bin/pastor" ] || { echo "error: the install left no binary at $ROOT/bin/pastor" >&2; exit 25; }
+VERSION=$("$ROOT/bin/pastor" version | head -n 1)
 case "$VERSION" in
   "$EXPECT"*) ;;
   *) echo "error: installed $VERSION, expected $EXPECT" >&2; exit 26 ;;
 esac
-printf 'collie-install:root=%s\ncollie-install:version=%s\n' "$ROOT" "$VERSION"
+printf 'pastor-install:root=%s\npastor-install:version=%s\n' "$ROOT" "$VERSION"

@@ -39,7 +39,7 @@ function guard() {
 
 const dirs: string[] = [];
 function stateDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "collie-guard-"));
+  const dir = mkdtempSync(join(tmpdir(), "pastor-guard-"));
   dirs.push(dir);
   return privateTestDir(dir);
 }

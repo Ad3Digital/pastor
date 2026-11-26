@@ -18,7 +18,7 @@ import { useSyncExternalStore } from "react";
 // the keyboard. See the `composing` block there — a preference is what the operator chose, not what
 // the keyboard is currently costing them.
 
-const STORAGE_KEY = "collie:strips-collapsed:v1";
+const STORAGE_KEY = "pastor:strips-collapsed:v1";
 const DEFAULT_COLLAPSED = false;
 
 let collapsed = load();

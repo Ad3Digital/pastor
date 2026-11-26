@@ -13,18 +13,18 @@ import { wipeDevice } from "./wipe";
 // the wipe must clear, or a preference that may stay? The second test then proves the table true by
 // seeding each key and running the wipe.
 //
-// The scan reads app source for a quoted literal shaped like a Collie key (`collie:` or `collie.`),
-// templates included, so `collie:auto-reloaded-for=${id}` reads as its prefix. Tests, the playground
+// The scan reads app source for a quoted literal shaped like a Pastor key (`pastor:` or `pastor.`),
+// templates included, so `pastor:auto-reloaded-for=${id}` reads as its prefix. Tests, the playground
 // and fixtures are out of scope: none of them ships.
 
 const SRC = join(import.meta.dirname, "..");
-const KEY_LITERAL = /["'`](collie[:.][A-Za-z][^"'`\s$]*)/g;
+const KEY_LITERAL = /["'`](pastor[:.][A-Za-z][^"'`\s$]*)/g;
 
 /** Literals of that shape that are not storage keys at all. */
 const NOT_STORAGE = new Map<string, string>([
-  ["collie:open", "a service-worker postMessage type (lib/notification-open.ts)"],
-  ["collie:herd", "a notification tag (lib/push-decision.ts)"],
-  ["collie:herd@<host>", "the per-host notification tag, named in a comment"],
+  ["pastor:open", "a service-worker postMessage type (lib/notification-open.ts)"],
+  ["pastor:herd", "a notification tag (lib/push-decision.ts)"],
+  ["pastor:herd@<host>", "the per-host notification tag, named in a comment"],
 ]);
 
 type Area = "local" | "session";
@@ -40,52 +40,52 @@ interface KeyFate {
 
 const KEYS = new Map<string, KeyFate>([
   // ── Wiped: what a pairing leaves behind ──
-  ["collie:draft:", { area: "local", prefix: true, fate: "wiped", why: "unsent words typed under the pairing" }],
+  ["pastor:draft:", { area: "local", prefix: true, fate: "wiped", why: "unsent words typed under the pairing" }],
   // The token and the push endpoint are named by constants, so the scan sees them through those.
-  ["collie:device-token", { area: "local", prefix: false, fate: "wiped", why: "the credential itself" }],
-  ["collie:push-endpoint", { area: "local", prefix: false, fate: "wiped", why: "names this phone's push endpoint" }],
+  ["pastor:device-token", { area: "local", prefix: false, fate: "wiped", why: "the credential itself" }],
+  ["pastor:push-endpoint", { area: "local", prefix: false, fate: "wiped", why: "names this phone's push endpoint" }],
   // Cleared with the token (lib/pairing.ts `clearDeviceToken`): it caps the store at this pairing's expiry.
-  ["collie:pairing-expires", { area: "local", prefix: false, fate: "wiped", why: "the ended pairing's expiry" }],
+  ["pastor:pairing-expires", { area: "local", prefix: false, fate: "wiped", why: "the ended pairing's expiry" }],
   // Written first by the wipe and removed last; present only while a wipe is unfinished (lib/wipe.ts).
-  ["collie:wipe-pending", { area: "local", prefix: false, fate: "wiped", why: "a wipe's resume mark" }],
+  ["pastor:wipe-pending", { area: "local", prefix: false, fate: "wiped", why: "a wipe's resume mark" }],
   // ── Kept: how this phone likes to look and behave, never what a session said ──
-  ["collie:theme:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:design:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:key-board:v1", { area: "local", prefix: false, fate: "kept", why: "preference, this phone's key layout" }],
-  ["collie:display-prefs:v4", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:dash-prefs:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:locale:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:haptics:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:harness-bar:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:strips-collapsed:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:stt-hands-free:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:stt-engine:v1", { area: "local", prefix: false, fate: "kept", why: "preference, Host or This phone for speech (ADR 0096)" }],
-  ["collie:zen-enabled:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:auto-zen-enabled:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
-  ["collie:pins:v1", { area: "local", prefix: false, fate: "kept", why: "pinned pane ids, no content" }],
-  ["collie:pin-hint:v1", { area: "local", prefix: false, fate: "kept", why: "a dismissed hint" }],
-  ["collie:masked-hint:v1", { area: "local", prefix: false, fate: "kept", why: "a dismissed hint" }],
-  ["collie:hidden-machines:v1", { area: "local", prefix: false, fate: "kept", why: "machine names hidden here" }],
-  ["collie:mirror-native:", { area: "local", prefix: true, fate: "kept", why: "a per-pane colour choice" }],
-  ["collie:tour:v1", { area: "local", prefix: false, fate: "kept", why: "the tour was seen" }],
-  ["collie:new-sheet:again:v1", { area: "local", prefix: false, fate: "wiped", why: "the last start per machine names its folders" }],
-  ["collie:no-prompts-confirmed:v1", { area: "local", prefix: false, fate: "wiped", why: "the per-device No prompts confirms name machines and command lines" }],
-  ["collie:new-page:kind:v1", { area: "local", prefix: false, fate: "kept", why: "Agent or Command per machine, one word, no folder" }],
-  ["collie:push-disabled", { area: "local", prefix: false, fate: "kept", why: "the operator's push choice" }],
+  ["pastor:theme:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:design:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:key-board:v1", { area: "local", prefix: false, fate: "kept", why: "preference, this phone's key layout" }],
+  ["pastor:display-prefs:v4", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:dash-prefs:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:locale:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:haptics:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:harness-bar:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:strips-collapsed:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:stt-hands-free:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:stt-engine:v1", { area: "local", prefix: false, fate: "kept", why: "preference, Host or This phone for speech (ADR 0096)" }],
+  ["pastor:zen-enabled:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:auto-zen-enabled:v1", { area: "local", prefix: false, fate: "kept", why: "preference" }],
+  ["pastor:pins:v1", { area: "local", prefix: false, fate: "kept", why: "pinned pane ids, no content" }],
+  ["pastor:pin-hint:v1", { area: "local", prefix: false, fate: "kept", why: "a dismissed hint" }],
+  ["pastor:masked-hint:v1", { area: "local", prefix: false, fate: "kept", why: "a dismissed hint" }],
+  ["pastor:hidden-machines:v1", { area: "local", prefix: false, fate: "kept", why: "machine names hidden here" }],
+  ["pastor:mirror-native:", { area: "local", prefix: true, fate: "kept", why: "a per-pane colour choice" }],
+  ["pastor:tour:v1", { area: "local", prefix: false, fate: "kept", why: "the tour was seen" }],
+  ["pastor:new-sheet:again:v1", { area: "local", prefix: false, fate: "wiped", why: "the last start per machine names its folders" }],
+  ["pastor:no-prompts-confirmed:v1", { area: "local", prefix: false, fate: "wiped", why: "the per-device No prompts confirms name machines and command lines" }],
+  ["pastor:new-page:kind:v1", { area: "local", prefix: false, fate: "kept", why: "Agent or Command per machine, one word, no folder" }],
+  ["pastor:push-disabled", { area: "local", prefix: false, fate: "kept", why: "the operator's push choice" }],
   // Written BY the wipe, so it outlives it: the cause the pair screen names once, then clears.
-  ["collie:wipe-last", { area: "local", prefix: false, fate: "kept", why: "a wipe reason word, no content" }],
-  ["collie:update-mode:closed:v1", { area: "local", prefix: false, fate: "kept", why: "update screen state" }],
-  ["collie:update-mode:v1", { area: "session", prefix: false, fate: "kept", why: "update screen state" }],
-  ["collie:auto-reloaded-for=", { area: "session", prefix: true, fate: "kept", why: "reload guard, a build id" }],
-  ["collie:pwa:guardReload:v1", { area: "session", prefix: false, fate: "kept", why: "reload guard" }],
-  ["collie:preload-reload", { area: "session", prefix: false, fate: "kept", why: "reload guard, a timestamp" }],
-  ["collie.nav.booted", { area: "session", prefix: false, fate: "kept", why: "navigation state" }],
-  ["collie.nav.seeded", { area: "session", prefix: false, fate: "kept", why: "navigation state, an app path" }],
-  ["collie.nav.pendingOpen", { area: "session", prefix: false, fate: "kept", why: "navigation state, an app path" }],
-  ["collie.nav.trail", { area: "session", prefix: false, fate: "kept", why: "navigation state, the app paths this tab visited" }],
+  ["pastor:wipe-last", { area: "local", prefix: false, fate: "kept", why: "a wipe reason word, no content" }],
+  ["pastor:update-mode:closed:v1", { area: "local", prefix: false, fate: "kept", why: "update screen state" }],
+  ["pastor:update-mode:v1", { area: "session", prefix: false, fate: "kept", why: "update screen state" }],
+  ["pastor:auto-reloaded-for=", { area: "session", prefix: true, fate: "kept", why: "reload guard, a build id" }],
+  ["pastor:pwa:guardReload:v1", { area: "session", prefix: false, fate: "kept", why: "reload guard" }],
+  ["pastor:preload-reload", { area: "session", prefix: false, fate: "kept", why: "reload guard, a timestamp" }],
+  ["pastor.nav.booted", { area: "session", prefix: false, fate: "kept", why: "navigation state" }],
+  ["pastor.nav.seeded", { area: "session", prefix: false, fate: "kept", why: "navigation state, an app path" }],
+  ["pastor.nav.pendingOpen", { area: "session", prefix: false, fate: "kept", why: "navigation state, an app path" }],
+  ["pastor.nav.trail", { area: "session", prefix: false, fate: "kept", why: "navigation state, the app paths this tab visited" }],
   // ── Dropped: the 1.17 last-seen mirror, moved into the on-device store (ADR 0087) ──
-  ["collie:last-snapshot:", { area: "session", prefix: true, fate: "dropped", why: "lib/last-seen.ts deletes it at boot" }],
-  ["collie:last-pane:", { area: "session", prefix: true, fate: "dropped", why: "lib/last-seen.ts deletes it at boot" }],
+  ["pastor:last-snapshot:", { area: "session", prefix: true, fate: "dropped", why: "lib/last-seen.ts deletes it at boot" }],
+  ["pastor:last-pane:", { area: "session", prefix: true, fate: "dropped", why: "lib/last-seen.ts deletes it at boot" }],
 ]);
 
 /**
@@ -130,8 +130,8 @@ function storageOf(area: Area): Storage {
 describe("storage keys and the wipe", () => {
   it("finds the keys it should (guard against a broken scan)", () => {
     const found = keyLiterals();
-    expect(found.has("collie:draft:")).toBe(true);
-    expect(found.has("collie:device-token")).toBe(true);
+    expect(found.has("pastor:draft:")).toBe(true);
+    expect(found.has("pastor:device-token")).toBe(true);
   });
 
   it("every storage key written under web/src has a decided fate at unpair", () => {

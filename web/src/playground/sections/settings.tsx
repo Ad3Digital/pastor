@@ -27,7 +27,7 @@ export const DEF: SectionDef = {
   id: "settings",
   title: "Settings",
   intent:
-    "The whole settings route, mounted twice: once on a solo collie with nothing paired, once on a lead with three paired devices and a crew card to show for it. Then the Updates page it links to, which is where the check, the card, the peers and the one button now live.",
+    "The whole settings route, mounted twice: once on a solo pastor with nothing paired, once on a lead with three paired devices and a crew card to show for it. Then the Updates page it links to, which is where the check, the card, the peers and the one button now live.",
 };
 
 // ── The Shell half of the New page, with one-off commands (ADR 0095) ───────────────────────────────
@@ -52,7 +52,7 @@ const RUN_ITEMS: LauncherItem[] = [
 const RUN_RECENT: RecentRun[] = [
   { line: "make deploy --env staging", cwd: "/home/op/app", at: 3, noPrompts: false, available: true },
   { line: "codex --dangerously-bypass-approvals-and-sandbox", cwd: null, at: 2, noPrompts: true, available: true },
-  { line: "journalctl --user -u collie.service --since today --no-pager", cwd: null, at: 1, noPrompts: false, available: true },
+  { line: "journalctl --user -u pastor.service --since today --no-pager", cwd: null, at: 1, noPrompts: false, available: true },
 ];
 
 /** A history entry as a bridge lists it while `[phone] run` is off. */
@@ -181,7 +181,7 @@ export function SettingsSection() {
       <Group title="Settings">
         <Card
           state="settings-solo-unpaired"
-          label="settings, solo collie, nothing paired"
+          label="settings, solo pastor, nothing paired"
           reach="tap the gear from the dashboard. With no device paired, the bridge answers no read and no write, and the Paired devices card offers the pairing verb instead of a list."
           note="The whole real route. Two things on it still reach the network on purpose — /api/config for the diagnostics build, and the browser's own push subscription — and both fail soft, so the page renders whole with no bridge."
           span={2}
@@ -194,7 +194,7 @@ export function SettingsSection() {
         <Card
           state="settings-lead-paired"
           label="settings, lead of a crew, three devices paired"
-          reach="pair a phone with `collie pair`, then open Settings on the lead. The Crew card appears only on a multi-machine roster; the device list names which row is the phone you are holding."
+          reach="pair a phone with `pastor pair`, then open Settings on the lead. The Crew card appears only on a multi-machine roster; the device list names which row is the phone you are holding."
           note="One Updates row, where three update cards used to stand. Its status line follows the footer chip's old precedence and its chevron says it opens a page."
           span={2}
         >
@@ -320,7 +320,7 @@ export function SettingsSection() {
           state="voice-paused"
           label="17: the hub, paused, this phone's copy is gone"
           reach="choose On this phone, then clear the site's storage, or let the browser evict the copy."
-          note="The card still names Whistle by Cactus Compute, on this phone, and says Paused. The choice stays on this phone. Collie does not switch to the host by itself (ADR 0096 Decision 12). Restore in the card is the one action; Change how speech works stands open, where choosing On your host is the person's other way out."
+          note="The card still names Whistle by Cactus Compute, on this phone, and says Paused. The choice stays on this phone. Pastor does not switch to the host by itself (ADR 0096 Decision 12). Restore in the card is the one action; Change how speech works stands open, where choosing On your host is the person's other way out."
         >
           <Stage height={1100}>
             <SpeechDemo whistle={{ ...WHISTLE_READY, hostEngine: true }} hostStt={HOST_WHISTLE} host={PROVIDER_WHISTLE} engine="phone" />
@@ -376,7 +376,7 @@ export function SettingsSection() {
         <Card
           state="voice-provider-codex-honest"
           label="11: Host speech, ChatGPT on, honest identity"
-          reach="choose ChatGPT subscription and tap I accept; the endpoint took Collie under its own name."
+          reach="choose ChatGPT subscription and tap I accept; the endpoint took Pastor under its own name."
           note="The identity line says what the recorded word means."
         >
           <Stage height={1000}>
@@ -387,7 +387,7 @@ export function SettingsSection() {
         <Card
           state="voice-provider-codex-fallback"
           label="12: Host speech, ChatGPT on, fallback identity"
-          reach="as 11, when the endpoint refused Collie's own name and accepted only the Codex CLI's headers."
+          reach="as 11, when the endpoint refused Pastor's own name and accepted only the Codex CLI's headers."
           note="The fallback is said in plain words. Off ends it."
         >
           <Stage height={1000}>
@@ -398,8 +398,8 @@ export function SettingsSection() {
         <Card
           state="voice-provider-terminal"
           label="13: Host speech, a speech service set up in a terminal"
-          reach="a host where the operator ran collie stt setup --provider openai-compatible, with a key."
-          note="In use, never changed here. The other choices are closed, and the commands that change it or turn it off are there to copy and run on the host. Each option still says how to set it up; Whistle and ChatGPT start with collie stt off (card 21)."
+          reach="a host where the operator ran pastor stt setup --provider openai-compatible, with a key."
+          note="In use, never changed here. The other choices are closed, and the commands that change it or turn it off are there to copy and run on the host. Each option still says how to set it up; Whistle and ChatGPT start with pastor stt off (card 21)."
         >
           <Stage height={1100}>
             <SpeechDemo
@@ -439,7 +439,7 @@ export function SettingsSection() {
           state="voice-provider-consent"
           label="16: Use your ChatGPT subscription?, the consent sheet"
           reach="tap ChatGPT subscription on Host speech. Nothing is sent to the host before I accept."
-          note="The host-wide line and the audio line, then the words collie stt setup prints, kept equal by a test. I accept sends the consent's id with the switch; the host then checks the sign-in and probes the endpoint, honest name first."
+          note="The host-wide line and the audio line, then the words pastor stt setup prints, kept equal by a test. I accept sends the consent's id with the switch; the host then checks the sign-in and probes the endpoint, honest name first."
         >
           <Stage height={760}>
             <CodexConsentSheet open codexBin={CODEX_BIN} busy={false} error={null} onAccept={() => {}} onCancel={() => {}} />
@@ -485,7 +485,7 @@ export function SettingsSection() {
           state="voice-provider-terminal-steps"
           label="21: Host speech, a terminal lock, Whistle's steps"
           reach="as 13, then tap How to set up under Whistle on your host."
-          note="The app never changes a provider set up with a key or a command (ADR 0097), so the steps start on the host: collie stt off, then collie stt whistle --host."
+          note="The app never changes a provider set up with a key or a command (ADR 0097), so the steps start on the host: pastor stt off, then pastor stt whistle --host."
         >
           <Stage height={1300}>
             <SpeechDemo
@@ -650,7 +650,7 @@ export function SettingsSection() {
         <Card
           state="new-page-pick-host"
           label="New page, crew, pick a machine"
-          reach="open the New page on a lead with peers. On a solo collie the machine select is not rendered at all."
+          reach="open the New page on a lead with peers. On a solo pastor the machine select is not rendered at all."
           note="The select is on the machine the start lands on: the one the list was already showing (?machine=workshop here), or the lead. A machine that cannot take writes stays in the list, disabled, with a word for why in brackets."
           span={2}
         >
@@ -696,7 +696,7 @@ export function SettingsSection() {
           state="new-page-add"
           label="Add your own, Agent, a recipe"
           reach="on the New page, tap Add your own under the Agent select. It shows when the machine's launchers.toml lets a phone add."
-          note="Pick the harness, tap the option chips (one per group), read the line Collie will type, and tap Add. The list below is every row a phone added on that machine, with Rename and Remove, and the operator's own rows locked. The recipes and rows are the chosen machine's own answer, so this card shows what the bridge behind the playground reports."
+          note="Pick the harness, tap the option chips (one per group), read the line Pastor will type, and tap Add. The list below is every row a phone added on that machine, with Rename and Remove, and the operator's own rows locked. The recipes and rows are the chosen machine's own answer, so this card shows what the bridge behind the playground reports."
           span={2}
         >
           <PhoneFrameCard height={760}>
@@ -723,7 +723,7 @@ export function SettingsSection() {
           note="The recipe, Write a command and how the operator turns it on, this machine's launchers.toml path with one example row and a Copy button, where phone rows live, and the docs link."
         >
           <Stage height={640}>
-            <LauncherHowSheet open onClose={() => {}} file="/home/op/.config/collie/launchers.toml" />
+            <LauncherHowSheet open onClose={() => {}} file="/home/op/.config/pastor/launchers.toml" />
           </Stage>
         </Card>
 
@@ -735,7 +735,7 @@ export function SettingsSection() {
         >
           <Stage height={520}>
             <NoPromptsSheet
-              ask={{ command: "claude --dangerously-skip-permissions", folder: "~/projects/collie", machine: "workshop" }}
+              ask={{ command: "claude --dangerously-skip-permissions", folder: "~/projects/pastor", machine: "workshop" }}
               onStart={() => {}}
               onCancel={() => {}}
             />

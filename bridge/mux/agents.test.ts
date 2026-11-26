@@ -10,7 +10,7 @@ import type { MuxPane } from "./types.ts";
 // import one another in production code, so this file imports across the boundary on purpose, as
 // crew-level-contract.test.ts does: the list must be exactly what the two readers answer to.
 
-describe("the contract's agent names are the names Collie's readers answer to", () => {
+describe("the contract's agent names are the names Pastor's readers answer to", () => {
   test("the list is the screen readers, the journal readers and the journal's aliases", () => {
     const readers = new Set([...registeredAgents(), ...KNOWN_HARNESS_NAMES, ...Object.keys(AGENT_ALIASES)]);
     expect([...MUX_AGENT_NAMES]).toEqual([...readers].toSorted());
@@ -46,11 +46,11 @@ describe("the conformance check applies the rule", () => {
 
   test("a harness id from the multiplexer's own vocabulary is a problem", () => {
     expect(agentNameProblems([pane("claude-code")])).toEqual([
-      `pane "p-claude-code" reports agent "claude-code", which is not a Collie harness name, so no screen reader or journal reader finds it (agents.ts)`,
+      `pane "p-claude-code" reports agent "claude-code", which is not a Pastor harness name, so no screen reader or journal reader finds it (agents.ts)`,
     ]);
   });
 
-  test("Collie's own names and a shell are not", () => {
+  test("Pastor's own names and a shell are not", () => {
     expect(agentNameProblems([pane("claude"), pane("pi"), pane("shell")])).toEqual([]);
   });
 

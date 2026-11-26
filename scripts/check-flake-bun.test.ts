@@ -114,7 +114,7 @@ describe("the Windows check runs the flake's Bun", () => {
     expect(budget("Bridge")).toBe(posixOnly.length + 1 + 21 + 36);
     expect(budget("Cli")).toBe(2 + 12);
     for (const name of posixOnly) expect(script).toContain(name);
-    expect(script).toContain("a 13 s WAV becomes text through a real child of this Collie");
+    expect(script).toContain("a 13 s WAV becomes text through a real child of this Pastor");
     expect(script).toContain("a child of this checkout's CLI turns 10.4 s of speech into text");
     expect(script).not.toContain("[int]$MaxSkips = ");
     expect(script).toContain("if ($skip -gt $skipBudget[$name])");

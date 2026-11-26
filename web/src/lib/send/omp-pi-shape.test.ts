@@ -53,7 +53,7 @@ describe("OMP 18.1.13 pi-shaped editor (live captures, 2026-09-07)", () => {
     expect(composerPrompt(screen)).toContain("한글 전송 테스트");
   });
   it("submits only after the real Korean draft capture verifies the typed message", async () => {
-    const text = "파일이나 도구를 사용하지 말고 COLLIE_E2E_OK 라고만 답해 주세요.";
+    const text = "파일이나 도구를 사용하지 말고 PASTOR_E2E_OK 라고만 답해 주세요.";
     const captured = readFileSync(join(dir, "korean-draft.txt"), "utf8");
     expect(extractInputDraft(parse(captured))).toBe(text);
     let screen = idle;
@@ -131,7 +131,7 @@ describe("OMP 18.8 pi-shaped editor with the slash palette up (live captures, 20
   });
 
   it("sends `/resume` — types it, sees the palette screen, and only then fires the submit key", async () => {
-    // The 2026-10-07 report reproduced end to end: Collie types the harness bar's `/resume` into an
+    // The 2026-10-07 report reproduced end to end: Pastor types the harness bar's `/resume` into an
     // omp pane, omp answers with the palette, and the guard's verification read has to find the text
     // there. Before this shape was recognised the read found no composer, no submit key ever went
     // out, and the command sat on the filter row.

@@ -237,7 +237,7 @@ describe("the merged allowlist", () => {
       async () => (await readMerged(f.sources)).rows,
       null,
       { list: () => Promise.resolve([{ id: "claude", label: "Claude Code", found: true }]) },
-      { merged: () => readMerged(f.sources), file: "/home/op/.config/herdr/plugins/config/herdr.collie/launchers.toml" },
+      { merged: () => readMerged(f.sources), file: "/home/op/.config/herdr/plugins/config/ad3.pastor/launchers.toml" },
     );
     // SAFETY: the route answers a LaunchersResponse as JSON.
     const body = (await res.json()) as LaunchersResponse;

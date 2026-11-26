@@ -219,7 +219,7 @@ describe("sendGuardedReply", () => {
   it("verifies a long Grok draft without treating the input scrollbar as message text", async () => {
     const text = Array.from(
       { length: 40 },
-      (_, i) => `Collie Grok probe line ${String(i + 1).padStart(2, "0")}: 繁體中文測試，不執行任何工具。`,
+      (_, i) => `Pastor Grok probe line ${String(i + 1).padStart(2, "0")}: 繁體中文測試，不執行任何工具。`,
     ).join("\n");
     const calls = harness(() =>
       fixtureText(calls.length === 0 ? "grok--fresh-idle.txt" : "grok--draft-scrollbar.txt"),
@@ -411,7 +411,7 @@ describe("sendGuardedReply", () => {
   // prompt" into an otherwise empty box, faint (SGR 2). `draftCarriesSend` accepts any draft whose
   // visible characters appear contiguously in the sent text, so a suggestion that happens to be an
   // 8+-character substring of the message would satisfy the guard against a box our text never
-  // reached — Collie would fire the submit key and report `sent` for a message that was lost.
+  // reached — Pastor would fire the submit key and report `sent` for a message that was lost.
   //
   // The defense is that the ghost never becomes a draft at all: the adapter classifies it by STYLE
   // and returns null, so `draftCarriesSend` is never handed one to be fooled by. This drives the whole
@@ -581,7 +581,7 @@ describe("sendGuardedReply", () => {
   // refused at, because at a password prompt "a menu or dialog is probably up" sends the operator
   // looking for a dialog to answer and waiting for an echo that is never coming.
   it("#103: names the password prompt it refused at, and still types nothing", async () => {
-    const calls = harness(() => "$ sudo systemctl restart collie\n[sudo] password for altan:");
+    const calls = harness(() => "$ sudo systemctl restart pastor\n[sudo] password for altan:");
 
     const out = await sendGuardedReply({
       paneId: "w1:p1",

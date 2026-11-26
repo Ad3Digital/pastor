@@ -4,7 +4,7 @@ import { parseMarker } from "../crew/staleness.ts";
 import { DURABLE_LEAD_MINIMUM, leadIsOld, OldLeadNotice } from "./old-lead.ts";
 
 // M50 spec 14: a durable peer names a lead below 1.21.0 once, from the release header the lead's sweep
-// sends, and keeps the release for the runtime marker that `collie doctor` reads.
+// sends, and keeps the release for the runtime marker that `pastor doctor` reads.
 describe("a durable peer and an old lead", () => {
   test("old means below 1.21.0; no header is never old", () => {
     expect(DURABLE_LEAD_MINIMUM).toBe("1.21.0");

@@ -226,7 +226,7 @@ describe("reset", () => {
 /** The body of a plain events read, as the program sent it. */
 async function fetchEvents(program: FakeDurableProgram, paneId: string, after: number, epoch: string): Promise<string> {
   const route = `/session/v1/pane/${paneId}/events?after=${String(after)}&epoch=${epoch}`;
-  const response = await program.rawGet(route, { "x-collie-session": "1" });
+  const response = await program.rawGet(route, { "x-pastor-session": "1" });
   return response.text();
 }
 
@@ -417,7 +417,7 @@ describe("where the events go", () => {
   test.skipIf(SOCKET_ONLY_SKIP)("the registry's factory builds the pane log from the target's log folder: one file per pane, even for a pane with no events", async () => {
     const program = await FakeDurableProgram.start();
     programs.push(program);
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-factory-"));
+    const dir = await mkdtemp(join(tmpdir(), "pastor-durable-factory-"));
     try {
       const adapter = durableMuxFactory.create({
         endpoint: "",

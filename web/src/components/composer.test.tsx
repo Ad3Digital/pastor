@@ -194,7 +194,7 @@ describe("Composer — send", () => {
 
     // The status names the key the way the Keys keypad names it, and the card is where it is.
     await waitFor(() =>
-      expect(screen.getByTestId("status")).toHaveTextContent(/Collie cannot read this dialog/i),
+      expect(screen.getByTestId("status")).toHaveTextContent(/Pastor cannot read this dialog/i),
     );
     expect(screen.getByTestId("status")).toHaveTextContent(/Esc is on the card/);
     expect(calls).toEqual([]);
@@ -214,7 +214,7 @@ describe("Composer — send", () => {
     await user.type(box, "carry on");
     await user.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() =>
-      expect(screen.getByTestId("status")).toHaveTextContent(/Collie cannot read this dialog/i),
+      expect(screen.getByTestId("status")).toHaveTextContent(/Pastor cannot read this dialog/i),
     );
 
     await user.click(screen.getByRole("button", { name: /type anyway/i }));
@@ -1388,7 +1388,7 @@ describe("Composer — oversize draft notice", () => {
 // at it for three days. These pin the two halves of the answer — say what it is, and get the operator
 // into the mode that works without leaving the secret behind.
 describe("Composer — password prompt", () => {
-  const SUDO = "$ sudo systemctl restart collie\n[sudo] password for altan:";
+  const SUDO = "$ sudo systemctl restart pastor\n[sudo] password for altan:";
 
   function serveSudo(calls: string[]) {
     server.use(
@@ -1435,7 +1435,7 @@ describe("Composer — password prompt", () => {
     await user.type(box, "hunter2hunter2");
     // The write-through has already put the secret in the 48h store, before any send was attempted —
     // the leak #103 asked about. Asserted here so the assertion below isn't vacuously true.
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).toContain("hunter2hunter2");
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).toContain("hunter2hunter2");
 
     await user.click(screen.getByRole("button", { name: "Send" }));
     await user.click(await screen.findByRole("button", { name: /use type/i }));
@@ -1445,7 +1445,7 @@ describe("Composer — password prompt", () => {
     await waitFor(() =>
       expect(screen.getByPlaceholderText(/type into the terminal/i)).toHaveValue(""),
     );
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).toBeNull();
     expectLeaving(screen.queryByRole("button", { name: /use type/i }));
     expect(calls).toEqual([]); // nothing was ever typed by the reply path
   });
@@ -1461,11 +1461,11 @@ describe("Composer — password prompt", () => {
     const box = screen.getByPlaceholderText(/type a reply/i);
 
     await user.type(box, "hunter2hunter2");
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).toContain("hunter2hunter2");
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).toContain("hunter2hunter2");
 
     await user.click(screen.getByRole("button", { name: "Send" }));
     await screen.findByRole("button", { name: /use type/i });
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).toBeNull();
     // Through the store's own reader, not just the storage key: the draft store has a second,
     // in-memory tier (lib/drafts.ts) and a secret surviving in a tier this assertion cannot see
     // would be #103 all over again, invisibly. clearDraft must empty both.
@@ -1475,7 +1475,7 @@ describe("Composer — password prompt", () => {
     // that happened while the notice was up was never stored either.
     await user.click(screen.getByRole("button", { name: /dismiss password-prompt notice/i }));
     expect(box).toHaveValue("hunter2hunter2");
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).toBeNull();
   });
 });
 
@@ -1656,7 +1656,7 @@ describe("Composer — the machine opens the actions belt, and no band stands ab
     const scrollerClass = actions().querySelector(".overflow-x-auto")!.className;
     expect(scrollerClass).toMatch(/(?:^|\s)pl-3(?=\s|$)/);
     expect(scrollerClass).toMatch(/(?:^|\s)pr-3(?=\s|$)/);
-    // The group's GUTTER is the scroller's and nothing else: with the capsule gone, Collie's
+    // The group's GUTTER is the scroller's and nothing else: with the capsule gone, Pastor's
     // controls stand on the belt's own ground and own no padding at all.
     expect(row().className).not.toMatch(/(?:^|\s)px-/);
   });
@@ -2165,7 +2165,7 @@ describe("Composer — no draft preview while its own send is in flight", () => 
     const user = userEvent.setup();
     const callLog: string[] = [];
     const { release } = holdTypeCall(callLog);
-    const staged = "schau mal /home/andiw/.local/state/collie/uploads/w4_p2-abc123.jpg";
+    const staged = "schau mal /home/andiw/.local/state/pastor/uploads/w4_p2-abc123.jpg";
     renderFlight(staged);
     await user.type(screen.getByPlaceholderText(/type a reply/i), staged);
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -2377,7 +2377,7 @@ describe("Composer — attachment limits published by this bridge", () => {
     const fileInput = screen.getByTestId("attach-files") as HTMLInputElement;
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("Collie can't attach app.rb."));
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("Pastor can't attach app.rb."));
     expect(uploadCalls).toBe(0);
   });
 });
@@ -2981,7 +2981,7 @@ describe("Composer — a long upload path cannot widen the field", () => {
   // The path no longer reaches the field at all (ADR 0060): the chip holds it and the marker
   // holds its place. The two classes above still matter for a path the operator types or pastes.
   it("keeps an uploaded path out of the field: the marker stands in for it", async () => {
-    const path = "/home/operator/.local/share/collie/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
+    const path = "/home/operator/.local/share/pastor/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
     server.use(http.post(/\/api\/pane\/[^/]+\/upload$/, () => HttpResponse.json({ ok: true, path })));
     renderComposer();
     const box = screen.getByPlaceholderText(/type a reply/i);
@@ -3517,7 +3517,7 @@ describe("Composer — an attachment is a chip (ADR 0060)", () => {
   });
 
   it("an old text-only draft still loads, with no chips", () => {
-    localStorage.setItem("collie:draft:default:w1:p1", JSON.stringify({ text: "from before", at: Date.now() }));
+    localStorage.setItem("pastor:draft:default:w1:p1", JSON.stringify({ text: "from before", at: Date.now() }));
     renderComposer();
     expect(field()).toHaveValue("from before");
     expect(screen.queryByRole("list", { name: "Attachments" })).toBeNull();

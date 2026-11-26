@@ -2,7 +2,7 @@
 
 `bun run canary` starts claude, codex, opencode and pi, and grok, hermes, agy, omp and muse when `--agent`
 names them, in a Herdr session of its own, types drafts
-and a few real sends, and checks with Collie's own code what the phone would read and whether each
+and a few real sends, and checks with Pastor's own code what the phone would read and whether each
 send lands. It then reads the session each agent WROTE, with the bridge's own journal adapter, and
 fails on a row or content type the reader does not recognise. With `--dialogs` it also opens real
 dialogs and sends to a busy agent, and with `--scenario options` it starts each New-sheet option once.
@@ -20,7 +20,7 @@ bun run canary --readers /tmp/c1131     # judge with another checkout's readers
 ```
 
 Exit 1 means a scenario failed. Captures and `summary.json` go to
-`/tmp/collie-canary/<run-id>/<agent>-<version>/`. They are never copied into `web/src/fixtures/`.
+`/tmp/pastor-canary/<run-id>/<agent>-<version>/`. They are never copied into `web/src/fixtures/`.
 
 grok, hermes, agy, omp and muse run only when `--agent` names them, because their sends spend each
 vendor's own quota. The `options` scenario is never part of a default run: it starts the agent once
@@ -30,7 +30,7 @@ passes when Herdr shows the agent up, idle or asking a question first. It makes 
 ### Another provider: `--via`
 
 ```sh
-COLLIE_GROK_ROOT=/path/to/grok-home/sessions \
+PASTOR_GROK_ROOT=/path/to/grok-home/sessions \
   bun run canary --agent claude,grok --via /path/to/launchers
 ```
 
@@ -45,8 +45,8 @@ in `exec <agent> "$@"`, so Herdr sees the agent itself. It covers the six defaul
 `dialogs`, `busy` and `options` start their own lines.
 
 A launcher that moves the agent's home (`GROK_HOME`, `PI_CODING_AGENT_DIR`, `HOME`) moves its log
-too. Point the journal at it with the bridge's own override for that agent, `COLLIE_GROK_ROOT`,
-`COLLIE_PI_ROOT` or `COLLIE_MUSE_ROOT` (a comma list), in the canary's environment.
+too. Point the journal at it with the bridge's own override for that agent, `PASTOR_GROK_ROOT`,
+`PASTOR_PI_ROOT` or `PASTOR_MUSE_ROOT` (a comma list), in the canary's environment.
 
 ## What it checks
 
@@ -116,11 +116,11 @@ OpenCode restarts. Plan approval is read and never answered. A dialog the model 
 
 ## Verdicts
 
-Whether a screen was reached is judged without Collie: Herdr's agent state and the screen's plain
-text. What the phone makes of that screen is judged with Collie's readers only.
+Whether a screen was reached is judged without Pastor: Herdr's agent state and the screen's plain
+text. What the phone makes of that screen is judged with Pastor's readers only.
 
-- `pass`: the screen came, and Collie read it right.
-- `fail`: the screen came, and Collie read it wrong. The run exits 1.
+- `pass`: the screen came, and Pastor read it right.
+- `fail`: the screen came, and Pastor read it wrong. The run exits 1.
 - `not-reached`: the screen never came in time, for example a model turn that did not finish. It
   is never a pass, and it never fails the run.
 - `known-gap`: a fail listed in `known-gaps.json`, with its reason and the issue, spec or ADR that
@@ -139,8 +139,8 @@ facts, it does not decide which readers an agent has.
 
 ## How it stays off the operator's panes
 
-- **Its own session.** The canary starts `herdr --session collie-canary server` and refuses to
-  start when a session of that name exists. Every command carries `--session collie-canary` and
+- **Its own session.** The canary starts `herdr --session pastor-canary server` and refuses to
+  start when a session of that name exists. Every command carries `--session pastor-canary` and
   `HERDR_SOCKET_PATH` set to that session's socket. The inherited `HERDR_*` variables are removed.
 - **An owned-id check.** Every pane and workspace command checks the id against the ids this run
   created. The send path refuses any other pane too.
@@ -158,7 +158,7 @@ own `readPane`, and `POST /api/pane/:id/reply` with the bridge's own `replyPane`
 `bridge/server.ts`. The shim builds a Herdr adapter on the canary session's socket. So there is no
 server, no port and no paired device. Any other route throws, because a new route means the send
 path changed. The bridge's audit lines for each send are kept in `summary.json`, with the device
-name `collie-canary`.
+name `pastor-canary`.
 
 ## Proof against 1.13.1
 
@@ -208,7 +208,7 @@ its client reported. So the canary attaches one client of its own (`client.ts`) 
   question on screen.
 - A plain folder inside a trusted git repo inherits Codex trust; a nested git repo does not.
 
-The project folder is always `/tmp/collie-canary-project`, emptied and rebuilt each run, so the
+The project folder is always `/tmp/pastor-canary-project`, emptied and rebuilt each run, so the
 agents keep ONE trust entry for it in `~/.codex/config.toml` and ONE project entry in
 `~/.claude.json`, not one per run. The canary does not edit those files. After the first run the
 folder is trusted, so the trust question no longer appears; the canary still answers it when it does.

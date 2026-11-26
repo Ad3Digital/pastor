@@ -23,7 +23,7 @@ import { join } from "node:path";
 // THE TOLERANCE CLOSES ON ITS OWN (M43, decided 2026-10-02). It is closed, so a missing Windows asset
 // stops the release like any other row, from the first of these two:
 //   * the day {@link WINDOWS_ASSET_MANDATORY_FROM}, read in UTC;
-//   * an earlier release, neither a draft nor a prerelease, that carries a `collie-*-windows-x64.zip`.
+//   * an earlier release, neither a draft nor a prerelease, that carries a `pastor-*-windows-x64.zip`.
 //     The script asks the releases API with `gh` and the job's `GH_TOKEN`, as the gate job does. A
 //     prerelease does not count, so an rc rehearsal that ships the zip leaves the next rehearsal free
 //     to test the failure.
@@ -72,8 +72,8 @@ export function windowsVerdict(set: WindowsSet, result: string, optional: boolea
 export function windowsNotes(present: boolean): string {
   return present
     ? [
-        "Windows zip: experimental and unsigned. Install it with `irm https://colliepwa.dev/install.ps1 | iex`.",
-        "The setup guide is at https://github.com/AltanS/collie/blob/main/docs/windows.md.",
+        "Windows zip: experimental and unsigned. Install it with `irm https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.ps1 | iex`.",
+        "The setup guide is at https://github.com/Ad3Digital/pastor/blob/main/docs/windows.md.",
         "Windows 11 Smart App Control may block it. Linux and macOS are not affected.",
       ].join("\n")
     : "The Windows zip was not built for this release.";
@@ -91,7 +91,7 @@ export type PriorWindowsRelease =
   | { readonly kind: "unknown"; readonly reason: string };
 
 /** The repository variable that opens the tolerance by hand. */
-export const OVERRIDE_VARIABLE = "COLLIE_WINDOWS_ASSET_OVERRIDE";
+export const OVERRIDE_VARIABLE = "PASTOR_WINDOWS_ASSET_OVERRIDE";
 
 export interface Tolerance {
   /** True while a missing Windows asset only warns. */
@@ -143,7 +143,7 @@ export function windowsTolerance(now: Date, ask: () => PriorWindowsRelease, over
 }
 
 /** The asset name of a Windows zip, in any version. */
-const WINDOWS_ZIP = /^collie-.+-windows-x64\.zip$/;
+const WINDOWS_ZIP = /^pastor-.+-windows-x64\.zip$/;
 
 /**
  * The jq filter `gh api` runs over each page: one tab-separated line per release, the tag, `draft`,
@@ -238,7 +238,7 @@ export interface WindowsFileNames {
 }
 
 export function windowsFiles(version: string): WindowsFileNames {
-  const zip = `collie-${version}-windows-x64.zip`;
+  const zip = `pastor-${version}-windows-x64.zip`;
   return { zip, sidecar: `${zip}.sha256`, entry: "windows-x64.artifact.json" };
 }
 

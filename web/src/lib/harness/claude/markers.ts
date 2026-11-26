@@ -164,7 +164,7 @@ export function isInputBoxTopBorder(text: string): boolean {
 // A long draft WRAPS inside the input box: the "❯ …" prompt line plus continuation lines (indented,
 // no leading "❯") before the bottom border. We scan up past those to find the prompt, bounded by
 // MAX_DRAFT_LINES — but as DEFENSE-IN-DEPTH, not a correctness bound. The caller's read window
-// defaults to 200 lines (COLLIE_READ_LINES, bridge/config.ts) and is client-requestable up to
+// defaults to 200 lines (PASTOR_READ_LINES, bridge/config.ts) and is client-requestable up to
 // MAX_READ_LINES (10,000, bridge/server.ts), so an unbounded walk would let a stray line that happens
 // to look like a border (see isBoxBorder in markers.ts) pair up with an unrelated quoted "❯" line
 // dozens (or thousands) of lines further up to complete a full (bogus) box shape — the cap, not the

@@ -5,13 +5,13 @@ import { fakeFiles, posixKey } from "./fakes.ts";
 
 describe("posixKey", () => {
   test("folds a Windows path to the POSIX key a fake filesystem stores", () => {
-    expect(posixKey("C:\\opt\\collie\\bin\\collie.exe", hostFor("win32"))).toBe("/opt/collie/bin/collie.exe");
-    expect(posixKey("\\opt\\collie", hostFor("win32"))).toBe("/opt/collie");
+    expect(posixKey("C:\\opt\\pastor\\bin\\pastor.exe", hostFor("win32"))).toBe("/opt/pastor/bin/pastor.exe");
+    expect(posixKey("\\opt\\pastor", hostFor("win32"))).toBe("/opt/pastor");
   });
 
   test("without a host it folds, so a Windows host pinned on Linux still finds its files", () => {
-    expect(posixKey("C:\\opt\\collie")).toBe("/opt/collie");
-    expect(posixKey("/opt/collie")).toBe("/opt/collie");
+    expect(posixKey("C:\\opt\\pastor")).toBe("/opt/pastor");
+    expect(posixKey("/opt/pastor")).toBe("/opt/pastor");
   });
 
   test("leaves a path alone off Windows, where a backslash is a legal name character", () => {
@@ -21,8 +21,8 @@ describe("posixKey", () => {
 
 describe("fakeFiles", () => {
   test("answers a path seeded by its POSIX key", () => {
-    const files = fakeFiles({ "/opt/collie/VERSION": "1.0.0\n" });
-    expect(files.read("/opt/collie/VERSION")).toBe("1.0.0\n");
-    expect(files.exists("/opt/collie")).toBe(true);
+    const files = fakeFiles({ "/opt/pastor/VERSION": "1.0.0\n" });
+    expect(files.read("/opt/pastor/VERSION")).toBe("1.0.0\n");
+    expect(files.exists("/opt/pastor")).toBe(true);
   });
 });

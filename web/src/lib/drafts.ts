@@ -14,7 +14,7 @@
 
 import { normalizeScope, type Scope } from "./scope";
 
-const PREFIX = "collie:draft:";
+const PREFIX = "pastor:draft:";
 
 /** Drafts older than this are pruned on first use — an ancient half-thought must never resurface. */
 const MAX_AGE_MS = 48 * 60 * 60 * 1000;

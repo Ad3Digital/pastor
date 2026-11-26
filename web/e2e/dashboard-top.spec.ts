@@ -67,12 +67,12 @@ for (const width of [360, 390, 412]) {
 test("the workspace select shows one workspace alone and the order select re-ranks, both remembered", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "webapp" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "collie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "pastor" })).toBeVisible();
 
-  const collie = await workspace(page).getByRole("option", { name: /^collie/u }).textContent();
-  await workspace(page).selectOption({ label: collie! });
+  const pastor = await workspace(page).getByRole("option", { name: /^pastor/u }).textContent();
+  await workspace(page).selectOption({ label: pastor! });
   await expect(page.getByRole("heading", { name: "webapp" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "collie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "pastor" })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "webapp" })).toHaveCount(0);
 

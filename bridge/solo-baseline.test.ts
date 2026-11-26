@@ -43,7 +43,7 @@ import type {
 // SOLO ZERO-TAX BASELINE — you are not allowed to tax a solo user.
 //
 // Crew federation (M3/M4) is being built on top of this code. The contract in CREW_PROTOCOL.md §11
-// says that with ZERO peers enrolled, Collie's observable behaviour stays byte-for-byte what it is
+// says that with ZERO peers enrolled, Pastor's observable behaviour stays byte-for-byte what it is
 // TODAY: no added snapshot field, no shifted ETag, no new route, no new state file, no new env key,
 // no changed notification tag or audit line.
 //
@@ -53,7 +53,7 @@ import type {
 // and the change either has to become peer-conditional or the contract has to be renegotiated.
 //
 // REGENERATING A GOLDEN IS A DELIBERATE ACT:
-//   COLLIE_REGEN_SOLO_BASELINE=1 bun test bridge/solo-baseline.test.ts
+//   PASTOR_REGEN_SOLO_BASELINE=1 bun test bridge/solo-baseline.test.ts
 // rewrites the fixtures under bridge/fixtures/solo-baseline/. Any PR that does so MUST say so in its
 // description, with the reason and the §11 row it renegotiates. Silent regeneration defeats the test.
 //
@@ -66,7 +66,7 @@ import type {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FIXTURES = join(import.meta.dir, "fixtures", "solo-baseline");
-const REGEN = process.env.COLLIE_REGEN_SOLO_BASELINE === "1";
+const REGEN = process.env.PASTOR_REGEN_SOLO_BASELINE === "1";
 
 function golden(name: string): string {
   // A Windows checkout may turn the committed LF into CRLF (core.autocrlf); the bytes the code
@@ -74,7 +74,7 @@ function golden(name: string): string {
   return readFileSync(join(FIXTURES, name), "utf8").replace(/\r\n/g, "\n");
 }
 
-/** Compare against a committed golden, or rewrite it under COLLIE_REGEN_SOLO_BASELINE=1. */
+/** Compare against a committed golden, or rewrite it under PASTOR_REGEN_SOLO_BASELINE=1. */
 function expectGolden(name: string, actual: string): void {
   if (REGEN) {
     writeFileSync(join(FIXTURES, name), actual);
@@ -93,12 +93,12 @@ const TS = 1_754_000_000_000;
 const claudePane: AgentView = {
   paneId: "w1:p1",
   workspaceId: "w1",
-  workspaceLabel: "collie",
+  workspaceLabel: "pastor",
   workspaceNumber: 1,
   tabId: "w1:t1",
   agent: "claude",
   status: "blocked",
-  cwd: "/home/you/playground/collie",
+  cwd: "/home/you/playground/pastor",
   focused: true,
   kind: "agent",
   paneLabel: "guard work",
@@ -106,7 +106,7 @@ const claudePane: AgentView = {
   // Server-side only: toPaneWire must strip this to `hasSession` and never leak the value.
   agentSession: { kind: "id", value: "abc-123" },
   readableLines: 48,
-  tabLabel: "collie",
+  tabLabel: "pastor",
   lastActiveAt: TS - 60_000,
   lastSeenAt: TS - 300_000,
 };
@@ -114,12 +114,12 @@ const claudePane: AgentView = {
 const codexPane: AgentView = {
   paneId: "w1:p2",
   workspaceId: "w1",
-  workspaceLabel: "collie",
+  workspaceLabel: "pastor",
   workspaceNumber: 1,
   tabId: "w1:t1",
   agent: "codex",
   status: "working",
-  cwd: "/home/you/playground/collie",
+  cwd: "/home/you/playground/pastor",
   focused: false,
   kind: "agent",
 };
@@ -127,7 +127,7 @@ const codexPane: AgentView = {
 const shellPane: AgentView = {
   paneId: "w1:p3",
   workspaceId: "w1",
-  workspaceLabel: "collie",
+  workspaceLabel: "pastor",
   workspaceNumber: 1,
   tabId: "w1:t1",
   agent: "shell",
@@ -141,7 +141,7 @@ const workspaces: WorkspaceView[] = [
   {
     workspaceId: "w1",
     number: 1,
-    label: "collie",
+    label: "pastor",
     focused: true,
     activeTabId: "w1:t1",
     tabCount: 1,
@@ -150,7 +150,7 @@ const workspaces: WorkspaceView[] = [
 ];
 
 const tabs: TabView[] = [
-  { tabId: "w1:t1", workspaceId: "w1", number: 1, label: "collie", focused: true, paneCount: 3 },
+  { tabId: "w1:t1", workspaceId: "w1", number: 1, label: "pastor", focused: true, paneCount: 3 },
 ];
 
 const engineSnapshot: EngineSnapshot = {
@@ -222,7 +222,7 @@ function soloSnapshot(registry: SessionRegistry): SnapshotResponse {
   const { agents, shellPanes, workspaces: ws, tabs: tb, bridge } = registry.get()!.engine.current();
   return {
     bridge,
-    // device: omitted — COLLIE_DEVICE_HEADER unset is the default deployment.
+    // device: omitted — PASTOR_DEVICE_HEADER unset is the default deployment.
     agents: agents.map((p) => toPaneWire(p, hasJournal)),
     shellPanes: shellPanes.map((p) => toPaneWire(p, hasJournal)),
     workspaces: ws,
@@ -358,7 +358,7 @@ const UPDATE_STATUS_KEYS = {
   // Every release newer than the running one (M15/05) — the card lists what one update folds in.
   newerVersions: true,
   // The package manager's own upgrade command (M17/02). Optional: only a packaged install under a
-  // prefix Collie recognises has one to name.
+  // prefix Pastor recognises has one to name.
   packageCommand: true,
   // The files on disk stopped naming the version this process runs (M17/02), and the command that
   // clears it — the latter optional, because most installs never reach the state.
@@ -502,7 +502,7 @@ describe("solo zero-tax — wire shapes carry no crew dimension", () => {
       "majorUrl",
       "newerVersions",
       // The package manager's own upgrade command (M17/02) — optional, and present only on a
-      // packaged install under a prefix Collie recognises.
+      // packaged install under a prefix Pastor recognises.
       "packageCommand",
       "releaseAvailable",
       // The command that clears the restart, optional beside the flag that raises it (M17/02).
@@ -634,7 +634,7 @@ describe("solo zero-tax — routes", () => {
       // journal named the file (CREW_PROTOCOL.md §9.1).
       "/^\\/api\\/blobs\\/([^/]+)$/",
       // Machines (ADR 0084): one machine's day of minutes, and its alert rules. A lead and a solo
-      // collie answer for every machine they keep watch over; a peer 404s (`crew.not_lead`), and none
+      // pastor answer for every machine they keep watch over; a peer 404s (`crew.not_lead`), and none
       // is forwardable — `bridge/crew/router.test.ts` pins all three as 404 across a link.
       "/^\\/api\\/machines\\/([^/]+)\\/(history|alerts)$/",
       // `changes` is the Changes view (ADR 0065): read-only git over the pane's folder, read-gated
@@ -654,6 +654,9 @@ describe("solo zero-tax — routes", () => {
       // One picture under the Files root, as its bytes (ADR 0090): the Files read's checks and gate,
       // the type read off the bytes, forwarded to the owning member like `files`.
       "/^\\/api\\/pane\\/([^/]+)\\/files\\/image$/",
+      // A live voice call on one Codex or OMP pane (bridge/live/): session-scoped and device-gated
+      // like the pane family beside it.
+      "/^\\/api\\/pane\\/([^/]+)\\/live$/",
       // The Whistle model as bytes (ADR 0096 Decision 9): a content-addressed READ, the hash compared
       // with the held file's and never made into a path. Lead-local, not forwardable.
       "/^\\/api\\/stt\\/model\\/([^/]+)$/",
@@ -729,7 +732,7 @@ describe("solo zero-tax — routes", () => {
       // Machines (ADR 0084): the list with each machine's latest sample. A read, gated as one.
       "/api/machines",
       // The prompt-cache watch list (M28/03, ADR 0042). Three SOLO routes in the notifications family,
-      // named here rather than exempted: the preference lives on the collie holding the subscription, so
+      // named here rather than exempted: the preference lives on the pastor holding the subscription, so
       // none of the three is forwardable and `bridge/crew/router.test.ts` pins all three as 404 across a
       // link. A solo instance registers them and answers about its own panes.
       "/api/notifications/cache-watch",
@@ -769,7 +772,7 @@ describe("solo zero-tax — routes", () => {
       // Starting an update from the phone (M15/05) — a SOLO route that legitimately extends this
       // list, named here rather than exempted. Write-gated through the same closure a send rides,
       // and it registers no crew sibling: a peer is levelled from the lead's terminal
-      // (`collie crew update`), never over the link (ADR 0016).
+      // (`pastor crew update`), never over the link (ADR 0016).
       "/api/update",
       "/api/update/check",
       // Closing the update band (M17/08) — solo, no crew sibling: it writes the lead's own update
@@ -923,70 +926,70 @@ describe("solo zero-tax — config", () => {
     // §11 "Poll cadence". Env is not scrubbed here (a deployment may override), so assert the
     // defaults from the source rather than from a live env.
     const src = readFileSync(join(import.meta.dir, "config.ts"), "utf8");
-    expect(src).toContain('envInt("COLLIE_POLL_MS", 1500');
-    expect(src).toContain('envInt("COLLIE_POLL_IDLE_MS", 12_000');
+    expect(src).toContain('envInt("PASTOR_POLL_MS", 1500');
+    expect(src).toContain('envInt("PASTOR_POLL_IDLE_MS", 12_000');
   });
 
   // Read from `bridge/config-schema.ts` rather than by grepping `config.ts`'s source, because the
   // schema is now the single declaration of what every setting is (ADR 0040). The rows that carry a
   // `configField` are exactly the settings `loadConfig` resolves, which is the list §11 pins. A
-  // CONFIG FILE ADDS NO ENV KEY, so this list is the 38 names it has always been plus `COLLIE_BASE_PATH` (ADR 0052), `COLLIE_MUSE_ROOT`, `COLLIE_OPENCLAW_ROOT` (#401) and the two `COLLIE_ACCESS_*` keys (ADR 0081) — the two
-  // `COLLIE_MUX_ENDPOINT_<NAME>` rows collapse back to the prefix the old grep saw, because the env
+  // CONFIG FILE ADDS NO ENV KEY, so this list is the 38 names it has always been plus `PASTOR_BASE_PATH` (ADR 0052), `PASTOR_MUSE_ROOT`, `PASTOR_OPENCLAW_ROOT` (#401) and the two `PASTOR_ACCESS_*` keys (ADR 0081) — the two
+  // `PASTOR_MUX_ENDPOINT_<NAME>` rows collapse back to the prefix the old grep saw, because the env
   // name is built at the call site and the file key must not be.
-  test("the schema names exactly today's COLLIE_* env keys — no crew enrollment key", () => {
+  test("the schema names exactly today's PASTOR_* env keys — no crew enrollment key", () => {
     const keys = [
       ...new Set(
-        CONFIG_SETTINGS.filter((s) => s.configField !== undefined && s.env.startsWith("COLLIE_")).map(
-          (s) => (s.env.startsWith("COLLIE_MUX_ENDPOINT_") ? "COLLIE_MUX_ENDPOINT_" : s.env),
+        CONFIG_SETTINGS.filter((s) => s.configField !== undefined && s.env.startsWith("PASTOR_")).map(
+          (s) => (s.env.startsWith("PASTOR_MUX_ENDPOINT_") ? "PASTOR_MUX_ENDPOINT_" : s.env),
         ),
       ),
     ].toSorted();
     expect(keys).toEqual([
-      "COLLIE_ACCESS_AUD",
-      "COLLIE_ACCESS_TEAM",
-      "COLLIE_ALLOWED_ORIGINS",
-      "COLLIE_ALLOW_ANY_HOST",
-      "COLLIE_ALLOW_NON_LOOPBACK_BIND",
-      "COLLIE_AUDIT_CONTENT",
-      "COLLIE_BASE_PATH",
-      "COLLIE_CACHE_WARN_SECONDS",
-      "COLLIE_CODEX_ROOT",
-      "COLLIE_DEVICE_ALLOWLIST",
-      "COLLIE_DEVICE_HEADER",
-      "COLLIE_GROK_ROOT",
-      "COLLIE_HERDR_DIAL",
-      "COLLIE_HERMES_ROOT",
-      "COLLIE_HOST",
-      "COLLIE_MAX_UPLOAD_MB",
-      "COLLIE_MULTI_SESSION",
-      "COLLIE_MUSE_ROOT",
-      "COLLIE_MUX",
-      "COLLIE_MUX_ENDPOINT_",
-      "COLLIE_NOTIFY_DELAY_MS",
-      "COLLIE_OPENCLAW_ROOT",
-      "COLLIE_OPENCODE_ROOT",
-      "COLLIE_PI_ROOT",
-      "COLLIE_POLL_IDLE_MS",
-      "COLLIE_POLL_MS",
-      "COLLIE_PORT",
-      "COLLIE_PUBLIC_HOSTS",
-      "COLLIE_READ_LINES",
-      "COLLIE_REDACT",
-      "COLLIE_SKIP_SERVE",
-      "COLLIE_STATE_DIR",
-      "COLLIE_SUBMIT_KEYS",
-      "COLLIE_TAILSCALE_HOSTS",
-      "COLLIE_TERN_BIN",
-      "COLLIE_TMUX_BIN",
-      "COLLIE_TRANSCRIPT",
-      "COLLIE_TRANSCRIPT_ROOT",
-      "COLLIE_TRUSTED_USER",
-      "COLLIE_TRUSTED_USER_OPTIONAL",
-      "COLLIE_UPLOAD_EXTRA_TYPES",
-      "COLLIE_VAPID_PRIVATE",
-      "COLLIE_VAPID_PUBLIC",
-      "COLLIE_VAPID_SUBJECT",
-      "COLLIE_ZELLIJ_BIN",
+      "PASTOR_ACCESS_AUD",
+      "PASTOR_ACCESS_TEAM",
+      "PASTOR_ALLOWED_ORIGINS",
+      "PASTOR_ALLOW_ANY_HOST",
+      "PASTOR_ALLOW_NON_LOOPBACK_BIND",
+      "PASTOR_AUDIT_CONTENT",
+      "PASTOR_BASE_PATH",
+      "PASTOR_CACHE_WARN_SECONDS",
+      "PASTOR_CODEX_ROOT",
+      "PASTOR_DEVICE_ALLOWLIST",
+      "PASTOR_DEVICE_HEADER",
+      "PASTOR_GROK_ROOT",
+      "PASTOR_HERDR_DIAL",
+      "PASTOR_HERMES_ROOT",
+      "PASTOR_HOST",
+      "PASTOR_MAX_UPLOAD_MB",
+      "PASTOR_MULTI_SESSION",
+      "PASTOR_MUSE_ROOT",
+      "PASTOR_MUX",
+      "PASTOR_MUX_ENDPOINT_",
+      "PASTOR_NOTIFY_DELAY_MS",
+      "PASTOR_OPENCLAW_ROOT",
+      "PASTOR_OPENCODE_ROOT",
+      "PASTOR_PI_ROOT",
+      "PASTOR_POLL_IDLE_MS",
+      "PASTOR_POLL_MS",
+      "PASTOR_PORT",
+      "PASTOR_PUBLIC_HOSTS",
+      "PASTOR_READ_LINES",
+      "PASTOR_REDACT",
+      "PASTOR_SKIP_SERVE",
+      "PASTOR_STATE_DIR",
+      "PASTOR_SUBMIT_KEYS",
+      "PASTOR_TAILSCALE_HOSTS",
+      "PASTOR_TERN_BIN",
+      "PASTOR_TMUX_BIN",
+      "PASTOR_TRANSCRIPT",
+      "PASTOR_TRANSCRIPT_ROOT",
+      "PASTOR_TRUSTED_USER",
+      "PASTOR_TRUSTED_USER_OPTIONAL",
+      "PASTOR_UPLOAD_EXTRA_TYPES",
+      "PASTOR_VAPID_PRIVATE",
+      "PASTOR_VAPID_PUBLIC",
+      "PASTOR_VAPID_SUBJECT",
+      "PASTOR_ZELLIJ_BIN",
     ]);
   });
 });
@@ -998,7 +1001,7 @@ describe("solo zero-tax — config", () => {
 
 /** Every `<stateDir>/…` path any bridge module names. `uploads` is a directory, the rest are files. */
 const STATE_DIR_ENTRIES = [
-  // Windows only (M43 spec 04): the access lists Collie saved before it changed one, so the change can
+  // Windows only (M43 spec 04): the access lists Pastor saved before it changed one, so the change can
   // be undone with `icacls /restore`. Absent until the bridge actually repaired a loose folder or file;
   // never on Linux or macOS, and never on a Windows install whose folders were private already.
   "acl-backups",
@@ -1009,7 +1012,7 @@ const STATE_DIR_ENTRIES = [
   "audit.log",
   // Agent beacons (M11/01) — a directory, and one no bridge module ever writes: the bridge only ever
   // READS it, and the emitter that fills it is a CLI verb the operator installs a hook for. An
-  // instance whose operator never ran `collie hooks install` never has this directory at all.
+  // instance whose operator never ran `pastor hooks install` never has this directory at all.
   "beacons",
   // The prompt-cache watch list (M28/03). Absent until the first watch toggle or the first warning sent
   // under the global switch — both are events, so a bridge that is merely started still writes the four
@@ -1022,7 +1025,7 @@ const STATE_DIR_ENTRIES = [
   // Written by use and by nothing else: absent until the first one from a phone.
   "control-receipts.json",
   // The bridge's own log of a durable program's panes (ADR 0099), one file per pane inside this folder.
-  // Written only by a bridge that drives `COLLIE_MUX=durable`: the factory that builds the writer is
+  // Written only by a bridge that drives `PASTOR_MUX=durable`: the factory that builds the writer is
   // never called for Herdr, tmux or zellij, so every other instance never has this folder.
   "durable",
   // The push guard's memory for asks that travel as data (ADR 0100), keyed on (host, toolCallId).
@@ -1049,12 +1052,12 @@ const STATE_DIR_ENTRIES = [
   "local-secret",
   // Machines (ADR 0084), a §11 row RENEGOTIATED ON PURPOSE. The alert rules are absent until the
   // operator sets the first one. The history is written from the tick at most once every five minutes,
-  // and only once a minute has been recorded — so a solo collie that runs for five minutes writes it,
+  // and only once a minute has been recorded — so a solo pastor that runs for five minutes writes it,
   // and a bridge only started and stopped does not. Both are driven in "the machine files appear …".
   "machine-alerts.json",
   "machine-history.json",
   "notify-prefs.json",
-  // Device pairing. Both are absent until the operator runs `collie pair`, and an install that
+  // Device pairing. Both are absent until the operator runs `pastor pair`, and an install that
   // never does keeps writing exactly the six entries above it.
   "paired-devices.json",
   "pairing-pending.json",
@@ -1062,9 +1065,9 @@ const STATE_DIR_ENTRIES = [
   "push-subscriptions.json",
   "snooze.json",
   // One receipt per starter a phone ran on a durable program (ADR 0102). Written by use and by nothing
-  // else: absent until the first starter run, which only a peer on `COLLIE_MUX=durable` can offer.
+  // else: absent until the first starter run, which only a peer on `PASTOR_MUX=durable` can offer.
   "starter-receipts.json",
-  // Speech-to-text settings. Absent until the operator runs `collie stt setup`. The bridge writes it
+  // Speech-to-text settings. Absent until the operator runs `pastor stt setup`. The bridge writes it
   // in one case only: the Host speech provider card in Settings, which writes Whistle or Codex (after
   // the consent) or removes the file, and only while no key, command or environment names a provider
   // (bridge/stt/host-http.ts, ADR 0097).
@@ -1076,13 +1079,13 @@ const STATE_DIR_ENTRIES = [
   "update-state.json",
   // The detached updater's run record and its lock (M15/04). WRITTEN BY THE CLI, never by the
   // bridge — `bridge/update-run.ts` only reads them, so the scan below sees the names here and no
-  // writer anywhere under `bridge/`. Absent until the first `collie update`.
+  // writer anywhere under `bridge/`. Absent until the first `pastor update`.
   "update.json",
   "update.lock",
   "uploads",
   // The Whistle model's folder, `whistle/` (ADR 0096): the model, its manifest and a download's
   // part file. Absent until a write device taps "Download to host" or the operator runs
-  // `collie stt whistle`; nothing else creates it.
+  // `pastor stt whistle`; nothing else creates it.
   "whistle",
   // The ref each new worktree was cut from (ADR 0089, amended). Written by use and by nothing else:
   // absent until the first create that named a starting point succeeds. Driven in "the worktree
@@ -1115,7 +1118,7 @@ const CREW_STATE_DIR_ENTRIES = [
   // The lead's paired-device registry, synced to the DEPUTY only (RFC §6.5, CREW_PROTOCOL.md §18.14).
   // **A solo instance can never have one**, and the reason is structural rather than a check anyone
   // has to remember: it is written on exactly one path — a `POST /crew/v1/pairing` that cleared the
-  // crew's two factors, came from this collie's own pinned LEAD, and found a verified warrant naming
+  // crew's two factors, came from this pastor's own pinned LEAD, and found a verified warrant naming
   // THIS machine as deputy. A solo instance has no trust store, so it registers no crew routes at all,
   // so none of those three can ever be true of it.
   //
@@ -1179,7 +1182,7 @@ describe("solo zero-tax — the filesystem", () => {
   });
 
   test("driving every solo write path produces only known files", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-solo-baseline-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "pastor-solo-baseline-"));
     try {
       const cfg: Config = { ...loadConfig(), stateDir };
       await new Snooze(cfg, () => TS).set(TS + 60_000);
@@ -1215,7 +1218,7 @@ describe("solo zero-tax — the filesystem", () => {
   // §11's "Files written" row, amended on purpose by M40/02: `folders.json` is written by use and by
   // nothing else. Driven, so the amendment is a fact about the store rather than a sentence.
   test("the folder list appears only on use: a create with a folder, or a star", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-solo-baseline-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "pastor-solo-baseline-"));
     try {
       const folders = new FolderStore({ stateDir }, "/home/op");
       await folders.load();
@@ -1231,7 +1234,7 @@ describe("solo zero-tax — the filesystem", () => {
   // The same shape for the worktree receipts (ADR 0089): loading writes nothing, a create with a
   // request id writes the one file.
   test("the worktree receipts appear only on use: a create that carries a request id", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-solo-baseline-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "pastor-solo-baseline-"));
     try {
       const receipts = new WorktreeReceiptStore(stateDir);
       await receipts.load();
@@ -1255,7 +1258,7 @@ describe("solo zero-tax — the filesystem", () => {
   // The same shape for the worktree bases (ADR 0089, amended): loading writes nothing, a create that
   // named a starting point writes the one file.
   test("the worktree bases appear only on use: a create that named a starting point", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-solo-baseline-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "pastor-solo-baseline-"));
     try {
       const bases = new WorktreeBaseStore(stateDir);
       await bases.load();
@@ -1270,10 +1273,10 @@ describe("solo zero-tax — the filesystem", () => {
 });
 
 // §11's "Files written" row, amended on purpose by ADR 0084, and driven like the folder list above:
-// the watch exactly as index.ts builds it on a solo collie, over a temp state folder.
+// the watch exactly as index.ts builds it on a solo pastor, over a temp state folder.
 describe("solo zero-tax — the machine files", () => {
   test("the history appears on the first save after five minutes of samples; the rules only on a rule", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-solo-baseline-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "pastor-solo-baseline-"));
     try {
       let now = TS;
       const watch = new MachineWatch({
@@ -1321,10 +1324,10 @@ describe("solo zero-tax — the machine files", () => {
 // ── 7. Notification tags and push payload ────────────────────────────────────
 
 describe("solo zero-tax — notifications", () => {
-  test("the primary session keeps the bare collie:herd tag", () => {
-    expect(herdTagFor(true, "default")).toBe("collie:herd");
+  test("the primary session keeps the bare pastor:herd tag", () => {
+    expect(herdTagFor(true, "default")).toBe("pastor:herd");
     // Whatever the primary is NAMED, its tag stays bare — the name never enters the solo tag.
-    expect(herdTagFor(true, "work")).toBe("collie:herd");
+    expect(herdTagFor(true, "work")).toBe("pastor:herd");
   });
 
   test("push.ts stamps `session` and `host` only when the message names one", () => {
@@ -1353,7 +1356,7 @@ describe("solo zero-tax — notifications", () => {
     // every local session's coordinator renders through, and a solo instance passes it no host.
     const { makeNotifySink } = await import("./notifications.ts");
     const sent: PushMessage[] = [];
-    const sink = makeNotifySink({ send: (m: PushMessage) => sent.push(m) }, { isMuted: () => false }, "collie:herd");
+    const sink = makeNotifySink({ send: (m: PushMessage) => sent.push(m) }, { isMuted: () => false }, "pastor:herd");
     sink.render({
       title: "claude needs you",
       titleCode: "agent.blocked",
@@ -1369,11 +1372,11 @@ describe("solo zero-tax — notifications", () => {
         titleCode: "agent.blocked",
         titleDetail: { agent: "claude" },
         body: "demo · /home/you",
-        tag: "collie:herd",
+        tag: "pastor:herd",
         paneId: "p1",
         renotify: true,
       },
-      { type: "clear", tag: "collie:herd" },
+      { type: "clear", tag: "pastor:herd" },
     ]);
     expect(sent.every((m) => !("host" in m))).toBe(true);
   });
@@ -1385,7 +1388,7 @@ const AUDIT_ENTRIES: AuditEntry[] = [
   { action: "reply", paneId: "w1:p1", detail: { text: "ship it" } },
   { action: "keys", paneId: "w1:p1", detail: { keys: ["ctrl+c"] } },
   { action: "tab.create", detail: { workspaceId: "w1" } },
-  { action: "pane.close", paneId: "w1:p3", session: "collie-demo", detail: {} },
+  { action: "pane.close", paneId: "w1:p3", session: "pastor-demo", detail: {} },
   { action: "upload", paneId: "w1:p1", device: "phone", detail: { filename: "shot.png", size: 1234 } },
 ];
 

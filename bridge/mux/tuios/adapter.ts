@@ -8,11 +8,11 @@
 //
 // ── THE MAPPING ─────────────────────────────────────────────────────────────────────────────────
 //
-//   tuios session    →  Collie SPACE   (the session's `id`)
-//   tuios workspace  →  Collie TAB     (`<session id>:<workspace number>`)
-//   tuios window     →  Collie PANE    (the window's `window_id`, carried through unchanged)
+//   tuios session    →  Pastor SPACE   (the session's `id`)
+//   tuios workspace  →  Pastor TAB     (`<session id>:<workspace number>`)
+//   tuios window     →  Pastor PANE    (the window's `window_id`, carried through unchanged)
 //
-// tuios's three levels are Collie's three levels, as on tmux. The ids are the part worth stating:
+// tuios's three levels are Pastor's three levels, as on tmux. The ids are the part worth stating:
 //
 //  • A window id is a UUID that survives a rename, a move between workspaces AND a daemon restart
 //    (probed: `tuios kill-server`, `tuios start-server`, every window came back under its old id).
@@ -131,13 +131,13 @@ const TUIOS_CAPABILITIES = declareCapabilities({
     "pushPaneEvents",
   ],
   unsupportedKeys: [...TUIOS_UNSENDABLE_KEYS, ...EXTENDED_ONLY_CHORDS],
-  // The event stream announces every structure change Collie shows: windows and sessions
+  // The event stream announces every structure change Pastor shows: windows and sessions
   // appearing, closing, moving and being renamed, and workspaces being renamed. So there is no
   // census and no number to state.
   topologyLatency: { kind: "push" },
   notes: {
     agentDetection:
-      "tuios names the agent in a pane from its harness. An agent Collie has no harness for reads as a shell.",
+      "tuios names the agent in a pane from its harness. An agent Pastor has no harness for reads as a shell.",
     sendKeys:
       "tuios has no Super or Command key for a pane, so a `meta` chord is refused. Ctrl+Enter is refused too, until it is shown to arrive as itself rather than as a plain Enter.",
     setFocus:
@@ -149,7 +149,7 @@ const TUIOS_CAPABILITIES = declareCapabilities({
     createWorktree: "Worktrees are not part of the first tuios adapter.",
     openWorktree: "Worktrees are not part of the first tuios adapter.",
     listSessions:
-      "Every session of this tuios daemon is already a space here. Another daemon has its own runtime directory, and tuios has no command that lists daemons, so a second daemon is reached by pointing a second collie at it.",
+      "Every session of this tuios daemon is already a space here. Another daemon has its own runtime directory, and tuios has no command that lists daemons, so a second daemon is reached by pointing a second pastor at it.",
   },
   // One daemon holds as many sessions as the operator makes, and each one is a space.
   spaces: "many",
@@ -191,10 +191,10 @@ function refusalFor<T>(err: T): MuxRefusalOutcome {
 }
 
 /**
- * The Collie harness name for each tuios harness id, where Collie has that harness.
+ * The Pastor harness name for each tuios harness id, where Pastor has that harness.
  *
- * tuios names harnesses after their manifests (`claude-code`); Collie's screen readers and journal
- * readers key on the short name (`claude`). The contract requires a Collie harness name or `shell`
+ * tuios names harnesses after their manifests (`claude-code`); Pastor's screen readers and journal
+ * readers key on the short name (`claude`). The contract requires a Pastor harness name or `shell`
  * (../agents.ts), so a harness missing here reads as a shell rather than passing its tuios id on.
  */
 const AGENT_BY_TUIOS_HARNESS = new Map<string, string>([
@@ -210,10 +210,10 @@ const AGENT_BY_TUIOS_HARNESS = new Map<string, string>([
 
 // A compile-time-shaped tie, checked at load: every name above must be one the contract accepts.
 for (const name of AGENT_BY_TUIOS_HARNESS.values()) {
-  if (!MUX_AGENT_NAMES.includes(name)) throw new Error(`tuios adapter maps to ${name}, which is not a Collie harness`);
+  if (!MUX_AGENT_NAMES.includes(name)) throw new Error(`tuios adapter maps to ${name}, which is not a Pastor harness`);
 }
 
-/** The Collie harness name for a tuios harness id, or `null` when Collie has no such harness. */
+/** The Pastor harness name for a tuios harness id, or `null` when Pastor has no such harness. */
 function agentName(harnessId: string): string | null {
   return AGENT_BY_TUIOS_HARNESS.get(harnessId.trim().toLowerCase()) ?? null;
 }
@@ -234,7 +234,7 @@ function agentStatus(state: string): AgentStatus {
   }
 }
 
-/** The id of one workspace of one session, as a Collie tab. */
+/** The id of one workspace of one session, as a Pastor tab. */
 function tabIdOf(sessionId: string, workspace: number): string {
   return `${sessionId}:${String(workspace)}`;
 }
@@ -582,7 +582,7 @@ export class TuiosMux implements MuxAdapter {
 
   /**
    * Which session holds this pane, and the window itself. A window this daemon does not list, or one
-   * whose process runs on another machine, is `gone`: that pane belongs to the Collie running there.
+   * whose process runs on another machine, is `gone`: that pane belongs to the Pastor running there.
    */
   private async locate(paneId: string): Promise<MuxOutcome<PaneLocation>> {
     try {
@@ -608,10 +608,10 @@ export class TuiosMux implements MuxAdapter {
       hello = await this.rpc.hello();
     } catch (err) {
       if (err instanceof TuiosError && err.code === "protocol_mismatch") {
-        return `This tuios daemon does not speak protocol ${String(TUIOS_PROTOCOL)}, which this Collie needs. Update tuios or Collie so the two match. tuios said: ${err.message}`;
+        return `This tuios daemon does not speak protocol ${String(TUIOS_PROTOCOL)}, which this Pastor needs. Update tuios or Pastor so the two match. tuios said: ${err.message}`;
       }
       if (err instanceof TuiosError && err.code === "unknown_verb") {
-        return "This tuios daemon is too old for Collie. Update tuios to 0.8.3 or newer, then restart its daemon with `tuios kill-server`.";
+        return "This tuios daemon is too old for Pastor. Update tuios to 0.8.3 or newer, then restart its daemon with `tuios kill-server`.";
       }
       throw err;
     }
@@ -619,7 +619,7 @@ export class TuiosMux implements MuxAdapter {
     const types = await this.rpc.subscribeTypes();
     const problem = types.includes(TUIOS_REQUIRED_EVENT)
       ? null
-      : `This tuios daemon (${hello.version || "unknown version"}) does not send ${TUIOS_REQUIRED_EVENT} events, which Collie needs. Update tuios to 0.8.3 or newer, then restart its daemon with \`tuios kill-server\`.`;
+      : `This tuios daemon (${hello.version || "unknown version"}) does not send ${TUIOS_REQUIRED_EVENT} events, which Pastor needs. Update tuios to 0.8.3 or newer, then restart its daemon with \`tuios kill-server\`.`;
     this.checked = { instance: hello.instance, problem };
     return problem;
   }
@@ -778,7 +778,7 @@ function toSnapshot(
 /**
  * tuios's entry in the mux registry.
  *
- * `endpoint` is the daemon's socket path (`COLLIE_MUX_ENDPOINT_TUIOS`). Empty means the one a tuios
+ * `endpoint` is the daemon's socket path (`PASTOR_MUX_ENDPOINT_TUIOS`). Empty means the one a tuios
  * client in the bridge's environment would dial: `$XDG_RUNTIME_DIR/tuios/tuios.sock`, else
  * `/tmp/tuios-<uid>/tuios.sock`. A systemd user unit has `XDG_RUNTIME_DIR`; a unit without it would
  * look in `/tmp`, and the probe's skip line names the path it tried.

@@ -17,12 +17,12 @@ import { defineConfig, devices } from "@playwright/test";
 // has no playground, and the playground has no `/api/*`.
 //
 // Chromium, plus WebKit on the `app` target at phone size. Safari is where a phone actually opens
-// Collie, and it disagrees with Chromium on things a unit test never sees: on 2026-09-14 the
+// Pastor, and it disagrees with Chromium on things a unit test never sees: on 2026-09-14 the
 // composer's belt held 6px of vertical overflow that Chromium clipped and WebKit let a thumb scroll.
 // `app-phone-webkit` collects the same specs as `app-phone` and exists so that class of bug fails in
 // CI. It is OPT-IN off CI: Playwright's WebKit build links against Ubuntu's libraries, so on Fedora
 // (this workspace's host) it cannot launch at all, and a developer's `bun run e2e` must not fail on
-// that. `COLLIE_E2E_WEBKIT=1` turns it on locally; `make e2e-webkit` at the workspace root runs it
+// that. `PASTOR_E2E_WEBKIT=1` turns it on locally; `make e2e-webkit` at the workspace root runs it
 // inside an Ubuntu distrobox for exactly that host. In CI the runner IS Ubuntu, so it is always on.
 
 /** The phone. 390x844 is the iPhone 14/15 CSS size. */
@@ -31,7 +31,7 @@ const PHONE = { width: 390, height: 844 } as const;
 const TABLET = { width: 820, height: 1180 } as const;
 
 /**
- * The `app` target's static server. 4173 is Vite's own preview port and collides with no Collie
+ * The `app` target's static server. 4173 is Vite's own preview port and collides with no Pastor
  * instance (8787-8790, 8799, 5198, 5199).
  *
  * SECURE CONTEXT, checked first-hand on 2026-09-09 with this config, Playwright 1.62.1 and its
@@ -50,7 +50,7 @@ const APP_BASE_URL = `http://127.0.0.1:${APP_PORT}`;
 /**
  * The `states` target's playground. 5199 is `make playground`'s own port
  * (`web/package.json`'s `playground` script), and it never collides with an instance for the
- * same reason `make playground-up` already checks for it. `COLLIE_PLAYGROUND=1` makes
+ * same reason `make playground-up` already checks for it. `PASTOR_PLAYGROUND=1` makes
  * `vite.config.ts`'s `playgroundOnlyPlugin` answer every `/api/*` with a 404 in-process, so this
  * target carries no API stub at all.
  */
@@ -66,7 +66,7 @@ const STATES_TEST_MATCH = [/states\.spec\.ts$/, /handles\.spec\.ts$/];
 const LIVE_TEST_IGNORE = "**/live/**";
 
 /** WebKit runs always in CI and only on request elsewhere; the header says why. */
-const WEBKIT = Boolean(process.env.CI) || process.env.COLLIE_E2E_WEBKIT === "1";
+const WEBKIT = Boolean(process.env.CI) || process.env.PASTOR_E2E_WEBKIT === "1";
 
 export default defineConfig({
   // Outside `src/`, so `vitest.config.ts:30` (`include: ["src/**/*.{test,spec}.{ts,tsx}"]`) collects
@@ -154,13 +154,13 @@ export default defineConfig({
       command: `bunx vite preview --host 127.0.0.1 --port ${APP_PORT} --strictPort`,
       // THE PROXY POINTS NOWHERE. `vite preview` inherits `server.proxy` (Vite resolves
       // `preview.proxy ?? server.proxy`), so an `/api/*` request the fixture never sees goes to
-      // `COLLIE_DEV_TARGET`, 127.0.0.1:8787 by default: on the workspace host that is the LIVE
+      // `PASTOR_DEV_TARGET`, 127.0.0.1:8787 by default: on the workspace host that is the LIVE
       // release lane. The fixture misses a request when a service worker has claimed the page (see
       // `e2e/issue-180.spec.ts`) and, under WebKit, when a poll is still in flight as the page
       // closes. On 2026-09-27 the first kind read the release lane's real snapshot and pane list in
       // `e2e/composer-clear.spec.ts`. Port 9 has no listener, so a missed request gets Vite's own
       // 502 here, the same answer CI gives, and never reaches a bridge.
-      env: { COLLIE_DEV_TARGET: "http://127.0.0.1:9" },
+      env: { PASTOR_DEV_TARGET: "http://127.0.0.1:9" },
       url: APP_BASE_URL,
       reuseExistingServer: !process.env.CI,
       stdout: "ignore",

@@ -1,32 +1,31 @@
 # Changelog
 
-This file tracks all notable changes to Collie, ordered newest version first. The project follows
-[Semantic Versioning](https://semver.org/). From 1.6.0 on, a version's changes are grouped under
+This file tracks all notable changes to Pastor, ordered newest version first. Pastor is a fork of
+[ColliePWA](https://github.com/AltanS/collie) by Altan Sarisin: every section from 1.21.1 down is
+ColliePWA's own history, kept as it was written, with its links to the upstream repository. The
+project follows [Semantic Versioning](https://semver.org/). A version's changes are grouped under
 `### Added`, `### Changed`, `### Fixed`, `### Packaging` and `### Docs`, in that order and only
 where there is content, and every bullet opens with a short bold lead sentence, which is the line
-the GitHub Release page prints. Older versions carry a single flat list. Every entry links to its commit and credits the contributor where there is one. The
-`## [Unreleased]` section contains merged work waiting for release. The release
-commit renames this heading to `## [x.y.z] - YYYY-MM-DD`, adds the commit hashes, and adds a new
-empty `## [Unreleased]` section above it. The newest numbered `## [x.y.z]` heading (excluding the
-Unreleased heading) **must** match the `version` field in `herdr-plugin.toml`, `package.json`,
-and `web/package.json`, which `scripts/check-version.sh` checks. See [`CLAUDE.md`](./CLAUDE.md) →
-*Versioning* for the bump policy.
+the GitHub Release page prints. The newest numbered `## [x.y.z]` heading **must** match the
+`version` field in `herdr-plugin.toml`, `package.json` and `web/package.json`, which
+`scripts/check-version.sh` checks. See [`CLAUDE.md`](./CLAUDE.md) → *Versioning*.
 
 ## Upgrading
 
-**Already on 1.x?** Run `collie update`, or run
-`herdr plugin action invoke update --plugin herdr.collie`. Check the result with
-`bin/collie version` (or `herdr plugin action invoke version --plugin herdr.collie`). It shows the
-newest tag. The phone PWA updates itself within about a minute; no reload needed.
-Running a crew? Update the lead first; members follow on their own. Details:
-`docs/crew.md` → *Updating from 1.7.0*.
+Run `pastor update`, or `herdr plugin action invoke update --plugin ad3.pastor` on a Herdr plugin
+install. Check the result with `pastor version`. The phone app updates itself within about a minute.
 
 ## [Unreleased]
 
 ### Added
 
-- **A passkey can pair a new device instead of a code.** A paired device creates one in Settings, under Paired devices; any browser that holds it, synced by Google or Apple, then pairs itself with a name and a fingerprint. The key is checked by the bridge, the device lands in the registry like any other, and `collie devices revoke` still removes it. (Local patch.)
-- **A voice call with Codex starts from the Call button and stays in the chat.** Tapping Call on a Codex pane connects at once through the `collie-voice` service mounted at `/voice-call`; a small bubble shows the call is live, and tapping it ends the call. (Local patch.)
+- **A passkey can pair a new device instead of a code.** A paired device creates one in Settings, under Paired devices; any browser that holds it, synced by Google or Apple, then pairs itself with a name and a fingerprint. The key is checked by the bridge, the device lands in the registry like any other, and `pastor devices revoke` still removes it.
+- **A live voice call works on Codex and OMP panes, on every host.** Tap Live call on a Codex or OMP pane and talk: the voice runs over WebRTC from the phone straight to OpenAI with the computer's own Codex login, a request is typed into the pane, and the agent's final message comes back spoken. On a Codex pane the bridge hosts the call and reads the answer from the Codex session log; on an OMP pane the `omp/extension.ts` extension does, after `bash omp/enable.sh`. Ported from the OMP Live work in the Collie fork.
+
+### Changed
+
+- **ColliePWA becomes Pastor, with its own name and crook mark.** The command is `pastor`, the Herdr plugin id is `ad3.pastor`, settings read `PASTOR_*` instead of `COLLIE_*`, and the state folder is `pastor`. A ColliePWA install is not migrated: install Pastor beside it and pair the phone again.
+- **Updates come from Ad3Digital/pastor.** `pastor update`, the Windows installer and the in-app update band read this repository's releases.
 
 ## [1.21.1] - 2026-10-14
 

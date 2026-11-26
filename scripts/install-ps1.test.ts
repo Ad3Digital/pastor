@@ -45,25 +45,25 @@ const CODE = LINES.filter((l) => !l.trimStart().startsWith("#"));
  *  `irm ... | iex` is not read as a call. A backtick escapes a quote in PowerShell. */
 const BARE = CODE.map((l) => l.replace(/"(?:[^"`]|`.)*"/g, '""'));
 const offending = (pattern: RegExp): string[] => BARE.filter((l) => pattern.test(l));
-const ENTRY = "Install-Collie $args";
+const ENTRY = "Install-Pastor $args";
 
 describe("scripts/install.ps1, read as text", () => {
   test("the header states what it will never do, as install.sh does", () => {
     expect(HEADER).toMatch(/never asks for admin rights/);
-    expect(HEADER).toMatch(/never writes outside COLLIE_DIR, except one entry in your user PATH/);
-    expect(HEADER).toMatch(/never starts a service or a task\. It runs one program once: the new collie\.exe/);
+    expect(HEADER).toMatch(/never writes outside PASTOR_DIR, except one entry in your user PATH/);
+    expect(HEADER).toMatch(/never starts a service or a task\. It runs one program once: the new pastor\.exe/);
     expect(HEADER).toMatch(/never sends anything anywhere/);
     expect(HEADER).toMatch(/never installs a download whose sha256 does not match/);
     expect(HEADER).toMatch(/ends by PRINTING the next steps/);
-    expect(HEADER).toContain("irm https://colliepwa.dev/install.ps1 | iex");
+    expect(HEADER).toContain("irm https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.ps1 | iex");
   });
 
   test("the same three steering variables as install.sh, and the two test switches, are named", () => {
-    for (const name of ["COLLIE_DIR", "COLLIE_UPDATE_REPO", "COLLIE_TAG", "COLLIE_NO_PATH_EDIT", "COLLIE_INSTALL_MIRROR"]) {
+    for (const name of ["PASTOR_DIR", "PASTOR_UPDATE_REPO", "PASTOR_TAG", "PASTOR_NO_PATH_EDIT", "PASTOR_INSTALL_MIRROR"]) {
       expect(HEADER).toContain(name);
     }
     const sh = readFileSync(join(import.meta.dir, "install.sh"), "utf8");
-    for (const name of ["COLLIE_DIR", "COLLIE_UPDATE_REPO", "COLLIE_TAG"]) expect(sh).toContain(name);
+    for (const name of ["PASTOR_DIR", "PASTOR_UPDATE_REPO", "PASTOR_TAG"]) expect(sh).toContain(name);
   });
 
   test("is plain ASCII, with no byte-order mark and no dash a reader cannot type", () => {
@@ -95,7 +95,7 @@ describe("scripts/install.ps1, read as text", () => {
 
   test("puts back the TLS setting it changes, and refuses Constrained Language Mode first", () => {
     expect(TEXT).toMatch(/finally \{\s*\[Net\.ServicePointManager\]::SecurityProtocol = \$tls\s*\}/);
-    const entry = TEXT.slice(TEXT.indexOf("function Invoke-CollieEntry("));
+    const entry = TEXT.slice(TEXT.indexOf("function Invoke-PastorEntry("));
     expect(entry.indexOf("LanguageMode")).toBeLessThan(entry.indexOf("ServicePointManager"));
   });
 
@@ -121,25 +121,25 @@ describe("scripts/install.ps1, read as text", () => {
   test("runs nothing it downloads, starts nothing, and asks for no admin", () => {
     expect(offending(/Invoke-Expression|\biex\b/)).toEqual([]);
     expect(offending(/Start-Process|Start-ScheduledTask|Register-ScheduledTask|schtasks|Start-Service|New-Service/i)).toEqual([]);
-    // The one program it runs: `collie.exe version`, through cmd.exe, from one function.
+    // The one program it runs: `pastor.exe version`, through cmd.exe, from one function.
     expect(offending(/Diagnostics\.Process\]::Start/)).toHaveLength(1);
     expect(TEXT).toContain('version < NUL > ');
     expect(offending(/RunAs|HKLM|LocalMachine|SymbolicLink/i)).toEqual([]);
     // "Machine" is a string, so it is looked for in the code with its strings left in.
     expect(CODE.filter((l) => /"Machine"|'Machine'/.test(l))).toEqual([]);
-    // No line calls a program with `&`, so no line runs the collie.exe it laid down.
+    // No line calls a program with `&`, so no line runs the pastor.exe it laid down.
     expect(offending(/(^|[\s(;])&\s/)).toEqual([]);
   });
 
-  test("a `collie.exe version` that hangs is stopped with its whole tree, not only cmd.exe", () => {
+  test("a `pastor.exe version` that hangs is stopped with its whole tree, not only cmd.exe", () => {
     // LF here: a Windows checkout may hand the script over with CRLF.
     const lf = TEXT.replaceAll("\r\n", "\n");
-    const run = lf.slice(lf.indexOf("function Test-CollieRuns"), lf.indexOf("function Stop-CollieBlocked"));
-    expect(run).toContain("if (-not $run.WaitForExit(30000)) {\n    Stop-CollieTree $run.Id");
+    const run = lf.slice(lf.indexOf("function Test-PastorRuns"), lf.indexOf("function Stop-PastorBlocked"));
+    expect(run).toContain("if (-not $run.WaitForExit(30000)) {\n    Stop-PastorTree $run.Id");
     expect(run).not.toContain("$run.Kill()");
-    const tree = TEXT.slice(TEXT.indexOf("function Stop-CollieTree"), TEXT.indexOf("function Test-CollieRuns"));
+    const tree = TEXT.slice(TEXT.indexOf("function Stop-PastorTree"), TEXT.indexOf("function Test-PastorRuns"));
     expect(tree).toContain('Get-CimInstance Win32_Process -Filter "ParentProcessId = $Id"');
-    expect(tree).toContain("Stop-CollieTree ([int]$child.ProcessId)");
+    expect(tree).toContain("Stop-PastorTree ([int]$child.ProcessId)");
     expect(tree).toContain("Stop-Process -Id $Id -Force");
   });
 
@@ -185,21 +185,21 @@ describe("scripts/install.ps1, read as text", () => {
 // ── On Windows: the script itself, against a release mirror served from this process ─────────────
 //
 // Every case runs Windows PowerShell 5.1 (`powershell.exe`, the one every Windows 11 has) on the
-// script with `-File`, steered by COLLIE_INSTALL_MIRROR at a Bun.serve on 127.0.0.1. Nothing here
-// reaches github.com. Every case sets COLLIE_NO_PATH_EDIT=1, so no test writes the real user PATH;
+// script with `-File`, steered by PASTOR_INSTALL_MIRROR at a Bun.serve on 127.0.0.1. Nothing here
+// reaches github.com. Every case sets PASTOR_NO_PATH_EDIT=1, so no test writes the real user PATH;
 // the PATH logic is tested through its pure function, and the real registry round trip is checked on
 // the Windows VM by hand (M43 spec 07). The child writes to a log FILE, never to a pipe: a child left
 // behind could hold a pipe open and hang the run.
 //
 // The profile folders (USERPROFILE, LOCALAPPDATA, APPDATA, TEMP) point into the scratch root too, so
-// "it never writes outside COLLIE_DIR" is an assertion about the disk.
+// "it never writes outside PASTOR_DIR" is an assertion about the disk.
 
 const IS_WINDOWS = process.platform === "win32";
 const SYSTEM_ROOT = process.env.SystemRoot ?? process.env.SYSTEMROOT ?? "C:\\Windows";
 const POWERSHELL = join(SYSTEM_ROOT, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
 /** Windows' own bsdtar, which writes a zip. A GNU tar from Git, often first on PATH, cannot. */
 const TAR = join(SYSTEM_ROOT, "System32", "tar.exe");
-const REPO = "AltanS/collie";
+const REPO = "Ad3Digital/pastor";
 const PLATFORM = "windows-x64";
 /** PowerShell's own caches. Windows PowerShell writes them when it loads a module (Expand-Archive). */
 const POWERSHELL_CACHE = /[\\/]Microsoft[\\/]Windows[\\/]PowerShell[\\/]/i;
@@ -248,7 +248,7 @@ class Mirror {
             headers: { "content-type": "application/json; charset=utf-8" },
           });
         }
-        // Any owner/name, so a case can steer COLLIE_UPDATE_REPO at it too.
+        // Any owner/name, so a case can steer PASTOR_UPDATE_REPO at it too.
         const download = /^\/[^/]+\/[^/]+\/releases\/download\/(.+)$/.exec(path);
         const body = download?.[1] === undefined ? undefined : this.files.get(download[1]);
         if (body === undefined) return new Response("Not Found", { status: 404 });
@@ -274,17 +274,17 @@ class Mirror {
 
 const sha256 = (bytes: Uint8Array): string => new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
 
-/** A zip shaped like the real one: one folder `collie-<v>-windows-x64` with `bin\collie.exe` in it. */
+/** A zip shaped like the real one: one folder `pastor-<v>-windows-x64` with `bin\pastor.exe` in it. */
 function buildZip(scratch: string, version: string, stub = false): Asset {
-  const root = `collie-${version}-${PLATFORM}`;
+  const root = `pastor-${version}-${PLATFORM}`;
   const stage = join(scratch, `stage-${version}`);
   mkdirSync(join(stage, root, "bin"), { recursive: true });
   mkdirSync(join(stage, root, "web", "dist"), { recursive: true });
   mkdirSync(join(stage, root, "docs"), { recursive: true });
-  // A real program, because the installer runs `collie.exe version` once: a copy of cmd.exe, which
+  // A real program, because the installer runs `pastor.exe version` once: a copy of cmd.exe, which
   // starts, reads NUL as its input, and exits 0. `stub` swaps in a text file Windows will not run.
-  if (stub) writeFileSync(join(stage, root, "bin", "collie.exe"), `stub collie ${version}\n`);
-  else copyFileSync(join(SYSTEM_ROOT, "System32", "cmd.exe"), join(stage, root, "bin", "collie.exe"));
+  if (stub) writeFileSync(join(stage, root, "bin", "pastor.exe"), `stub pastor ${version}\n`);
+  else copyFileSync(join(SYSTEM_ROOT, "System32", "cmd.exe"), join(stage, root, "bin", "pastor.exe"));
   writeFileSync(join(stage, root, "web", "dist", "index.html"), "<html></html>\n");
   writeFileSync(join(stage, root, "herdr-plugin.toml"), `version = "${version}"\n`);
   writeFileSync(join(stage, root, "package.json"), `{"version":"${version}"}\n`);
@@ -299,9 +299,9 @@ function buildZip(scratch: string, version: string, stub = false): Asset {
 /** A zip with the real payload's root and one extra entry named `bad`, written by .NET's own
  *  ZipArchive, which (unlike tar.exe) writes any name it is given. */
 function hostileZip(scratch: string, version: string, bad: string): Asset {
-  const root = `collie-${version}-${PLATFORM}`;
+  const root = `pastor-${version}-${PLATFORM}`;
   const out = join(scratch, `hostile-${version}.zip`);
-  const names = [`${root}/bin/collie.exe`, `${root}/herdr-plugin.toml`, bad];
+  const names = [`${root}/bin/pastor.exe`, `${root}/herdr-plugin.toml`, bad];
   const ps1 = join(scratch, `hostile-${version}.ps1`);
   writeFileSync(
     ps1,
@@ -326,8 +326,8 @@ function manifest(version: string, digest: string): string {
       tag: `v${version}`,
       version,
       artifacts: [
-        { name: `collie-${version}-linux-x64.tar.gz`, platform: "linux-x64", sha256: "e".repeat(64), size: 1 },
-        { name: `collie-${version}-${PLATFORM}.zip`, platform: PLATFORM, sha256: digest, size: 1, signed: false },
+        { name: `pastor-${version}-linux-x64.tar.gz`, platform: "linux-x64", sha256: "e".repeat(64), size: 1 },
+        { name: `pastor-${version}-${PLATFORM}.zip`, platform: PLATFORM, sha256: digest, size: 1, signed: false },
       ],
     },
     null,
@@ -338,10 +338,10 @@ function manifest(version: string, digest: string): string {
 /** Publish one release on the mirror: the zip, its sidecar and the manifest. */
 function publish(mirror: Mirror, asset: Asset, version: string, opts: { sidecar?: string } = {}): void {
   const tag = `v${version}`;
-  const name = `collie-${version}-${PLATFORM}.zip`;
+  const name = `pastor-${version}-${PLATFORM}.zip`;
   mirror.put(tag, name, asset.zip);
   mirror.put(tag, `${name}.sha256`, opts.sidecar ?? `${asset.digest}  ${name}\n`);
-  mirror.put(tag, `collie-${version}.manifest.json`, manifest(version, asset.digest));
+  mirror.put(tag, `pastor-${version}.manifest.json`, manifest(version, asset.digest));
 }
 
 interface Box {
@@ -357,8 +357,8 @@ function newBox(scratch: string, name: string): Box {
   for (const sub of ["Local", "Roaming", "Temp"]) mkdirSync(join(profile, sub), { recursive: true });
   const fakeBin = join(root, "fake-bin");
   mkdirSync(fakeBin, { recursive: true });
-  // A `collie` on PATH that leaves a mark when anything runs it. The script must only PRINT `collie start`.
-  writeFileSync(join(fakeBin, "collie.cmd"), `@echo off\r\necho ran %* > "${join(root, "collie-ran.txt")}"\r\n`);
+  // A `pastor` on PATH that leaves a mark when anything runs it. The script must only PRINT `pastor start`.
+  writeFileSync(join(fakeBin, "pastor.cmd"), `@echo off\r\necho ran %* > "${join(root, "pastor-ran.txt")}"\r\n`);
   return { root, dir: join(root, "install"), profile, fakeBin };
 }
 
@@ -366,7 +366,7 @@ function newBox(scratch: string, name: string): Box {
  *  the real profile, plus the case's own. `Path` and `PATH` are one name on Windows, so every name
  *  is compared without case. */
 function childEnv(box: Box, mirror: Mirror, extra: Readonly<Record<string, string | undefined>>, withHerdr: boolean) {
-  const drop = /^(PATH|TEMP|TMP|USERPROFILE|HOME|LOCALAPPDATA|APPDATA|PSMODULEPATH|GH_TOKEN|GITHUB_TOKEN|COLLIE_.*)$/i;
+  const drop = /^(PATH|TEMP|TMP|USERPROFILE|HOME|LOCALAPPDATA|APPDATA|PSMODULEPATH|GH_TOKEN|GITHUB_TOKEN|PASTOR_.*)$/i;
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !drop.test(k)) env[k] = v;
   if (withHerdr) writeFileSync(join(box.fakeBin, "herdr.cmd"), "@echo off\r\n");
@@ -378,9 +378,9 @@ function childEnv(box: Box, mirror: Mirror, extra: Readonly<Record<string, strin
     APPDATA: join(box.profile, "Roaming"),
     TEMP: join(box.profile, "Temp"),
     TMP: join(box.profile, "Temp"),
-    COLLIE_DIR: box.dir,
-    COLLIE_INSTALL_MIRROR: mirror.url,
-    COLLIE_NO_PATH_EDIT: "1",
+    PASTOR_DIR: box.dir,
+    PASTOR_INSTALL_MIRROR: mirror.url,
+    PASTOR_NO_PATH_EDIT: "1",
   });
   for (const [k, v] of Object.entries(extra)) {
     if (v === undefined) delete env[k];
@@ -488,14 +488,14 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
   beforeAll(() => {
     // The long spelling of the temp folder: on a Windows runner `tmpdir()` is an 8.3 short name
     // (`RUNNER~1`), and the installer prints and resolves the real one (`runneradmin`).
-    scratch = realpathSync.native(mkdtempSync(join(tmpdir(), "collie-install-ps1-")));
+    scratch = realpathSync.native(mkdtempSync(join(tmpdir(), "pastor-install-ps1-")));
     a1 = buildZip(scratch, v1);
     a2 = buildZip(scratch, v2);
     mirror.start();
     mirror.tags = [`v${v1}`, "v1.0.0-beta.10", "v0.9.0"];
     publish(mirror, a1, v1);
     // The sidecar of v2 is UPPER case: the digest is compared without case.
-    publish(mirror, a2, v2, { sidecar: `${a2.digest.toUpperCase()}  collie-${v2}-${PLATFORM}.zip\n` });
+    publish(mirror, a2, v2, { sidecar: `${a2.digest.toUpperCase()}  pastor-${v2}-${PLATFORM}.zip\n` });
   });
 
   afterAll(() => {
@@ -506,18 +506,18 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
   test("installs the newest strict release into versions\\<X.Y.Z> under a `current` junction", async () => {
     const b = box();
     const r = await install(b, mirror);
-    expect(r.out).toContain(`Collie ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
     expect(r.code).toBe(0);
-    expect(existsSync(join(b.dir, "versions", v1, "bin", "collie.exe"))).toBe(true);
+    expect(existsSync(join(b.dir, "versions", v1, "bin", "pastor.exe"))).toBe(true);
     expect(lstatSync(join(b.dir, "current")).isSymbolicLink()).toBe(true);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(readdirSync(b.dir).toSorted()).toEqual(["current", "versions"]);
     // The tags call, then the zip, its sidecar and the manifest. Nothing else is asked.
     expect(r.asked).toEqual([
       `/repos/${REPO}/tags`,
-      `/${REPO}/releases/download/v${v1}/collie-${v1}-${PLATFORM}.zip.sha256`,
-      `/${REPO}/releases/download/v${v1}/collie-${v1}-${PLATFORM}.zip`,
-      `/${REPO}/releases/download/v${v1}/collie-${v1}.manifest.json`,
+      `/${REPO}/releases/download/v${v1}/pastor-${v1}-${PLATFORM}.zip.sha256`,
+      `/${REPO}/releases/download/v${v1}/pastor-${v1}-${PLATFORM}.zip`,
+      `/${REPO}/releases/download/v${v1}/pastor-${v1}.manifest.json`,
     ]);
   }, 60_000);
 
@@ -525,7 +525,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror);
     expect(r.code).toBe(0);
-    const exe = `${b.dir}\\current\\bin\\collie.exe`;
+    const exe = `${b.dir}\\current\\bin\\pastor.exe`;
     const tail = r.out.trimEnd().split(/\r?\n/).slice(-24).join("\n");
     expect(tail).toContain("Next steps. This script does not take them for you:");
     expect(tail).toContain("1. Open a NEW terminal window.");
@@ -535,13 +535,13 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(tail).toContain(`${exe} url`);
     // Pairing is always on (ADR 0086), so pairing is a step of its own.
     expect(tail).toContain(`${exe} pair`);
-    expect(tail).toContain("Linking several machines (crew) does not work on Windows yet. Collie on one machine works fine.");
-    expect(tail).toContain("collie.exe is unsigned: Windows does not know the publisher of this file.");
-    expect(r.out).toContain("COLLIE_NO_PATH_EDIT=1 is set, so your PATH was not changed.");
+    expect(tail).toContain("Linking several machines (crew) does not work on Windows yet. Pastor on one machine works fine.");
+    expect(tail).toContain("pastor.exe is unsigned: Windows does not know the publisher of this file.");
+    expect(r.out).toContain("PASTOR_NO_PATH_EDIT=1 is set, so your PATH was not changed.");
     // No herdr on this PATH: the PATH check says so, and the install goes on.
     expect(r.out).toContain("Herdr not found on your PATH.");
-    // The `collie` on PATH leaves a mark when run. There is none.
-    expect(existsSync(join(b.root, "collie-ran.txt"))).toBe(false);
+    // The `pastor` on PATH leaves a mark when run. There is none.
+    expect(existsSync(join(b.root, "pastor-ran.txt"))).toBe(false);
   }, 60_000);
 
   test("names no Herdr download when herdr is on PATH", async () => {
@@ -552,7 +552,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(r.out).not.toContain("Herdr not found");
   }, 60_000);
 
-  test("writes nothing outside COLLIE_DIR, and leaves no scratch folder in it", async () => {
+  test("writes nothing outside PASTOR_DIR, and leaves no scratch folder in it", async () => {
     const b = box();
     const r = await install(b, mirror);
     expect(r.code).toBe(0);
@@ -562,11 +562,11 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(existsSync(join(b.dir, ".current.new"))).toBe(false);
   }, 60_000);
 
-  test("installs into %LOCALAPPDATA%\\collie when COLLIE_DIR is not set", async () => {
+  test("installs into %LOCALAPPDATA%\\pastor when PASTOR_DIR is not set", async () => {
     const b = box();
-    const r = await install(b, mirror, { env: { COLLIE_DIR: undefined } });
+    const r = await install(b, mirror, { env: { PASTOR_DIR: undefined } });
     expect(r.code).toBe(0);
-    expect(existsSync(join(b.profile, "Local", "collie", "versions", v1, "bin", "collie.exe"))).toBe(true);
+    expect(existsSync(join(b.profile, "Local", "pastor", "versions", v1, "bin", "pastor.exe"))).toBe(true);
   }, 60_000);
 
   test("a second run changes nothing, says so, and downloads nothing", async () => {
@@ -575,11 +575,11 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const before = snapshot(b);
     const again = await install(b, mirror);
     expect(again.code).toBe(0);
-    expect(again.out).toContain(`Collie ${v1} is already installed in ${b.dir}. To update, run: collie update`);
+    expect(again.out).toContain(`Pastor ${v1} is already installed in ${b.dir}. To update, run: pastor update`);
     expect(again.asked).toEqual([]);
     expect(snapshot(b)).toBe(before);
     // The same pinned tag again: still nothing changed, nothing downloaded.
-    const pinned = await install(b, mirror, { env: { COLLIE_TAG: `v${v1}` } });
+    const pinned = await install(b, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expect(pinned.code).toBe(0);
     expect(pinned.out).toContain("Nothing was changed, and nothing was downloaded.");
     expect(pinned.out).not.toContain("Laying");
@@ -587,23 +587,23 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(snapshot(b)).toBe(before);
   }, 90_000);
 
-  test("COLLIE_TAG lays a newer version down beside the old one and flips `current`, with no tags call", async () => {
+  test("PASTOR_TAG lays a newer version down beside the old one and flips `current`, with no tags call", async () => {
     const b = box();
     expect((await install(b, mirror)).code).toBe(0);
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v2}` } });
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expect(r.out).toContain(`Laying v${v2} down beside it`);
     expect(r.code).toBe(0);
     expect(readdirSync(join(b.dir, "versions")).toSorted()).toEqual([v1, v2]);
     expect(currentTarget(b)).toBe(versionDir(b, v2));
     expect(r.asked.some((p) => p.includes("/tags"))).toBe(false);
     expect(existsSync(join(b.dir, ".current.new"))).toBe(false);
-    // Collie may be running already: the next step is a restart, never "start" and "nothing is running".
-    expect(r.out).toContain(`OK  Collie ${v2} is installed in ${b.dir}, and current names it.`);
-    expect(r.out).toMatch(/If Collie is running, run {2}\S*collie(\.exe)? restart {2}to start this version\./);
+    // Pastor may be running already: the next step is a restart, never "start" and "nothing is running".
+    expect(r.out).toContain(`OK  Pastor ${v2} is installed in ${b.dir}, and current names it.`);
+    expect(r.out).toMatch(/If Pastor is running, run {2}\S*pastor(\.exe)? restart {2}to start this version\./);
     expect(r.out).not.toContain("Nothing is running yet");
     expect(r.out).not.toContain(" start\n");
     // Back to v1, which is on disk: a junction flip, and nothing is downloaded.
-    const back = await install(b, mirror, { env: { COLLIE_TAG: `v${v1}` } });
+    const back = await install(b, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expect(back.code).toBe(0);
     expect(back.out).toContain("nothing was downloaded");
     expect(back.asked).toEqual([]);
@@ -620,10 +620,10 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const corrupt = new Uint8Array(good.zip);
     const at = corrupt.length - 30;
     corrupt.set([(corrupt[at] ?? 0) ^ 0xff], at);
-    mirror.put(`v${bad}`, `collie-${bad}-${PLATFORM}.zip`, corrupt);
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${bad}` } });
+    mirror.put(`v${bad}`, `pastor-${bad}-${PLATFORM}.zip`, corrupt);
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${bad}` } });
     expectFailed(r);
-    expect(r.out).toContain(`CHECKSUM MISMATCH for collie-${bad}-${PLATFORM}.zip`);
+    expect(r.out).toContain(`CHECKSUM MISMATCH for pastor-${bad}-${PLATFORM}.zip`);
     expect(r.out).toContain("nothing was installed");
     expect(readdirSync(join(b.dir, "versions"))).toEqual([v1]);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
@@ -634,8 +634,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const v = "0.39.0";
     publish(mirror, buildZip(scratch, v), v);
-    mirror.drop(`v${v}`, `collie-${v}-${PLATFORM}.zip.sha256`);
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v}` } });
+    mirror.drop(`v${v}`, `pastor-${v}-${PLATFORM}.zip.sha256`);
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
     expect(r.out).toContain("so a download could not be checked");
     expect(existsSync(b.dir)).toBe(false);
@@ -645,8 +645,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const v = "0.40.0";
     publish(mirror, buildZip(scratch, v), v);
-    mirror.put(`v${v}`, `collie-${v}.manifest.json`, manifest(v, "a".repeat(64)));
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v}` } });
+    mirror.put(`v${v}`, `pastor-${v}.manifest.json`, manifest(v, "a".repeat(64)));
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
     expect(r.out).toContain("is not the one release");
     expect(existsSync(b.dir)).toBe(false);
@@ -654,9 +654,9 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
 
   test("a release with no Windows zip is a plain refusal", async () => {
     const b = box();
-    const r = await install(b, mirror, { env: { COLLIE_TAG: "v0.35.0" } });
+    const r = await install(b, mirror, { env: { PASTOR_TAG: "v0.35.0" } });
     expectFailed(r);
-    expect(r.out).toContain(`release v0.35.0 has no collie-0.35.0-${PLATFORM}.zip.sha256 (HTTP 404)`);
+    expect(r.out).toContain(`release v0.35.0 has no pastor-0.35.0-${PLATFORM}.zip.sha256 (HTTP 404)`);
     expect(r.out).toContain("Either that release has no Windows build");
     expect(existsSync(b.dir)).toBe(false);
   }, 60_000);
@@ -668,7 +668,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expect(r.code).toBe(0);
-      expect(r.out).toContain(`Collie ${v1} is installed`);
+      expect(r.out).toContain(`Pastor ${v1} is installed`);
       expect(r.asked.filter((p) => p.includes("v9."))).toEqual([]);
       expect(readdirSync(join(b.dir, "versions"))).toEqual([v1]);
     } finally {
@@ -676,15 +676,15 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     }
   }, 60_000);
 
-  test("a hostile COLLIE_TAG or COLLIE_UPDATE_REPO stops before any request", async () => {
+  test("a hostile PASTOR_TAG or PASTOR_UPDATE_REPO stops before any request", async () => {
     for (const env of [
-      { COLLIE_TAG: "v1.0.0/../x" },
-      { COLLIE_TAG: "v1.0.0-..x" },
-      { COLLIE_TAG: "v1.0.0\\..\\x" },
-      { COLLIE_UPDATE_REPO: "AltanS/collie/../x" },
-      { COLLIE_UPDATE_REPO: "../.." },
-      { COLLIE_UPDATE_REPO: "AltanS/.." },
-      { COLLIE_UPDATE_REPO: "a b/c" },
+      { PASTOR_TAG: "v1.0.0/../x" },
+      { PASTOR_TAG: "v1.0.0-..x" },
+      { PASTOR_TAG: "v1.0.0\\..\\x" },
+      { PASTOR_UPDATE_REPO: "Ad3Digital/pastor/../x" },
+      { PASTOR_UPDATE_REPO: "../.." },
+      { PASTOR_UPDATE_REPO: "AltanS/.." },
+      { PASTOR_UPDATE_REPO: "a b/c" },
     ]) {
       const b = box();
       const r = await install(b, mirror, { env });
@@ -694,12 +694,12 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     }
   }, 120_000);
 
-  test("COLLIE_DIR must be a full path on a drive, not a share, not a drive root, with no ';' or '%'", async () => {
+  test("PASTOR_DIR must be a full path on a drive, not a share, not a drive root, with no ';' or '%'", async () => {
     const b = box();
-    for (const dir of ["install", "\\\\server\\share\\collie", "C:\\", `${b.root}\\a;b`, `${b.root}\\a%b%`]) {
-      const r = await install(b, mirror, { env: { COLLIE_DIR: dir } });
+    for (const dir of ["install", "\\\\server\\share\\pastor", "C:\\", `${b.root}\\a;b`, `${b.root}\\a%b%`]) {
+      const r = await install(b, mirror, { env: { PASTOR_DIR: dir } });
       expectFailed(r);
-      expect(r.out).toContain("COLLIE_DIR=");
+      expect(r.out).toContain("PASTOR_DIR=");
       expect(r.asked).toEqual([]);
     }
     expect(existsSync(join(b.root, "install"))).toBe(false);
@@ -708,30 +708,30 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
   test("a folder with a space, an '&' and a non-ASCII letter installs", async () => {
     const b = box();
     const dir = join(b.root, "inst a&b \u00fc");
-    const r = await install(b, mirror, { env: { COLLIE_DIR: dir } });
-    expect(r.out).toContain(`Collie ${v1} is installed in ${dir}`);
+    const r = await install(b, mirror, { env: { PASTOR_DIR: dir } });
+    expect(r.out).toContain(`Pastor ${v1} is installed in ${dir}`);
     expect(r.code).toBe(0);
     expect(norm(realpathSync(join(dir, "current")))).toBe(norm(realpathSync(join(dir, "versions", v1))));
   }, 60_000);
 
-  test("a repository other than AltanS/collie is named in a loud line", async () => {
+  test("a repository other than Ad3Digital/pastor is named in a loud line", async () => {
     const b = box();
-    const r = await install(b, mirror, { env: { COLLIE_UPDATE_REPO: "someone/collie-fork" } });
+    const r = await install(b, mirror, { env: { PASTOR_UPDATE_REPO: "someone/pastor-fork" } });
     expect(r.code).toBe(0);
-    expect(r.out).toContain("WARNING: COLLIE_UPDATE_REPO is set. This installs Collie from github.com/someone/collie-fork");
-    expect(r.asked[0]).toBe("/repos/someone/collie-fork/tags");
+    expect(r.out).toContain("WARNING: PASTOR_UPDATE_REPO is set. This installs Pastor from github.com/someone/pastor-fork");
+    expect(r.asked[0]).toBe("/repos/someone/pastor-fork/tags");
   }, 60_000);
 
-  test("COLLIE_INSTALL_MIRROR takes only file:/// and loopback http, and says loudly that it is set", async () => {
+  test("PASTOR_INSTALL_MIRROR takes only file:/// and loopback http, and says loudly that it is set", async () => {
     for (const url of ["https://example.com", "http://10.0.0.1:8080", "http://127.0.0.1.evil.example", "http://user@127.0.0.1", "ftp://127.0.0.1", "\\\\server\\share"]) {
       const b = box();
-      const r = await install(b, mirror, { env: { COLLIE_INSTALL_MIRROR: url } });
+      const r = await install(b, mirror, { env: { PASTOR_INSTALL_MIRROR: url } });
       expectFailed(r);
       expect(r.out).toContain("It is a test seam");
       expect(r.asked).toEqual([]);
     }
     const ok = await install(box(), mirror);
-    expect(ok.out).toContain(`WARNING: COLLIE_INSTALL_MIRROR is set. This is a test seam: everything comes from ${mirror.url}`);
+    expect(ok.out).toContain(`WARNING: PASTOR_INSTALL_MIRROR is set. This is a test seam: everything comes from ${mirror.url}`);
   }, 120_000);
 
   test("a file:/// mirror folder works the same way", async () => {
@@ -745,8 +745,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       if (key.startsWith(`v${v1}/`)) writeFileSync(join(release, key.slice(`v${v1}/`.length)), body);
     }
     const url = `file:///${root.replace(/\\/g, "/")}`;
-    const r = await install(b, mirror, { env: { COLLIE_INSTALL_MIRROR: url } });
-    expect(r.out).toContain(`Collie ${v1} is installed in ${b.dir}`);
+    const r = await install(b, mirror, { env: { PASTOR_INSTALL_MIRROR: url } });
+    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
     expect(r.code).toBe(0);
     expect(r.asked).toEqual([]);
   }, 60_000);
@@ -760,11 +760,11 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       expect(r.code).toBe(0);
       expect(r.out).toContain("v0.38.5 has no Windows build. Trying the next older release.");
       expect(r.out).toContain("v0.38.4 has no Windows build. Trying the next older release.");
-      expect(r.out).toContain(`Collie ${v1} is installed`);
+      expect(r.out).toContain(`Pastor ${v1} is installed`);
       expect(r.asked.filter((p) => p.endsWith(".sha256"))).toEqual([
-        `/${REPO}/releases/download/v0.38.5/collie-0.38.5-${PLATFORM}.zip.sha256`,
-        `/${REPO}/releases/download/v0.38.4/collie-0.38.4-${PLATFORM}.zip.sha256`,
-        `/${REPO}/releases/download/v${v1}/collie-${v1}-${PLATFORM}.zip.sha256`,
+        `/${REPO}/releases/download/v0.38.5/pastor-0.38.5-${PLATFORM}.zip.sha256`,
+        `/${REPO}/releases/download/v0.38.4/pastor-0.38.4-${PLATFORM}.zip.sha256`,
+        `/${REPO}/releases/download/v${v1}/pastor-${v1}-${PLATFORM}.zip.sha256`,
       ]);
     } finally {
       mirror.tags = saved;
@@ -784,7 +784,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expect(r.code).toBe(0);
-      expect(r.out).toContain(`Collie ${v1} is installed`);
+      expect(r.out).toContain(`Pastor ${v1} is installed`);
       expect(mirror.tagQueries.slice(before)).toEqual(["?per_page=100", "?per_page=100&page=2"]);
     } finally {
       mirror.tags = saved;
@@ -798,8 +798,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expectFailed(r);
-      expect(r.out).toContain("none of the newest 5 releases of AltanS/collie carries a Windows build yet");
-      expect(lastLine(r.out)).toContain("COLLIE_TAG");
+      expect(r.out).toContain("none of the newest 5 releases of Ad3Digital/pastor carries a Windows build yet");
+      expect(lastLine(r.out)).toContain("PASTOR_TAG");
       expect(r.out).not.toContain("HTTP 404");
       expect(existsSync(b.dir)).toBe(false);
     } finally {
@@ -814,7 +814,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       const r = await install(b, mirror);
       expectFailed(r);
       expect(r.out).toContain("rate limit says no (HTTP 403)");
-      expect(lastLine(r.out)).toContain("$env:COLLIE_TAG = 'vX.Y.Z'");
+      expect(lastLine(r.out)).toContain("$env:PASTOR_TAG = 'vX.Y.Z'");
     } finally {
       mirror.tagsStatus = 200;
     }
@@ -822,7 +822,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
 
   test("a GitHub token in the environment never reaches a mirror", async () => {
     const before = mirror.authorizations.length;
-    const r = await install(box(), mirror, { env: { GH_TOKEN: "ghp_secret", COLLIE_GITHUB_TOKEN: "ghp_secret2" } });
+    const r = await install(box(), mirror, { env: { GH_TOKEN: "ghp_secret", PASTOR_GITHUB_TOKEN: "ghp_secret2" } });
     expect(r.code).toBe(0);
     expect(mirror.authorizations.slice(before)).toEqual([]);
     expect(r.out).not.toContain("ghp_secret");
@@ -830,12 +830,12 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
 
   test("a zip with an entry that climbs out, or names a drive, is refused before anything is written", async () => {
     let n = 0;
-    for (const bad of ["collie-0.42.0-windows-x64/../../evil.txt", "C:/evil.txt", "/evil.txt", "other-root/evil.txt"]) {
+    for (const bad of ["pastor-0.42.0-windows-x64/../../evil.txt", "C:/evil.txt", "/evil.txt", "other-root/evil.txt"]) {
       const v = `0.42.${n++}`;
       const asset = hostileZip(scratch, v, bad.replace("0.42.0", v));
       publish(mirror, asset, v);
       const b = box();
-      const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v}` } });
+      const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
       expectFailed(r);
       expect(r.out).toContain("the zip is not safe to unpack");
       expect(existsSync(b.dir)).toBe(false);
@@ -869,7 +869,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     rmSync(join(b.dir, "current"));
     mkdirSync(join(b.dir, "current"));
     writeFileSync(join(b.dir, "current", "mine.txt"), "mine\n");
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v2}` } });
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(r);
     expect(r.out).toContain("is a real folder or file, not a junction");
     expect(r.asked).toEqual([]);
@@ -881,38 +881,38 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     expect((await install(b, mirror)).code).toBe(0);
     mkdirSync(join(b.dir, "versions", v2, "web"), { recursive: true });
-    const half = await install(b, mirror, { env: { COLLIE_TAG: `v${v2}` } });
+    const half = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(half);
-    expect(half.out).toContain("holds no bin\\collie.exe");
+    expect(half.out).toContain("holds no bin\\pastor.exe");
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(half.asked).toEqual([]);
 
     rmSync(join(b.dir, "versions", v2), { recursive: true });
     const elsewhere = join(b.root, "elsewhere");
     mkdirSync(join(elsewhere, "bin"), { recursive: true });
-    writeFileSync(join(elsewhere, "bin", "collie.exe"), "not ours\n");
+    writeFileSync(join(elsewhere, "bin", "pastor.exe"), "not ours\n");
     symlinkSync(elsewhere, join(b.dir, "versions", v2), "junction");
-    const linked = await install(b, mirror, { env: { COLLIE_TAG: `v${v2}` } });
+    const linked = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(linked);
     expect(linked.out).toContain("is a junction or a link");
     expect(currentTarget(b)).toBe(versionDir(b, v1));
-    expect(existsSync(join(elsewhere, "bin", "collie.exe"))).toBe(true);
+    expect(existsSync(join(elsewhere, "bin", "pastor.exe"))).toBe(true);
   }, 90_000);
 
-  test("a collie.exe Windows will not run stops the install with the causes, and no next steps", async () => {
+  test("a pastor.exe Windows will not run stops the install with the causes, and no next steps", async () => {
     const v = "0.43.0";
     publish(mirror, buildZip(scratch, v, true), v);
     const b = box();
-    const r = await install(b, mirror, { env: { COLLIE_TAG: `v${v}` } });
+    const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
-    for (const words of ["did not let collie.exe run", "Smart App Control", "Microsoft Defender", "whoever manages this computer", "safe to leave in place", "turning it off is permanent", "More info, then Run anyway"]) {
+    for (const words of ["did not let pastor.exe run", "Smart App Control", "Microsoft Defender", "whoever manages this computer", "safe to leave in place", "turning it off is permanent", "More info, then Run anyway"]) {
       expect(r.out).toContain(words);
     }
-    expect(lastLine(r.out)).toContain("https://github.com/AltanS/collie/issues");
+    expect(lastLine(r.out)).toContain("https://github.com/Ad3Digital/pastor/issues");
     expect(r.out).not.toContain("is installed in");
     // The files stay: the install is safe to leave in place.
-    expect(existsSync(join(b.dir, "current", "bin", "collie.exe"))).toBe(true);
-    expect(existsSync(join(b.dir, ".collie-version-check.txt"))).toBe(false);
+    expect(existsSync(join(b.dir, "current", "bin", "pastor.exe"))).toBe(true);
+    expect(existsSync(join(b.dir, ".pastor-version-check.txt"))).toBe(false);
   }, 60_000);
 
   // THE DRIFT CONTRACT. install.ps1 and the CLI describe one layout in two languages. A tree the
@@ -920,7 +920,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
   // install would read itself (its process root is versions\<v>: Bun resolves execPath through the
   // junction). install.sh writes no marker file, and neither does install.ps1: `classifyInstall`
   // reads a binary install from the `versions` parent and the `current` link alone.
-  test("the tree it lays down is the binary install `collie` reads, path for path", async () => {
+  test("the tree it lays down is the binary install `pastor` reads, path for path", async () => {
     const b = box();
     const r = await install(b, mirror);
     expect(r.code).toBe(0);
@@ -940,12 +940,12 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(layout.currentLink).toBe(join(b.dir, "current"));
     expect(layout.version).toBe(v1);
     expect(currentVersionDir({ link: realLinkFs }, layout)).toBe(v1);
-    expect(publishedBinary(root, realLinkFs, host)).toBe(join(b.dir, "current", "bin", "collie.exe"));
+    expect(publishedBinary(root, realLinkFs, host)).toBe(join(b.dir, "current", "bin", "pastor.exe"));
   }, 60_000);
 
-  test("a COLLIE_TAG of the wrong shape dies before any request", async () => {
+  test("a PASTOR_TAG of the wrong shape dies before any request", async () => {
     const b = box();
-    const r = await install(b, mirror, { env: { COLLIE_TAG: "1.0.0" } });
+    const r = await install(b, mirror, { env: { PASTOR_TAG: "1.0.0" } });
     expectFailed(r);
     expect(r.out).toContain("is not a release tag");
     expect(r.asked).toEqual([]);
@@ -965,16 +965,16 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     writeFileSync(join(other.dir, "notes.txt"), "mine\n");
     const r = await install(other, mirror);
     expectFailed(r);
-    expect(r.out).toContain("is not a Collie install");
+    expect(r.out).toContain("is not a Pastor install");
     expect(readdirSync(other.dir)).toEqual(["notes.txt"]);
 
     const git = box();
     mkdirSync(join(git.dir, ".git"), { recursive: true });
     const g = await install(git, mirror);
     expect(g.code).toBe(0);
-    expect(g.out).toContain(`Collie (a git checkout) is already installed in ${git.dir}. To update, run: collie update`);
+    expect(g.out).toContain(`Pastor (a git checkout) is already installed in ${git.dir}. To update, run: pastor update`);
     expect(g.asked).toEqual([]);
-    const pinned = await install(git, mirror, { env: { COLLIE_TAG: `v${v1}` } });
+    const pinned = await install(git, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expectFailed(pinned);
     expect(pinned.out).toContain(`git -C ${git.dir} checkout v${v1}`);
   }, 90_000);
@@ -984,19 +984,19 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     mirror.put("script", "install.ps1", new Uint8Array(readFileSync(SCRIPT)));
     const url = `${mirror.url}/${REPO}/releases/download/script/install.ps1`;
     // What the session had before, against what it has after: preferences, the TLS protocols, and
-    // every function whose name does not say Collie.
+    // every function whose name does not say Pastor.
     const command = [
-      "$fn = @(Get-ChildItem function: | Where-Object { $_.Name -notlike '*Collie*' } | ForEach-Object Name)",
+      "$fn = @(Get-ChildItem function: | Where-Object { $_.Name -notlike '*Pastor*' } | ForEach-Object Name)",
       "$eap = $ErrorActionPreference; $pp = $ProgressPreference; $tls = [Net.ServicePointManager]::SecurityProtocol",
       `irm -UseBasicParsing ${url} | iex`,
       "$code = $LASTEXITCODE",
       // A module PowerShell loads on its own (Expand-Archive's) brings its functions; those are not the script's.
-      "$new = @(Get-ChildItem function: | Where-Object { $_.Name -notlike '*Collie*' -and -not $_.ModuleName -and $fn -notcontains $_.Name })",
+      "$new = @(Get-ChildItem function: | Where-Object { $_.Name -notlike '*Pastor*' -and -not $_.ModuleName -and $fn -notcontains $_.Name })",
       "'LEAK functions=' + $new.Count + ' eap=' + ($eap -eq $ErrorActionPreference) + ' progress=' + ($pp -eq $ProgressPreference) + ' tls=' + ($tls -eq [Net.ServicePointManager]::SecurityProtocol)",
       "exit $code",
     ].join("; ");
     const r = await runPowerShell(b, ["-Command", command], childEnv(b, mirror, {}, false));
-    expect(r.out).toContain(`Collie ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
     expect(r.code).toBe(0);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(r.out).toContain("LEAK functions=0 eap=True progress=True tls=True");
@@ -1009,16 +1009,16 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const corrupt = new Uint8Array(good.zip);
     const at = corrupt.length - 30;
     corrupt.set([(corrupt[at] ?? 0) ^ 0xff], at);
-    mirror.put(`v${v}`, `collie-${v}-${PLATFORM}.zip`, corrupt);
+    mirror.put(`v${v}`, `pastor-${v}-${PLATFORM}.zip`, corrupt);
     const bad = box();
-    const failed = await runPowerShell(bad, ["-File", SCRIPT], childEnv(bad, mirror, { COLLIE_TAG: `v${v}` }, false));
+    const failed = await runPowerShell(bad, ["-File", SCRIPT], childEnv(bad, mirror, { PASTOR_TAG: `v${v}` }, false));
     expect(failed.code).toBe(1);
     expect(lastLine(failed.out)).toMatch(/^Install failed\. /);
     expect(failed.out).toContain("CHECKSUM MISMATCH");
 
     const ok = box();
     const installed = await runPowerShell(ok, ["-File", SCRIPT], childEnv(ok, mirror, {}, false));
-    expect(installed.out).toContain(`Collie ${v1} is installed in ${ok.dir}`);
+    expect(installed.out).toContain(`Pastor ${v1} is installed in ${ok.dir}`);
     expect(installed.code).toBe(0);
   }, 90_000);
 
@@ -1029,7 +1029,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const r = await runPowerShell(
       b,
       ["-Command", `irm -UseBasicParsing ${url} | iex; 'STILL HERE ' + $LASTEXITCODE; exit $LASTEXITCODE`],
-      childEnv(b, mirror, { COLLIE_TAG: "v0.35.0" }, false),
+      childEnv(b, mirror, { PASTOR_TAG: "v0.35.0" }, false),
     );
     expect(r.code).toBe(1);
     expect(r.out).toContain("Install failed.");
@@ -1040,7 +1040,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const wow = join(SYSTEM_ROOT, "SysWOW64", "WindowsPowerShell", "v1.0", "powershell.exe");
     const r = await runPowerShell(b, ["-Command", `& ${psQuote(SCRIPT)}; exit $LASTEXITCODE`], childEnv(b, mirror, {}, false), wow);
-    expect(r.out).toContain(`Collie ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
     expect(r.code).toBe(0);
   }, 60_000);
 
@@ -1081,22 +1081,22 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const r = await helpers(
       b,
       [
-        "$e = 'C:\\Users\\u\\AppData\\Local\\collie\\current\\bin'",
-        "Show (Add-CollieUserPathEntry 'C:\\a;%USERPROFILE%\\b' $e)",
-        "Show (Add-CollieUserPathEntry 'C:\\a;' $e)",
-        "Show (Add-CollieUserPathEntry '' $e)",
-        "Show (Add-CollieUserPathEntry 'C:\\a;c:\\users\\U\\appdata\\local\\COLLIE\\current\\bin\\;C:\\b' $e)",
+        "$e = 'C:\\Users\\u\\AppData\\Local\\pastor\\current\\bin'",
+        "Show (Add-PastorUserPathEntry 'C:\\a;%USERPROFILE%\\b' $e)",
+        "Show (Add-PastorUserPathEntry 'C:\\a;' $e)",
+        "Show (Add-PastorUserPathEntry '' $e)",
+        "Show (Add-PastorUserPathEntry 'C:\\a;c:\\users\\U\\appdata\\local\\PASTOR\\current\\bin\\;C:\\b' $e)",
         "$env:SPEC07_HOME = 'C:\\Users\\u\\AppData\\Local'",
-        "Show (Add-CollieUserPathEntry 'C:\\a;%SPEC07_HOME%\\collie\\current\\bin' $e)",
-        // The line `collie uninstall` prints removes the entry again: the value comes back byte for byte.
-        "foreach ($v in @('C:\\a;', 'C:\\a', '%USERPROFILE%\\x;C:\\b;')) { $n = Add-CollieUserPathEntry $v $e; 'ROUNDTRIP ' + (((($n -split ';') | Where-Object { $_.TrimEnd('\\') -ne $e }) -join ';') -ceq $v) }",
+        "Show (Add-PastorUserPathEntry 'C:\\a;%SPEC07_HOME%\\pastor\\current\\bin' $e)",
+        // The line `pastor uninstall` prints removes the entry again: the value comes back byte for byte.
+        "foreach ($v in @('C:\\a;', 'C:\\a', '%USERPROFILE%\\x;C:\\b;')) { $n = Add-PastorUserPathEntry $v $e; 'ROUNDTRIP ' + (((($n -split ';') | Where-Object { $_.TrimEnd('\\') -ne $e }) -join ';') -ceq $v) }",
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
     expect(r.out.trim().split(/\r?\n/)).toEqual([
-      "VALUE C:\\a;%USERPROFILE%\\b;C:\\Users\\u\\AppData\\Local\\collie\\current\\bin",
-      "VALUE C:\\a;C:\\Users\\u\\AppData\\Local\\collie\\current\\bin;",
-      "VALUE C:\\Users\\u\\AppData\\Local\\collie\\current\\bin",
+      "VALUE C:\\a;%USERPROFILE%\\b;C:\\Users\\u\\AppData\\Local\\pastor\\current\\bin",
+      "VALUE C:\\a;C:\\Users\\u\\AppData\\Local\\pastor\\current\\bin;",
+      "VALUE C:\\Users\\u\\AppData\\Local\\pastor\\current\\bin",
       "NULL",
       "NULL",
       "ROUNDTRIP True",
@@ -1105,36 +1105,36 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     ]);
   }, 60_000);
 
-  test("this window's PATH gets the entry too, and the steps spell `collie` only when it finds this install", async () => {
+  test("this window's PATH gets the entry too, and the steps spell `pastor` only when it finds this install", async () => {
     const b = box();
     const bin = join(b.root, "inst", "current", "bin");
     mkdirSync(bin, { recursive: true });
-    copyFileSync(join(SYSTEM_ROOT, "System32", "cmd.exe"), join(bin, "collie.exe"));
+    copyFileSync(join(SYSTEM_ROOT, "System32", "cmd.exe"), join(bin, "pastor.exe"));
     const other = join(b.root, "other");
     mkdirSync(other, { recursive: true });
-    writeFileSync(join(other, "collie.cmd"), "@echo off\r\n");
+    writeFileSync(join(other, "pastor.cmd"), "@echo off\r\n");
     const r = await helpers(
       b,
       [
         // The registry write is replaced: no test edits the real user PATH.
-        "function Set-CollieUserPath($Entry) { return $true }",
-        "Remove-Item Env:COLLIE_NO_PATH_EDIT",
+        "function Set-PastorUserPath($Entry) { return $true }",
+        "Remove-Item Env:PASTOR_NO_PATH_EDIT",
         `$env:Path = 'C:\\Windows\\System32'`,
-        `Publish-CollieName ${psQuote(join(b.root, "inst"))}`,
+        `Publish-PastorName ${psQuote(join(b.root, "inst"))}`,
         "'PATH ' + $env:Path",
-        `'NAME ' + (Get-CollieCommandName ${psQuote(join(bin, "collie.exe"))})`,
-        `Publish-CollieName ${psQuote(join(b.root, "inst"))} | Out-Null`,
+        `'NAME ' + (Get-PastorCommandName ${psQuote(join(bin, "pastor.exe"))})`,
+        `Publish-PastorName ${psQuote(join(b.root, "inst"))} | Out-Null`,
         "'ONCE ' + @($env:Path -split ';' | Where-Object { $_ -like '*current\\bin' }).Count",
         `$env:Path = ${psQuote(other)} + ';' + $env:Path`,
-        `'SHADOWED ' + (Get-CollieCommandName ${psQuote(join(bin, "collie.exe"))})`,
+        `'SHADOWED ' + (Get-PastorCommandName ${psQuote(join(bin, "pastor.exe"))})`,
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
     expect(r.out).toContain("Added ");
     expect(r.out).toContain(`PATH C:\\Windows\\System32;${bin}`);
-    expect(r.out).toContain("NAME collie\r\n");
+    expect(r.out).toContain("NAME pastor\r\n");
     expect(r.out).toContain("ONCE 1");
-    expect(r.out).toContain(`SHADOWED ${join(bin, "collie.exe")}`);
+    expect(r.out).toContain(`SHADOWED ${join(bin, "pastor.exe")}`);
   }, 60_000);
 
   test("refuses a machine that is not x64 or is older than build 19041", async () => {
@@ -1142,12 +1142,12 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const r = await helpers(
       b,
       [
-        "Show (Get-CollieHostProblem 'Arm64' 26100)",
-        "Show (Get-CollieHostProblem 'X86' 26100)",
-        "Show (Get-CollieHostProblem 'AMD64' 18363)",
-        "Show (Get-CollieHostProblem 'X64' 22631)",
-        "Show (Get-CollieHostProblem 'AMD64' 19041)",
-        "Show (Get-CollieHostProblem (Get-CollieArch) ([Environment]::OSVersion.Version.Build))",
+        "Show (Get-PastorHostProblem 'Arm64' 26100)",
+        "Show (Get-PastorHostProblem 'X86' 26100)",
+        "Show (Get-PastorHostProblem 'AMD64' 18363)",
+        "Show (Get-PastorHostProblem 'X64' 22631)",
+        "Show (Get-PastorHostProblem 'AMD64' 19041)",
+        "Show (Get-PastorHostProblem (Get-PastorArch) ([Environment]::OSVersion.Version.Build))",
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
@@ -1164,17 +1164,17 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const r = await helpers(
       b,
       [
-        `Show (Get-CollieDigestProblem '${d.toUpperCase()}  x.zip' 'x.zip' '${d}')`,
-        `Show (Get-CollieDigestProblem '${d}  x.zip' 'x.zip' '${"cd".repeat(32)}')`,
-        `Show (Get-CollieDigestProblem '${d}  y.zip' 'x.zip' '${d}')`,
-        "Show (Get-CollieDigestProblem '' 'x.zip' 'aa')",
-        `Show (Get-CollieDigestProblem '${d}' 'x.zip' '${d}')`,
-        `Show (Get-CollieDigestProblem '${d}  *x.zip' 'x.zip' '${d}')`,
-        `Show (Get-CollieDigestProblem '${d}  x.zip extra' 'x.zip' '${d}')`,
-        `Show (Get-CollieDigestProblem '${d.slice(1)}  x.zip' 'x.zip' '${d}')`,
-        "$r = 'collie-1.0.0-windows-x64'",
-        "foreach ($n in @(\"$r/bin/collie.exe\", \"$r/\", \"$r/../x\", \"$r/a/../../x\", 'C:/x', \"$r/a:b\", '/x', '\\x', \"$r\\..\\x\", 'other/x', '')) { Show (Get-CollieEntryProblem $n $r) }",
-        "Show ((Sort-CollieTags @('v1.9.0', 'v1.15.0', 'v1.10.0', 'v1.16.0-rc.1', 'v1.2.0', 'nightly')) -join ',')",
+        `Show (Get-PastorDigestProblem '${d.toUpperCase()}  x.zip' 'x.zip' '${d}')`,
+        `Show (Get-PastorDigestProblem '${d}  x.zip' 'x.zip' '${"cd".repeat(32)}')`,
+        `Show (Get-PastorDigestProblem '${d}  y.zip' 'x.zip' '${d}')`,
+        "Show (Get-PastorDigestProblem '' 'x.zip' 'aa')",
+        `Show (Get-PastorDigestProblem '${d}' 'x.zip' '${d}')`,
+        `Show (Get-PastorDigestProblem '${d}  *x.zip' 'x.zip' '${d}')`,
+        `Show (Get-PastorDigestProblem '${d}  x.zip extra' 'x.zip' '${d}')`,
+        `Show (Get-PastorDigestProblem '${d.slice(1)}  x.zip' 'x.zip' '${d}')`,
+        "$r = 'pastor-1.0.0-windows-x64'",
+        "foreach ($n in @(\"$r/bin/pastor.exe\", \"$r/\", \"$r/../x\", \"$r/a/../../x\", 'C:/x', \"$r/a:b\", '/x', '\\x', \"$r\\..\\x\", 'other/x', '')) { Show (Get-PastorEntryProblem $n $r) }",
+        "Show ((Sort-PastorTags @('v1.9.0', 'v1.15.0', 'v1.10.0', 'v1.16.0-rc.1', 'v1.2.0', 'nightly')) -join ',')",
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
@@ -1206,9 +1206,9 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       b,
       [
         `$dir = '${b.dir}'`,
-        "New-CollieJunction \"$dir\\current\" \"$dir\\versions\\" + v1 + "\"",
-        "function Move-CollieItem($From, $To) { throw 'simulated: the rename was refused' }",
-        "try { Set-CollieCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['CollieFix'] }",
+        "New-PastorJunction \"$dir\\current\" \"$dir\\versions\\" + v1 + "\"",
+        "function Move-PastorItem($From, $To) { throw 'simulated: the rename was refused' }",
+        "try { Set-PastorCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['PastorFix'] }",
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
@@ -1228,11 +1228,11 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       b,
       [
         `$dir = '${b.dir}'`,
-        "New-CollieJunction \"$dir\\current\" \"$dir\\versions\\" + v1 + "\"",
-        "function Move-CollieItem($From, $To) { throw 'simulated: the rename was refused' }",
-        "$real = ${function:New-CollieJunction}",
-        "function New-CollieJunction($Path, $Target) { if ($Path.EndsWith('\\current')) { throw 'simulated: no junction' }; & $real $Path $Target }",
-        "try { Set-CollieCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['CollieFix'] }",
+        "New-PastorJunction \"$dir\\current\" \"$dir\\versions\\" + v1 + "\"",
+        "function Move-PastorItem($From, $To) { throw 'simulated: the rename was refused' }",
+        "$real = ${function:New-PastorJunction}",
+        "function New-PastorJunction($Path, $Target) { if ($Path.EndsWith('\\current')) { throw 'simulated: no junction' }; & $real $Path $Target }",
+        "try { Set-PastorCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['PastorFix'] }",
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
@@ -1241,14 +1241,14 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(existsSync(join(b.dir, "versions", v1, "bin", "sentinel.txt"))).toBe(true);
   }, 60_000);
 
-  test("a real folder named `current` is not Collie's to remove", async () => {
+  test("a real folder named `current` is not Pastor's to remove", async () => {
     const b = box();
     twoVersions(b);
     mkdirSync(join(b.dir, "current"));
     writeFileSync(join(b.dir, "current", "mine.txt"), "mine\n");
     const r = await helpers(
       b,
-      [`$dir = '${b.dir}'`, "try { Set-CollieCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['CollieFix'] }"].join(
+      [`$dir = '${b.dir}'`, "try { Set-PastorCurrent $dir \"$dir\\versions\\" + v2 + "\"; 'NO ERROR' } catch { 'ERR ' + $_.Exception.Message; 'FIX ' + $_.Exception.Data['PastorFix'] }"].join(
         "\r\n",
       ),
     );

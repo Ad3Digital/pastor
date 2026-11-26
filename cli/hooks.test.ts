@@ -18,10 +18,10 @@ import {
 } from "./hooks.ts";
 import { EXIT } from "./io.ts";
 import type { Environment } from "./context.ts";
-import { collieBinary } from "./unit.ts";
+import { pastorBinary } from "./unit.ts";
 import type { JsonValue } from "../bridge/json.ts";
 
-// `collie hooks install|uninstall|status`. Every decision is a pure function of the document on disk,
+// `pastor hooks install|uninstall|status`. Every decision is a pure function of the document on disk,
 // so the merge rules are pinned directly; the verbs are then asserted for what they DO — which file
 // is written, which is refused untouched, and what the operator reads.
 //
@@ -32,12 +32,12 @@ import type { JsonValue } from "../bridge/json.ts";
 // to POSIX (`posixKey`), so a seed may use either spelling; only a recorded op log needs folding.
 const CLAUDE_DIR = join(HOME, ".claude");
 const SETTINGS = join(CLAUDE_DIR, "settings.json");
-const BACKUP = `${SETTINGS}.collie-backup`;
-const PUBLISHED = join(HOME, ".local", "bin", "collie");
-/** This checkout's compiled binary: `bin/collie` on POSIX, `bin/collie.exe` on Windows. */
-const OWN = collieBinary(ROOT);
+const BACKUP = `${SETTINGS}.pastor-backup`;
+const PUBLISHED = join(HOME, ".local", "bin", "pastor");
+/** This checkout's compiled binary: `bin/pastor` on POSIX, `bin/pastor.exe` on Windows. */
+const OWN = pastorBinary(ROOT);
 const COMMAND = `${OWN} beacon emit ${HOOK_MARKER}`;
-/** A second Claude profile, named by `COLLIE_TRANSCRIPT_ROOT`, and the settings file beside its journal. */
+/** A second Claude profile, named by `PASTOR_TRANSCRIPT_ROOT`, and the settings file beside its journal. */
 const OPS_PROFILE = join("/srv", "ops");
 const OPS_SETTINGS = join(OPS_PROFILE, "settings.json");
 /** Where a stow/chezmoi-style `~/.claude` link points. */
@@ -45,7 +45,7 @@ const DOTFILES = join("/dotfiles", "claude");
 /** A path segment that only a version directory has — the hook command must never contain it. */
 const VERSIONS_SEGMENT = /[/\\]versions[/\\]/;
 
-/** A hook the OPERATOR wrote. Nothing Collie does may touch it, read it, or move it. */
+/** A hook the OPERATOR wrote. Nothing Pastor does may touch it, read it, or move it. */
 const THEIRS = { matcher: "Bash", hooks: [{ type: "command", command: "/usr/local/bin/audit.sh" }] };
 
 function deps(
@@ -68,7 +68,7 @@ describe("the targets", () => {
   test("are ~/.claude, plus one per configured Claude journal root (issue #92)", () => {
     const work = join("/srv", "work");
     const roots = [join(work, "projects"), join(OPS_PROFILE, "projects")].join(",");
-    expect(claudeSettingsTargets(context({ COLLIE_TRANSCRIPT_ROOT: roots }))).toEqual([
+    expect(claudeSettingsTargets(context({ PASTOR_TRANSCRIPT_ROOT: roots }))).toEqual([
       { dir: CLAUDE_DIR, path: SETTINGS },
       { dir: work, path: join(work, "settings.json") },
       { dir: OPS_PROFILE, path: OPS_SETTINGS },
@@ -76,7 +76,7 @@ describe("the targets", () => {
   });
 
   test("never name a project settings file, and never repeat one", () => {
-    const targets = claudeSettingsTargets(context({ COLLIE_TRANSCRIPT_ROOT: join(CLAUDE_DIR, "projects") }));
+    const targets = claudeSettingsTargets(context({ PASTOR_TRANSCRIPT_ROOT: join(CLAUDE_DIR, "projects") }));
     expect(targets).toEqual([{ dir: CLAUDE_DIR, path: SETTINGS }]);
     for (const target of targets) expect(target.path).not.toContain("settings.local.json");
   });
@@ -100,24 +100,24 @@ describe("the command it writes", () => {
 
   test("is pinned to the checkout when the published name is somebody else's", () => {
     const d = deps();
-    d.fs.entries.set(PUBLISHED, { kind: "symlink", target: "/opt/collie-v1/bin/collie" });
+    d.fs.entries.set(PUBLISHED, { kind: "symlink", target: "/opt/pastor-v1/bin/pastor" });
     expect(resolveHookCommand(d.ctx, d.fs).source).toBe("checkout");
   });
 
-  // ── A binary install: the hook must survive `collie update` (issue: dangling versioned hooks) ──
+  // ── A binary install: the hook must survive `pastor update` (issue: dangling versioned hooks) ──
   //
   // The layout is `<root>/versions/X.Y.Z` with a `current` symlink beside it, and `update` keeps only
-  // the PREVIOUS version — so a hook pinned to `versions/1.0.0-beta.49/bin/collie` is deleted out from
+  // the PREVIOUS version — so a hook pinned to `versions/1.0.0-beta.49/bin/pastor` is deleted out from
   // under itself after one or two updates and fires into nothing, silently. Nothing here may write a
   // `versions/` path.
 
   // `resolve`, not `join`: `publishedBinary` compares `resolve`d paths, and on Windows a resolved path
   // carries a drive. A root spelled without one would never equal its own `versions/` directory.
-  const INSTALL_ROOT = resolve(HOME, ".local", "share", "collie");
+  const INSTALL_ROOT = resolve(HOME, ".local", "share", "pastor");
   const VERSION_ROOT = join(INSTALL_ROOT, "versions", "1.0.0-beta.49");
-  // `collieBinary`, not a bare `collie`: the published binary is `collie.exe` on Windows.
-  const VERSIONED = collieBinary(VERSION_ROOT);
-  const CURRENT = collieBinary(join(INSTALL_ROOT, "current"));
+  // `pastorBinary`, not a bare `pastor`: the published binary is `pastor.exe` on Windows.
+  const VERSIONED = pastorBinary(VERSION_ROOT);
+  const CURRENT = pastorBinary(join(INSTALL_ROOT, "current"));
 
   /** A binary install: the process runs from the version directory, `current` points at it. */
   function binaryDeps(published?: string): ReturnType<typeof deps> {
@@ -137,7 +137,7 @@ describe("the command it writes", () => {
     });
   });
 
-  test("on a binary install with no published name, writes `current/bin/collie` — never the version directory", () => {
+  test("on a binary install with no published name, writes `current/bin/pastor` — never the version directory", () => {
     const d = binaryDeps();
     const resolved = resolveHookCommand(d.ctx, d.fs);
     expect(resolved).toEqual({
@@ -156,12 +156,12 @@ describe("the command it writes", () => {
   });
 
   test("a published name left over at a GC'd version falls back to `current`, never to the dangling path", () => {
-    const d = binaryDeps(collieBinary(join(INSTALL_ROOT, "versions", "1.0.0-beta.47")));
+    const d = binaryDeps(pastorBinary(join(INSTALL_ROOT, "versions", "1.0.0-beta.47")));
     expect(resolveHookCommand(d.ctx, d.fs).binary).toBe(CURRENT);
   });
 
   test("a published name belonging to another install is refused on a binary install too", () => {
-    const d = binaryDeps("/opt/collie-v1/bin/collie");
+    const d = binaryDeps("/opt/pastor-v1/bin/pastor");
     expect(resolveHookCommand(d.ctx, d.fs).binary).toBe(CURRENT);
   });
 
@@ -178,7 +178,7 @@ describe("the command it writes", () => {
   });
 
   test("carries a version-prefixed ownership marker", () => {
-    expect(HOOK_MARKER).toMatch(/# collie-beacon v\d+$/);
+    expect(HOOK_MARKER).toMatch(/# pastor-beacon v\d+$/);
     expect(markedCommandIn({ hooks: [{ type: "command", command: COMMAND }] })).toBe(COMMAND);
     expect(markedCommandIn({ hooks: [{ type: "command", command: "/usr/local/bin/audit.sh" }] })).toBeNull();
     expect(markedCommandIn("not a group")).toBeNull();
@@ -214,7 +214,7 @@ describe("the merge", () => {
   });
 
   test("replaces a stale marker version IN PLACE — the self-heal that does not reorder", () => {
-    const stale = { hooks: [{ type: "command", command: "/old/bin/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/bin/pastor beacon emit # pastor-beacon v0" }] };
     const outcome = installDocument({ hooks: { Stop: [stale, THEIRS] } }, COMMAND);
     const stop = outcome.kind === "document" ? JSON.parse(serializeSettings(outcome.document)).hooks.Stop : [];
     expect(markedCommandIn(stop[0])).toBe(COMMAND);
@@ -255,8 +255,8 @@ describe("install", () => {
   test("is atomic — the live file is renamed into place, never written through", () => {
     const d = deps();
     cmdHooksInstall(d, ["claude"]);
-    expect(d.files.ops.filter((op) => op.startsWith("mv "))).toEqual([`mv ${posixKey(`${SETTINGS}.collie-tmp`)} ${posixKey(SETTINGS)}`]);
-    expect([...d.files.entries.keys()].filter((p) => p.endsWith(".collie-tmp"))).toEqual([]);
+    expect(d.files.ops.filter((op) => op.startsWith("mv "))).toEqual([`mv ${posixKey(`${SETTINGS}.pastor-tmp`)} ${posixKey(SETTINGS)}`]);
+    expect([...d.files.entries.keys()].filter((p) => p.endsWith(".pastor-tmp"))).toEqual([]);
   });
 
   test("backs the file up once, with the ORIGINAL bytes, before the first modification", () => {
@@ -265,7 +265,7 @@ describe("install", () => {
     cmdHooksInstall(d, ["claude"]);
     expect(d.files.entries.get(BACKUP)?.text).toBe(original);
     // A later modification does not take a second backup — the first is the one worth keeping.
-    const moved = { ...d, ctx: context({}, { root: "/opt/collie-2" }) };
+    const moved = { ...d, ctx: context({}, { root: "/opt/pastor-2" }) };
     cmdHooksInstall(moved, ["claude"]);
     expect(d.files.entries.get(BACKUP)?.text).toBe(original);
   });
@@ -336,7 +336,7 @@ describe("install", () => {
   });
 
   test("writes every configured profile, not just ~/.claude", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
+    const d = deps({ env: { PASTOR_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
     expect(cmdHooksInstall(d, ["claude"])).toBe(EXIT.OK);
     expect(d.files.entries.has(SETTINGS)).toBe(true);
     expect(d.files.entries.has(OPS_SETTINGS)).toBe(true);
@@ -406,7 +406,7 @@ describe("install", () => {
       const d = deps();
       expect(cmdHooksInstall(d, args)).toBe(EXIT.USAGE);
       expect(d.files.entries.size).toBe(0);
-      expect(d.io.stderr.join("\n")).toContain("collie hooks install {claude}");
+      expect(d.io.stderr.join("\n")).toContain("pastor hooks install {claude}");
     }
   });
 });
@@ -435,7 +435,7 @@ describe("uninstall", () => {
 
 describe("status", () => {
   test("reports each target and writes absolutely nothing", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
+    const d = deps({ env: { PASTOR_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
     expect(cmdHooksStatus(d)).toBe(EXIT.OK);
     const said = d.io.stdout.join("\n");
     expect(said).toContain(`${SETTINGS}: no settings file`);
@@ -468,7 +468,7 @@ describe("status", () => {
   });
 
   test("names a stale marker version as something install would heal", () => {
-    const stale = { hooks: [{ type: "command", command: "/old/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/pastor beacon emit # pastor-beacon v0" }] };
     const document = { hooks: Object.fromEntries(BEACON_HOOKS.map((r) => [r.event, [stale]])) };
     const d = deps({ files: { [SETTINGS]: serializeSettings(document) } });
     cmdHooksStatus(d);
@@ -476,7 +476,7 @@ describe("status", () => {
   });
 });
 
-// `--check` is what `collie update` runs on the binary it has just installed: no output at all, and
+// `--check` is what `pastor update` runs on the binary it has just installed: no output at all, and
 // the exit code is the whole answer. "Behind" is narrower than "install would change something" —
 // a file with none of our entries opted out, and nothing may nag it.
 describe("status --check", () => {
@@ -487,7 +487,7 @@ describe("status --check", () => {
     });
   };
   const staleDoc = () => {
-    const stale = { hooks: [{ type: "command", command: "/old/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/pastor beacon emit # pastor-beacon v0" }] };
     return serializeSettings({ hooks: Object.fromEntries(BEACON_HOOKS.map((r) => [r.event, [stale]])) });
   };
   const installed = () => {
@@ -524,7 +524,7 @@ describe("status --check", () => {
 
   test("is behind when ANY configured profile is, not only ~/.claude (issue #92)", () => {
     const d = deps({
-      env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") },
+      env: { PASTOR_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") },
       files: { [SETTINGS]: installed(), [OPS_SETTINGS]: partial() },
     });
     expect(cmdHooksStatus(d, ["--check"])).toBe(EXIT.STATE);

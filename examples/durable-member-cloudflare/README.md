@@ -3,11 +3,11 @@
 A Cloudflare Worker with one Durable Object that runs the same ticket triage as
 [`examples/durable-member`](../durable-member/README.md), with
 [Pi Durable](https://www.npmjs.com/package/@earendil-works/pi-durable) keeping its conversations in the
-Durable Object's SQLite storage. It serves Collie's durable wire over HTTPS, and a bearer token is the only
-gate. A Collie peer with `COLLIE_MUX=durable` and `COLLIE_DURABLE_URL` lists the conversations as panes, and
+Durable Object's SQLite storage. It serves Pastor's durable wire over HTTPS, and a bearer token is the only
+gate. A Pastor peer with `PASTOR_MUX=durable` and `PASTOR_DURABLE_URL` lists the conversations as panes, and
 you answer their questions from the phone. The wire is experimental and may change in any minor release of
-Collie ([`WIRE.md` section 1B](../../bridge/mux/durable/WIRE.md#1b-tls-with-a-bearer-token)). Once deployed,
-it runs on your Cloudflare account and costs money there: every poll from Collie is a billed request (see
+Pastor ([`WIRE.md` section 1B](../../bridge/mux/durable/WIRE.md#1b-tls-with-a-bearer-token)). Once deployed,
+it runs on your Cloudflare account and costs money there: every poll from Pastor is a billed request (see
 [Cost](#cost)). This folder is example code to read and copy. It is not a package.
 
 ## Run it locally
@@ -16,70 +16,70 @@ You need Node 22 or later for wrangler and the tests, and Bun for `bun run smoke
 needs a Cloudflare account. `wrangler dev` runs the Worker in a local copy of the Workers runtime and keeps
 the Durable Object's SQLite under `.wrangler/state`.
 
-From a clone of collie:
+From a clone of pastor:
 
 ```sh
 cd examples/durable-member-cloudflare
 npm ci
-printf 'COLLIE_TOKEN=%s\n' "$(openssl rand -hex 32)" > .dev.vars
+printf 'PASTOR_TOKEN=%s\n' "$(openssl rand -hex 32)" > .dev.vars
 bunx wrangler dev --port 8801 --ip 127.0.0.1
 ```
 
 The second line writes a fresh random token to `.dev.vars`, a file git ignores
 (`.dev.vars.example` shows its shape). The third serves the Worker on `http://127.0.0.1:8801`. Use port 8801
-or any free port, but not 8787: that is wrangler's default port and also the port of a Collie install. Check
+or any free port, but not 8787: that is wrangler's default port and also the port of a Pastor install. Check
 it from a second terminal:
 
 ```sh
-curl -H "Authorization: Bearer $(sed -n 's/^COLLIE_TOKEN=//p' .dev.vars)" http://127.0.0.1:8801/session/v1/hello
+curl -H "Authorization: Bearer $(sed -n 's/^PASTOR_TOKEN=//p' .dev.vars)" http://127.0.0.1:8801/session/v1/hello
 ```
 
-The answer starts with `{"service":"collie-durable"`. Without the header, the answer is 401
+The answer starts with `{"service":"pastor-durable"`. Without the header, the answer is 401
 `{"code":"unauthorized"}`. On the first start the program opens one ticket, and the scripted model asks to
 run `write_note`. The ticket waits for your answer. Stop wrangler with Ctrl-C. Delete `.wrangler/state` to
 start over.
 
-## Point a Collie peer at it
+## Point a Pastor peer at it
 
-A peer is one Collie instance, and one instance mirrors one backend, so the program needs a peer of its
+A peer is one Pastor instance, and one instance mirrors one backend, so the program needs a peer of its
 own. The peer needs the address and the same token:
 
 ```sh
-COLLIE_MUX=durable
-COLLIE_DURABLE_URL=http://127.0.0.1:8801
-COLLIE_DURABLE_TOKEN=your-32-byte-random-token-here   # the value in .dev.vars
+PASTOR_MUX=durable
+PASTOR_DURABLE_URL=http://127.0.0.1:8801
+PASTOR_DURABLE_TOKEN=your-32-byte-random-token-here   # the value in .dev.vars
 ```
 
-Collie sends a token only over `https://`, with one exception: `http://127.0.0.1:<port>` or
+Pastor sends a token only over `https://`, with one exception: `http://127.0.0.1:<port>` or
 `http://localhost:<port>`, for `wrangler dev` on the same machine. The token must be at least 32 bytes, for
-example 64 hex characters from `openssl rand -hex 32`. Set the socket or the URL, never both. `collie doctor`
+example 64 hex characters from `openssl rand -hex 32`. Set the socket or the URL, never both. `pastor doctor`
 says whether the token is set and how long it is, and never prints it. The full peer settings are in
 [durable notes](../../docs/multiplexers.md#durable-notes).
 
-### First run on a host that already runs Collie
+### First run on a host that already runs Pastor
 
-The program gets a second Collie instance with its own port and state folder. Put these lines in
-`~/.config/herdr/plugins/config/herdr.collie-durable/.env`:
+The program gets a second Pastor instance with its own port and state folder. Put these lines in
+`~/.config/herdr/plugins/config/ad3.pastor-durable/.env`:
 
 ```sh
-COLLIE_INSTANCE=durable
-COLLIE_PORT=8795
-COLLIE_STATE_DIR=/home/you/.local/state/collie-durable
-COLLIE_MUX=durable
-COLLIE_DURABLE_URL=http://127.0.0.1:8801
-COLLIE_DURABLE_TOKEN=your-32-byte-random-token-here   # the value in .dev.vars
+PASTOR_INSTANCE=durable
+PASTOR_PORT=8795
+PASTOR_STATE_DIR=/home/you/.local/state/pastor-durable
+PASTOR_MUX=durable
+PASTOR_DURABLE_URL=http://127.0.0.1:8801
+PASTOR_DURABLE_TOKEN=your-32-byte-random-token-here   # the value in .dev.vars
 ```
 
 Then start it, check it, and join it to your crew under a name of its own, so the host chip can tell it
 from the other instance on this host:
 
 ```sh
-COLLIE_INSTANCE=durable collie start
-COLLIE_INSTANCE=durable collie doctor
-COLLIE_INSTANCE=durable collie crew join <lead-address> --label durable
+PASTOR_INSTANCE=durable pastor start
+PASTOR_INSTANCE=durable pastor doctor
+PASTOR_INSTANCE=durable pastor crew join <lead-address> --label durable
 ```
 
-`collie crew invite` on the lead gives the address and the code; the steps are in
+`pastor crew invite` on the lead gives the address and the code; the steps are in
 [Join the crew](../durable-member/README.md#join-the-crew). A question the program asks reaches the phone as
 a push when push is set up, the same as a question from any other pane.
 
@@ -89,20 +89,20 @@ You need a Cloudflare account and `bunx wrangler login` once. Then, in this fold
 
 ```sh
 openssl rand -hex 32                 # make a new token; copy it
-bunx wrangler secret put COLLIE_TOKEN   # paste it when asked
+bunx wrangler secret put PASTOR_TOKEN   # paste it when asked
 bunx wrangler deploy
 ```
 
-`wrangler deploy` prints the address, `https://collie-durable-member.<your-subdomain>.workers.dev`. The
+`wrangler deploy` prints the address, `https://pastor-durable-member.<your-subdomain>.workers.dev`. The
 subdomain is the `workers.dev` name of your account. Put the address and the token in the peer:
 
 ```sh
-COLLIE_DURABLE_URL=https://collie-durable-member.<your-subdomain>.workers.dev
-COLLIE_DURABLE_TOKEN=your-32-byte-random-token-here
+PASTOR_DURABLE_URL=https://pastor-durable-member.<your-subdomain>.workers.dev
+PASTOR_DURABLE_TOKEN=your-32-byte-random-token-here
 ```
 
 Use a different token for the deployed program than for `wrangler dev`. A deploy restarts the Durable
-Object, so Collie sees a new epoch and reads every pane again. An open question comes back with the same id
+Object, so Pastor sees a new epoch and reads every pane again. An open question comes back with the same id
 (see [Limits](#limits)).
 
 ## The trust model
@@ -119,13 +119,13 @@ keeps them out.
   wakes nothing. A token shorter than 32 bytes, or none at all, makes the Worker refuse every request.
 - **Make the token random.** It must be at least 32 bytes, for example 64 hex characters from
   `openssl rand -hex 32`. Keep it in two places only: the Worker's secret and the peer's `.env`.
-- **Rotate it without a lockout.** The Worker takes `COLLIE_TOKEN` and, while it is set,
-  `COLLIE_TOKEN_NEXT`. Both are checked hashed and in constant time. Rotate in three steps:
-  1. Set `COLLIE_TOKEN_NEXT` to the new value: `bunx wrangler secret put COLLIE_TOKEN_NEXT`. Both tokens
+- **Rotate it without a lockout.** The Worker takes `PASTOR_TOKEN` and, while it is set,
+  `PASTOR_TOKEN_NEXT`. Both are checked hashed and in constant time. Rotate in three steps:
+  1. Set `PASTOR_TOKEN_NEXT` to the new value: `bunx wrangler secret put PASTOR_TOKEN_NEXT`. Both tokens
      now work.
-  2. Put the new value in the peer's `COLLIE_DURABLE_TOKEN`, and restart the peer.
-  3. Move the value to `COLLIE_TOKEN` (`bunx wrangler secret put COLLIE_TOKEN`), then unset
-     `COLLIE_TOKEN_NEXT` (`bunx wrangler secret delete COLLIE_TOKEN_NEXT`). Only the new token works now.
+  2. Put the new value in the peer's `PASTOR_DURABLE_TOKEN`, and restart the peer.
+  3. Move the value to `PASTOR_TOKEN` (`bunx wrangler secret put PASTOR_TOKEN`), then unset
+     `PASTOR_TOKEN_NEXT` (`bunx wrangler secret delete PASTOR_TOKEN_NEXT`). Only the new token works now.
 
   Each secret you set or delete deploys a new version of the Worker, which restarts the Durable Object.
 - **Cloudflare sees the text.** TLS ends at Cloudflare's edge. Transcripts and tool output sit in the
@@ -134,7 +134,7 @@ keeps them out.
   included, is in `process.env`. The tools here are toys. A tool that runs code you did not write could
   read the token and the model key.
 - **The next step is Cloudflare Access.** An Access policy with a service token would put a second gate in
-  front of the Worker, at Cloudflare. Collie does not send Access's two headers yet, so this example
+  front of the Worker, at Cloudflare. Pastor does not send Access's two headers yet, so this example
   stops at the bearer token.
 - **Allow and Deny only.** With the token as the only gate, an always-allow answer from whoever holds it
   would let every later call through. The example offers no always-allow, and it refuses one: its core
@@ -146,7 +146,7 @@ keeps them out.
 Prices are from Cloudflare's pricing pages, read on 2026-10-13. Check them before you deploy.
 
 - **Every poll is a billed request, twice.** One poll is one Worker request and one Durable Object
-  request, and a "nothing changed" answer (304) counts too. Over HTTPS, Collie asks every 2 s while a
+  request, and a "nothing changed" answer (304) counts too. Over HTTPS, Pastor asks every 2 s while a
   phone watches the machine, and every 10 s when none does. The bridge's own safety-net poll reuses
   the last answer, so an idle peer asks once per 10 s: 8,640 Durable Object requests a day (about
   260,000 a month), plus the same number of Worker requests. While a phone watches, the 2 s poll
@@ -173,8 +173,8 @@ Prices are from Cloudflare's pricing pages, read on 2026-10-13. Check them befor
   a deploy, on a new secret, and when it is evicted, and it raises every waiting question before it
   answers again.
 - **Nothing runs while nothing asks.** The object has no alarm. A run that was cut off continues only when
-  the next request, usually Collie's next poll, starts the object again.
-- **Every start is a new epoch.** Collie then reads each pane again in full.
+  the next request, usually Pastor's next poll, starts the object again.
+- **Every start is a new epoch.** Pastor then reads each pane again in full.
 - **A Worker must start within 1 s.** Cloudflare's limit for the top-level code. A real deploy of this
   bundle was not tried, so its start time there is not measured.
 - **Free gives a Worker 10 ms of CPU per request.** Whether the Durable Object's start (opening Pi and
@@ -187,8 +187,8 @@ Prices are from Cloudflare's pricing pages, read on 2026-10-13. Check them befor
 
 | Name | Kind | Default | What it does |
 | --- | --- | --- | --- |
-| `COLLIE_TOKEN` | secret, required | none | The bearer token, at least 32 bytes. `.dev.vars` for `wrangler dev`, `wrangler secret put COLLIE_TOKEN` after a deploy. Missing or shorter: every request gets 401. |
-| `COLLIE_TOKEN_NEXT` | secret | not set | The next token, while a rotation runs (see [The trust model](#the-trust-model)). A request with either token is taken. Shorter than 32 bytes: ignored. |
+| `PASTOR_TOKEN` | secret, required | none | The bearer token, at least 32 bytes. `.dev.vars` for `wrangler dev`, `wrangler secret put PASTOR_TOKEN` after a deploy. Missing or shorter: every request gets 401. |
+| `PASTOR_TOKEN_NEXT` | secret | not set | The next token, while a rotation runs (see [The trust model](#the-trust-model)). A request with either token is taken. Shorter than 32 bytes: ignored. |
 | `REAL_MODEL` | var | not set | An OpenRouter model id. Not set means the scripted model. |
 | `OPENROUTER_API_KEY` | secret | not set | Your OpenRouter key, read only when `REAL_MODEL` is set. |
 | `DM_STEP_MS` | var | `400` | The pause before each scripted answer. |
@@ -228,7 +228,7 @@ The files here:
 - `src/worker.ts` checks the token (`src/token.ts`) and forwards to the one Durable Object.
 - `src/member.ts` is the program: the Durable Object that opens Pi, lays out the panes and serves the wire.
 - `src/storage.ts` is the one place where Pi Durable meets the Durable Object's SQLite.
-- `src/receipts.ts` keeps the request ids in a `collie_receipts` table, so a retry after a restart still
+- `src/receipts.ts` keeps the request ids in a `pastor_receipts` table, so a retry after a restart still
   runs once. It keeps the newest 1000 per pane and drops older ones in the same transaction; a repeat of a
   dropped id gets a 500, an unknown outcome, and runs nothing. The core's `ReceiptStore` interface is two
   methods.

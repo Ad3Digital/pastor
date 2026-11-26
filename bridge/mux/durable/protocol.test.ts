@@ -46,7 +46,7 @@ describe("version negotiation", () => {
 
   test("the detail starts with incompatible and names both ranges", () => {
     expect(incompatibleDetail({ min: 2, max: 3 })).toBe(
-      "incompatible: program speaks 2..3, this Collie speaks 1..1",
+      "incompatible: program speaks 2..3, this Pastor speaks 1..1",
     );
     expect(incompatibleDetail(null)).toBe("incompatible");
   });
@@ -69,7 +69,7 @@ describe("hello", () => {
 
   test("an absent cap is false, and null reads as absent", () => {
     const parsed = parseHello(
-      JSON.stringify({ service: "collie-durable", protocol: { min: 1, max: 1 }, host: null, epoch: EPOCH, ready: false, caps: { asks: null, send: true } }),
+      JSON.stringify({ service: "pastor-durable", protocol: { min: 1, max: 1 }, host: null, epoch: EPOCH, ready: false, caps: { asks: null, send: true } }),
     );
     expect(parsed.ok && parsed.value.caps).toEqual({ asks: false, starters: false, send: true, steer: false, abort: false });
     expect(parsed.ok && parsed.value.hostName).toBe("");
@@ -94,7 +94,7 @@ describe("hello", () => {
 
   test("the host name is cleaned and capped like every display string", () => {
     const parsed = parseHello(
-      JSON.stringify({ service: "collie-durable", protocol: { min: 1, max: 1 }, host: { name: hostileText("evil", 200) }, epoch: EPOCH, ready: true }),
+      JSON.stringify({ service: "pastor-durable", protocol: { min: 1, max: 1 }, host: { name: hostileText("evil", 200) }, epoch: EPOCH, ready: true }),
     );
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
@@ -105,7 +105,7 @@ describe("hello", () => {
 
   test("a hello without the service name is not a durable program, whatever else it says", () => {
     const base = { protocol: { min: 1, max: 1 }, host: { name: "h" }, epoch: EPOCH, ready: true, caps: {} };
-    for (const service of [undefined, null, "", "collie", "Collie-Durable", 1]) {
+    for (const service of [undefined, null, "", "pastor", "Pastor-Durable", 1]) {
       expect(parseHello(JSON.stringify({ ...base, service }))).toEqual({ ok: false, detail: NOT_A_DURABLE_PROGRAM });
     }
     expect(parseHello(JSON.stringify({ ...base, service: DURABLE_SERVICE })).ok).toBe(true);

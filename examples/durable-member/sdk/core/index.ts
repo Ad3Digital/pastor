@@ -42,7 +42,7 @@ export interface CoreOptions {
   allowAlways?: boolean;
 }
 
-export interface CollieCore {
+export interface PastorCore {
   /** New and random for every core. A program makes one core per start. */
   readonly epoch: string;
   workspace(id: string, o: { title: string; cwd?: string }): WorkspaceHandle;
@@ -54,7 +54,7 @@ export interface CollieCore {
   handle(request: Request, call?: CallInfo): Promise<Response>;
 }
 
-export function createCore(o: CoreOptions): CollieCore {
+export function createCore(o: CoreOptions): PastorCore {
   const store = new Store(o.tailLimit, o.receipts, o.allowAlways ?? true);
   const state: CoreState = {
     store,

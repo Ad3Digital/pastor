@@ -1,10 +1,10 @@
 // CHAVES DE ACESSO (WebAuthn) — uma segunda porta para o pareamento (patch local do Antonio).
 //
-// O código de `collie pair` continua sendo a porta de entrada: só um aparelho JÁ pareado registra
+// O código de `pastor pair` continua sendo a porta de entrada: só um aparelho JÁ pareado registra
 // uma chave. Depois disso, qualquer navegador que tenha essa chave (sincronizada pelo gerenciador de
 // senhas do Google ou da Apple) se pareia sozinho: a assinatura da chave substitui o código de 8
 // letras e o resultado é exatamente o de um `POST /api/pair` — um aparelho novo no registro, com nome
-// próprio, revogável por `collie devices revoke`.
+// próprio, revogável por `pastor devices revoke`.
 //
 // Só a chave PÚBLICA fica aqui, em `passkeys.json` no diretório de estado (0600, escrita atômica).
 // Os desafios vivem em memória, servem uma vez e expiram em cinco minutos.
@@ -82,7 +82,10 @@ export class PasskeyStore {
   private async read(): Promise<StoredPasskey[]> {
     try {
       const parsed: unknown = JSON.parse(await readFile(this.path, "utf8"));
-      return Array.isArray(parsed) ? (parsed as StoredPasskey[]) : [];
+      if (!Array.isArray(parsed)) return [];
+      // SAFETY: this file is written only by `write()` below, from StoredPasskey records; a hand edit
+      // that breaks the shape makes verification fail closed (no matching id or a bad key), never pass.
+      return parsed as StoredPasskey[];
     } catch {
       return [];
     }
@@ -94,6 +97,7 @@ export class PasskeyStore {
       const tmp = `${this.path}.${process.pid}.tmp`;
       await writeFile(tmp, JSON.stringify(list, null, 2), { mode: 0o600 });
       await rename(tmp, this.path);
+      return undefined;
     });
     this.queue = op.catch(() => undefined);
     return op;
@@ -123,12 +127,12 @@ export class PasskeyStore {
     const existing = await this.read();
     const { generateRegistrationOptions } = await webauthn();
     const options = await generateRegistrationOptions({
-      rpName: "Collie",
+      rpName: "Pastor",
       rpID: rp.rpID,
       // One person, one account: every key this bridge holds belongs to the operator.
-      userName: `collie@${rp.rpID}`,
-      userDisplayName: "Collie",
-      userID: new TextEncoder().encode(`collie-operator@${rp.rpID}`),
+      userName: `pastor@${rp.rpID}`,
+      userDisplayName: "Pastor",
+      userID: new TextEncoder().encode(`pastor-operator@${rp.rpID}`),
       attestationType: "none",
       excludeCredentials: existing.map((p) => ({ id: p.id, transports: p.transports })),
       authenticatorSelection: { residentKey: "required", userVerification: "preferred" },

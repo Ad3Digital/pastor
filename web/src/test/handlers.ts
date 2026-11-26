@@ -44,12 +44,12 @@ export const fixtureAgents: AgentView[] = [
   {
     paneId: "w2:p1",
     workspaceId: "w2",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 2,
     tabId: "w2:t1",
     agent: "codex",
     status: "working",
-    cwd: "/home/you/collie",
+    cwd: "/home/you/pastor",
     focused: true,
   },
 ];
@@ -58,12 +58,12 @@ export const fixtureShellPanes: AgentView[] = [
   {
     paneId: "w2:p2",
     workspaceId: "w2",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     workspaceNumber: 2,
     tabId: "w2:t2",
     agent: "shell",
     status: "unknown",
-    cwd: "/home/you/collie",
+    cwd: "/home/you/pastor",
     focused: false,
     kind: "shell",
   },
@@ -82,7 +82,7 @@ export const fixtureWorkspaces: WorkspaceView[] = [
   {
     workspaceId: "w2",
     number: 2,
-    label: "collie",
+    label: "pastor",
     focused: true,
     activeTabId: "w2:t1",
     tabCount: 2,
@@ -96,11 +96,11 @@ export const fixtureTabs: TabView[] = [
   { tabId: "w2:t2", workspaceId: "w2", number: 2, label: "shell", focused: false, paneCount: 1 },
 ];
 
-// A two-session registry: the primary "default" plus a named "collie-demo". Order is primary-first,
+// A two-session registry: the primary "default" plus a named "pastor-demo". Order is primary-first,
 // then alphabetical — matching the bridge contract.
 export const fixtureSessions: SessionSummary[] = [
   { name: "default", isPrimary: true, reachable: true, agents: 2, working: 1, blocked: 1 },
-  { name: "collie-demo", isPrimary: false, reachable: true, agents: 1, working: 1, blocked: 0 },
+  { name: "pastor-demo", isPrimary: false, reachable: true, agents: 1, working: 1, blocked: 0 },
 ];
 
 export const fixtureSnapshot: SnapshotResponse = {
@@ -133,7 +133,7 @@ export const fixtureServers: ServerSummary[] = [
     isLead: false,
     reachable: false,
     protocol: "incompatible",
-    protocolDetail: "crew protocol 2 (this collie speaks 1)",
+    protocolDetail: "crew protocol 2 (this pastor speaks 1)",
     lastSeenAt: 500,
   },
 ];
@@ -260,7 +260,7 @@ export const fixtureCrewStatus: CrewStatusResponse = {
       address: "attic.tail1234.ts.net:8787",
       enrolledAt: 60_000,
       health: "conflicted",
-      reason: "crew protocol 2 (this collie speaks 1)",
+      reason: "crew protocol 2 (this pastor speaks 1)",
       lastSeenAt: 500,
       secretBehind: true,
       provisional: true,
@@ -271,7 +271,7 @@ export const fixtureCrewStatus: CrewStatusResponse = {
 };
 
 /**
- * What `POST /api/tab` answers: the fresh shell pane of a new tab in `collie` (w2). Shared by the
+ * What `POST /api/tab` answers: the fresh shell pane of a new tab in `pastor` (w2). Shared by the
  * unit layer's handler below and the browser tier's stub (e2e/fixtures/api.ts), so the two never
  * describe a created tab two ways.
  */
@@ -280,9 +280,9 @@ export const fixtureNewTab: Extract<CreateResponse, { ok: true }> = {
   pane: {
     paneId: "w2:p9",
     workspaceId: "w2",
-    workspaceLabel: "collie",
+    workspaceLabel: "pastor",
     tabId: "w2:t9",
-    cwd: "/home/you/collie",
+    cwd: "/home/you/pastor",
   },
 };
 
@@ -385,7 +385,7 @@ export const fixtureOmpAskBatchChat = ompAskChat("Where should the note go?", [
 ]);
 
 /**
- * A journal image reference in the ONE shape `imageSrc` accepts: a blob path on the owning collie,
+ * A journal image reference in the ONE shape `imageSrc` accepts: a blob path on the owning pastor,
  * `/api/blobs/<64 hex>` (`lib/api.ts` § BLOB_REF). Anything else is refused there and renders as no
  * image, so a fixture that used a plausible-looking `https://` URL would be testing the refusal.
  */
@@ -786,8 +786,8 @@ export const handlers = [
       headers: {
         "content-type": "image/png",
         "cache-control": "no-store",
-        "x-collie-file-size": String(size),
-        "x-collie-file-mtime": String(FIXTURE_MTIME_MS),
+        "x-pastor-file-size": String(size),
+        "x-pastor-file-mtime": String(FIXTURE_MTIME_MS),
       },
     });
   }),
@@ -839,7 +839,7 @@ export const handlers = [
   // world, and a test that wants a crew overrides this with `fixtureCrewStatus`.
   http.get("/api/crew", () =>
     HttpResponse.json(
-      { error: "this collie is not the lead of a crew", code: "crew.not_lead" },
+      { error: "this pastor is not the lead of a crew", code: "crew.not_lead" },
       { status: 404 },
     ),
   ),

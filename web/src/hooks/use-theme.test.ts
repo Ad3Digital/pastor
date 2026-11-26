@@ -11,7 +11,7 @@ import type { UseThemeReturn } from "./use-theme";
 // never fire — fine for everything else in the suite, useless for the one mechanism here that has no
 // CSS fallback. So this file installs a controllable fake locally and leaves the shared one alone.
 
-const STORAGE_KEY = "collie:theme:v1";
+const STORAGE_KEY = "pastor:theme:v1";
 
 /** The controllable half of the local `matchMedia` fake: read the state, drive a change. */
 interface MediaControl {

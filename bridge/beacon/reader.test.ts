@@ -100,7 +100,7 @@ describe("the pane key", () => {
   });
 
   test("the directory hangs off the resolved state dir", () => {
-    expect(beaconsDir("/var/state/collie")).toBe(join("/var/state/collie", "beacons"));
+    expect(beaconsDir("/var/state/pastor")).toBe(join("/var/state/pastor", "beacons"));
   });
 });
 
@@ -181,12 +181,12 @@ describe("markers are a list", () => {
     expect(markersIn(reading, "screen")).toEqual([]);
   });
 
-  test("the tmux marker is the Collie pane id verbatim — the join is string equality", async () => {
+  test("the tmux marker is the Pastor pane id verbatim — the join is string equality", async () => {
     const [reading] = await sweep(directoryOfBeacons(beacon()));
     expect(reading).toBeDefined();
     if (reading === undefined) return;
     const [marker] = markersIn(reading, "tmux");
-    // `$TMUX_PANE` is `%7`, and `%` is legal in a Collie id for precisely this reason. No transform.
+    // `$TMUX_PANE` is `%7`, and `%` is legal in a Pastor id for precisely this reason. No transform.
     expect(marker?.pane).toBe("%7");
     expect(marker?.scope).toBe("/tmp/tmux-1000/default");
   });
@@ -196,7 +196,7 @@ describe("markers are a list", () => {
     expect(reading).toBeDefined();
     if (reading === undefined) return;
     const [marker] = markersIn(reading, "zellij");
-    // `$ZELLIJ_PANE_ID` is `3`, not the namespaced Collie id. The adapter's matcher adds zellij's
+    // `$ZELLIJ_PANE_ID` is `3`, not the namespaced Pastor id. The adapter's matcher adds zellij's
     // pane-id prefix at the join (M11/03) — the file never carries it, so this value stays exactly
     // what the multiplexer put in the environment.
     expect(marker?.pane).toBe("3");

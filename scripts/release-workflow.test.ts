@@ -105,7 +105,7 @@ describe("release.yml: a Windows failure never stops a release", () => {
     expect(step?.run).toContain("bun scripts/windows-asset.ts --dir");
     expect(step?.run).toContain('--result "$WINDOWS_RESULT" --repo "$GITHUB_REPOSITORY"');
     // The escape: a repository variable, read by the workflow, passed through untouched.
-    expect(step?.env?.WINDOWS_ASSET_OVERRIDE).toBe("${{ vars.COLLIE_WINDOWS_ASSET_OVERRIDE }}");
+    expect(step?.env?.WINDOWS_ASSET_OVERRIDE).toBe("${{ vars.PASTOR_WINDOWS_ASSET_OVERRIDE }}");
     expect(step?.run).toContain('--override "$WINDOWS_ASSET_OVERRIDE"');
     expect(step?.env?.WINDOWS_RESULT).toBe("${{ needs.payload-windows.result }}");
     // The same token the gate job hands `gh`; the script asks the releases API with it.

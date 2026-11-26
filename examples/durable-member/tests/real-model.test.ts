@@ -16,7 +16,7 @@ describe("REAL_MODEL", () => {
   test("an OpenRouter model id from Pi's catalog starts the app, and the starters are there", async () => {
     process.env.REAL_MODEL = "google/gemini-3.1-flash-lite";
     const app = await startApp(opts());
-    const snap = (await api.snapshot({ socket: app.collie.address, version: 1 })).body;
+    const snap = (await api.snapshot({ socket: app.pastor.address, version: 1 })).body;
     expect(snap.starters!.map((s) => s.id)).toEqual(["new-triage", "two-notes"]);
     await app.close();
   });

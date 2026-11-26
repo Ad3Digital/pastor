@@ -5,7 +5,7 @@ import { en } from "@/lib/i18n/messages/en";
 import { installApiStub } from "./fixtures/api";
 
 // The first-run screen, in a real browser, because the two facts worth proving here are both about
-// the ORIGIN rather than about a component: a device that has never run Collie is shown the screen
+// the ORIGIN rather than about a component: a device that has never run Pastor is shown the screen
 // once the snapshot lands, and the same device reloaded is not shown it again. Every other `app` spec
 // passes unedited because `installApiStub` pre-spends it by default; this one opts out.
 

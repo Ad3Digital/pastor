@@ -3,7 +3,7 @@ import { posix, win32 } from "node:path";
 
 import {
   binaryName,
-  collieBinary,
+  pastorBinary,
   foldName,
   HOST,
   hostFor,
@@ -39,17 +39,17 @@ describe("hostFor", () => {
   });
 });
 
-describe("binaryName and collieBinary", () => {
-  test("a Windows root gets collie.exe, joined the Windows way", () => {
-    expect(binaryName(WIN)).toBe("collie.exe");
-    expect(collieBinary("C:\\Users\\x\\collie", WIN)).toBe("C:\\Users\\x\\collie\\bin\\collie.exe");
-    expect(collieBinary("C:/Users/x/collie", WIN)).toBe("C:\\Users\\x\\collie\\bin\\collie.exe");
+describe("binaryName and pastorBinary", () => {
+  test("a Windows root gets pastor.exe, joined the Windows way", () => {
+    expect(binaryName(WIN)).toBe("pastor.exe");
+    expect(pastorBinary("C:\\Users\\x\\pastor", WIN)).toBe("C:\\Users\\x\\pastor\\bin\\pastor.exe");
+    expect(pastorBinary("C:/Users/x/pastor", WIN)).toBe("C:\\Users\\x\\pastor\\bin\\pastor.exe");
   });
 
-  test("a POSIX root gets a bare collie", () => {
-    expect(binaryName(LINUX)).toBe("collie");
-    expect(collieBinary("/opt/collie", LINUX)).toBe("/opt/collie/bin/collie");
-    expect(collieBinary("/opt/collie", hostFor("darwin"))).toBe("/opt/collie/bin/collie");
+  test("a POSIX root gets a bare pastor", () => {
+    expect(binaryName(LINUX)).toBe("pastor");
+    expect(pastorBinary("/opt/pastor", LINUX)).toBe("/opt/pastor/bin/pastor");
+    expect(pastorBinary("/opt/pastor", hostFor("darwin"))).toBe("/opt/pastor/bin/pastor");
   });
 });
 

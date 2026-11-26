@@ -89,7 +89,7 @@ const PNG_BYTES = readFileSync(PNG_PATH);
  */
 async function pinTerminalView(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    window.localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    window.localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   });
 }
 
@@ -151,7 +151,7 @@ export const E2E_DEVICE_TOKEN = "e2e-device-token";
  * stub answers reads without a token, so only a case that asserts the header needs this.
  */
 export async function pairDevice(page: Page): Promise<void> {
-  await page.addInitScript((token) => localStorage.setItem("collie:device-token", token), E2E_DEVICE_TOKEN);
+  await page.addInitScript((token) => localStorage.setItem("pastor:device-token", token), E2E_DEVICE_TOKEN);
 }
 
 /** One request the blob route answered: its path and the `Authorization` header it carried. */

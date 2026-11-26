@@ -1,8 +1,8 @@
 # Crew protocol v2 — the lead↔peer contract
 
-The wire contract for **crew federation**: several machines each running a full Collie, one of them
+The wire contract for **crew federation**: several machines each running a full Pastor, one of them
 holding the phone-facing front door. Sibling to [`HERDR_API.md`](./HERDR_API.md), which documents the
-contract *below* Collie (the Herdr socket); this documents the contract *between* Collies.
+contract *below* Pastor (the Herdr socket); this documents the contract *between* Pastors.
 
 **Provenance convention**, mirroring `HERDR_API.md`:
 
@@ -30,7 +30,7 @@ this version finishes the rename ([ADR 0039](./.adr/0039-the-machine-says-crew-t
 | Headers | `X-Pack-*`, `x-pack-*` | `X-Crew-*`, `x-crew-*` |
 | Version constant | `PACK_PROTOCOL_VERSION = 1` | `CREW_PROTOCOL_VERSION = 2` |
 | Error codes and JSON field names | say pack | say crew |
-| Signing context strings | `collie-pack-warrant-v1`, `collie-pack-dial-v1` | `collie-crew-warrant-v2`, `collie-crew-dial-v2` |
+| Signing context strings | `pastor-pack-warrant-v1`, `pastor-pack-dial-v1` | `pastor-crew-warrant-v2`, `pastor-crew-dial-v2` |
 
 Three readings keep the body below correct as it stands:
 
@@ -55,18 +55,18 @@ a named constant on the operator's side too: `PROTOCOL_FLOOR_VERSION` in `cli/up
 **A member below the floor lands on §7's exact-match window, and it is told twice.** On the link, its
 answers carry no crew protocol header, so the headerless ladder calls it `unreachable` for the first
 minute and `incompatible` after that, with a reason that states the version this build speaks. On the
-operator's own path, the lead's `collie update --check` walk reds the `version` check, naming both
+operator's own path, the lead's `pastor update --check` walk reds the `version` check, naming both
 versions and the remedy, which is to level that machine from its own terminal. The red blocks the crew
 update rather than starting a roll that cannot finish (§7.1, ADR 0045).
 
 **The overlap that carried the 1.7.0 roll was removed in 1.9.0.** 1.8.0 answered the old path prefix as
 well as `/crew/v1/*`, fell back to it once as a member, read a crew id under either spelling, read two
-`COLLIE_PACK_*` budget keys, renamed three state files on its first start and redirected the old census
+`PASTOR_PACK_*` budget keys, renamed three state files on its first start and redirected the old census
 route. All of it is gone. That was the plan ADR 0039 recorded when the rename shipped, and
 `bridge/removal-schedule.test.ts` is now the tombstone that keeps those names out.
 
 **A state directory that never saw 1.8.x is named, never adopted.** The one-time state-file rename went
-with the overlap, so a collie that finds 1.7.0's `pack-trust.json` without `crew-trust.json` says so at
+with the overlap, so a pastor that finds 1.7.0's `pack-trust.json` without `crew-trust.json` says so at
 start, prints both hand edits, and stays solo. The canonical signed strings did not move, so a warrant
 any 1.8.x lead minted still verifies (§18).
 
@@ -79,18 +79,18 @@ version 2 and only version 2.
 
 | Term | Meaning |
 |---|---|
-| **collie** | One Collie instance — one server process on one machine. Every crew member runs a full one. |
-| **lead** | The one collie that holds the managed front door. The phone talks to the lead and to nothing else. |
-| **peer** | A collie with no front door, reached only by the lead over an authenticated crew link. |
+| **pastor** | One Pastor instance — one server process on one machine. Every crew member runs a full one. |
+| **lead** | The one pastor that holds the managed front door. The phone talks to the lead and to nothing else. |
+| **peer** | A pastor with no front door, reached only by the lead over an authenticated crew link. |
 | **crew** | The lead plus its enrolled peers. One lead per crew, always. |
-| **member** | A collie enrolled in a crew — lead or peer. Identified by a **member id**. |
-| **solo** | A crew of one: a lead with zero enrolled peers. Today's Collie, exactly. |
+| **member** | A pastor enrolled in a crew — lead or peer. Identified by a **member id**. |
+| **solo** | A crew of one: a lead with zero enrolled peers. Today's Pastor, exactly. |
 | **deputy** | The one peer the lead has named as eligible to take over. A deputy is a peer in every other respect. **At most one exists in a crew at any instant** (§18). |
 | **warrant** | The short, lead-signed object that names the deputy: crew id, generation, deputy member id, deputy certificate fingerprint, issue and refresh times (§18). A *standing permission*, never a command. |
 
-These are the shipped words. Earlier drafts said *alpha* for *lead* and *bridge* for *collie*; both
+These are the shipped words. Earlier drafts said *alpha* for *lead* and *bridge* for *pastor*; both
 are dead. The vocabulary decision and the rename rules for operator-visible surfaces are
-[ADR 0012](./.adr/0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md).
+[ADR 0012](./.adr/0012-every-machine-runs-a-pastor-and-the-pack-has-a-lead.md).
 
 ## 2. Shape of the thing
 
@@ -107,8 +107,8 @@ never rides the crew link:
 ```mermaid
 graph TD
   phone["phone (PWA)"] -->|"HTTPS /api/*"| lead
-  lead["lead collie (managed front door)"] -->|"/crew/v1/* : pinned mTLS + crew secret"| peerA["peer A collie (no front door)"]
-  lead -->|"/crew/v1/*"| peerB["peer B collie (no front door)"]
+  lead["lead pastor (managed front door)"] -->|"/crew/v1/* : pinned mTLS + crew secret"| peerA["peer A pastor (no front door)"]
+  lead -->|"/crew/v1/*"| peerB["peer B pastor (no front door)"]
   lead --- leadH["Herdr + agents, lead-local"]
   peerA --- peerAH["Herdr + agents, A-local"]
   peerB --- peerBH["Herdr + agents, B-local"]
@@ -119,13 +119,13 @@ graph TD
 
 The lead is the only dialler: a peer never calls the lead except at `join`, `leave` and `promote`
 (§8.6), and publishes nothing for the phone to reach ([ADR 0013](./.adr/0013-a-peer-listens-without-becoming-a-front-door.md)).
-The dotted edges are `collie crew add` / `collie crew update`, which push a git bundle over the
+The dotted edges are `pastor crew add` / `pastor crew update`, which push a git bundle over the
 operator's own ssh ([ADR 0016](./.adr/0016-updates-ride-the-operators-ssh.md)); the crew link carries
 runtime data and never software.
 
 Three rules generate most of this document:
 
-1. **The lead consumes a peer's *Collie* HTTP API.** The lead **never dials a peer's Herdr socket**,
+1. **The lead consumes a peer's *Pastor* HTTP API.** The lead **never dials a peer's Herdr socket**,
    and no Herdr method name ever crosses a crew link. This is the mux-driver seam — a peer fronting
    something other than Herdr is invisible to this protocol. Argument:
    [ADR 0011](./.adr/0011-the-pack-protocol-is-the-mux-driver-seam.md).
@@ -133,10 +133,10 @@ Three rules generate most of this document:
    gates. A peer's crew listener is not a front door.
 3. **Solo pays zero tax.** With zero peers enrolled, every observable byte is what it is today (§11).
 
-### Why peers run a full Collie
+### Why peers run a full Pastor
 
 The cheaper design is obvious and will be re-proposed: let the lead dial a *remote Herdr socket* over
-a forwarded connection and skip the second Collie entirely. It does not work, for reasons that are
+a forwarded connection and skip the second Pastor entirely. It does not work, for reasons that are
 structural rather than aesthetic:
 
 - **The journal is host-local by rule.** `bridge/journal/` reads the agent's own session log off the
@@ -148,14 +148,14 @@ structural rather than aesthetic:
 - **Audit is host-local by design.** `<stateDir>/audit.log` is the record of what happened on *these*
   terminals (`bridge/audit.ts:64-67`). A forwarded socket writes every peer's history into the lead's
   log and leaves the peer's own operator with nothing.
-- **It welds Collie to Herdr.** The wire format would become Herdr method names, and the seam in rule
+- **It welds Pastor to Herdr.** The wire format would become Herdr method names, and the seam in rule
   1 would not exist.
 
 ---
 
 ## 3. Roles and modes
 
-A collie runs in exactly one mode, decided by its enrollment state, not by a flag the operator
+A pastor runs in exactly one mode, decided by its enrollment state, not by a flag the operator
 maintains by hand.
 
 | Mode | Front door | Serves the PWA | Browser gates (`checkAccess`) | Crew listener |
@@ -168,28 +168,28 @@ In **peer mode the browser-facing surface is disabled**: `serveStatic()` (the SP
 `bridge/server.ts:386`), the `/auth` reserved placeholder (`:383`, `isReservedAuthPath()` `:1347`) and
 the `/api/*` routes are not served to the crew listener. A peer answers `/crew/v1/*` and nothing else.
 
-**There is no second port.** The crew surface is a path prefix on the collie's existing listener, with
+**There is no second port.** The crew surface is a path prefix on the pastor's existing listener, with
 its own admission path.
 
-**The bind is `COLLIE_HOST`, and the operator owns it** *(amended 2026-08-08 — see below)*. The crew
-listener answers on the one address `COLLIE_HOST` names (`bridge/config.ts` `host`, default
+**The bind is `PASTOR_HOST`, and the operator owns it** *(amended 2026-08-08 — see below)*. The crew
+listener answers on the one address `PASTOR_HOST` names (`bridge/config.ts` `host`, default
 `127.0.0.1`); `Bun.serve` takes a single `hostname`, so there is exactly one bind, not a pair.
 `join` does not touch it — reachability is the operator's to own here exactly as it is at §8.2 and
 everywhere else in this design. The bind bounds only **which interface the listener answers on**; it
 is **pinned mutual TLS + the crew-secret admission that actually gates** every request (§8.1). A
 wider bind therefore widens *who can attempt* the gate, never *who passes* it.
 
-Concretely: a peer reachable only over an overlay or a LAN must set `COLLIE_HOST` to that interface
-— a loopback-only bind refuses the lead's dial. `COLLIE_HOST=0.0.0.0` (or `::`, or empty) binds all
+Concretely: a peer reachable only over an overlay or a LAN must set `PASTOR_HOST` to that interface
+— a loopback-only bind refuses the lead's dial. `PASTOR_HOST=0.0.0.0` (or `::`, or empty) binds all
 interfaces; that is not a hole — the two factors still gate — but it is worth stating, so a peer on a
-wildcard bind emits a loud one-line startup warning naming the effective bind, and `collie crew
-status` shows the resolved bind so an operator can see it rather than infer it. Collie **warns, it
+wildcard bind emits a loud one-line startup warning naming the effective bind, and `pastor crew
+status` shows the resolved bind so an operator can see it rather than infer it. Pastor **warns, it
 does not refuse to start** (ADR 0013's posture: a startup refusal it cannot justify is paternalism).
 
 > **Amendment (2026-08-08, F3).** Earlier drafts of this section claimed a peer "binds loopback plus
 > exactly the address the operator supplied at `join` time — nothing wildcard, no `0.0.0.0`". That
 > dual-bind was never implemented and is not expressible (`Bun.serve` takes one `hostname`); the real
-> bind is `COLLIE_HOST` alone, and nothing warned on a wildcard. The claim overstated a control — the
+> bind is `PASTOR_HOST` alone, and nothing warned on a wildcard. The claim overstated a control — the
 > exact failure ADR 0013 names — so it is corrected here to match the code, and the guardrail its
 > intent wanted (the wildcard-bind warning + the `crew status` bind line) is now built.
 
@@ -227,7 +227,7 @@ it to `session=` on the wire (`web/src/lib/api.ts:70-77`).
 
 The `(host, session, paneId)` triple is also the cache-key shape. Today's pane ETag cache is keyed by
 the NUL-joined `(session, paneId)` pair precisely because pane ids collide across servers
-(`web/src/lib/api.ts:201-203`); a second Collie is another such server, so the key widens by one
+(`web/src/lib/api.ts:201-203`); a second Pastor is another such server, so the key widens by one
 component and the reasoning is unchanged.
 
 ---
@@ -247,7 +247,7 @@ the same handlers. There is no second handler set, no second semantic, and no He
 | `GET` | `/crew/v1/workspace/:id/changes` | `GET …/workspace/:id/changes` | proxied byte-for-byte — additive-optional (§7.1). The same list asked by workspace rather than by pane (ADR 0065), with the same query. A lead that predates it never calls it, and a peer that predates it answers 404 to a lead that does |
 | `GET` | `/crew/v1/pane/:id/files` | `GET …/files` | proxied byte-for-byte — additive-optional (§7.1), added 2026-10-05 (M45/03). One folder (`?dir=`) or one text file (`?path=`) under the same root the pane's Changes list reads, off **the member's own disk** (ADR 0083); the query rides through untouched. A READ for forwarding (attempted against a stale member, read budget, audited on neither side), but the member answers it only for a device its **own** device policy authorises, exactly as for a write (§12): `crewGate` takes its write branch for it. A lead that predates it never calls it, and a peer that predates it answers **404** to a lead that does, which the phone must read as "update this member", never as a missing file. A refused path is the member's own `404 { "error": "unknown-path" }`, told apart by its body. A listing row may carry `ignored: true` (additive-optional, added 2026-10-05): git says the entry is ignored in the repository that holds the folder, asked once per listing by the member over its own disk. A member that predates it, one with no repository there, and one whose git did not answer in time all send no field, and the phone then hides nothing for it. The phone hides flagged rows by default; it is a view filter, and an ignored file still reads |
 | `GET` | `/crew/v1/workspace/:id/files` | `GET …/workspace/:id/files` | proxied byte-for-byte — additive-optional (§7.1), added 2026-10-05 (M45/03). The same Files view asked by workspace, with the same query, gate and 404 reading as the pane row above |
-| `GET` | `/crew/v1/pane/:id/files/image` | `GET …/files/image` | proxied byte-for-byte — additive-optional (§7.1), added 2026-10-07 (ADR 0090). One picture (`?path=`) under the same root as the pane's Files read, as its own bytes, off **the member's own disk**; the member reads the type off the bytes (PNG, JPEG, GIF, WebP, AVIF) and answers `413` past 16 MiB and `415` for anything else. The same gate as the Files read (§12, `crewGate`'s write branch), a READ for forwarding, audited on neither side. The lead does not relay the member's cache or security headers: it sets `no-store`, `default-src 'none'; sandbox` and `inline` itself on whatever comes back. It does relay the plain-data `X-Collie-File-Size` and `X-Collie-File-Mtime` the member sends, the picture's version, so the phone can hold the picture in memory; a member that sends neither gets neither. A peer that predates it answers **404**, which the phone reads as "no picture" and shows the file's size instead |
+| `GET` | `/crew/v1/pane/:id/files/image` | `GET …/files/image` | proxied byte-for-byte — additive-optional (§7.1), added 2026-10-07 (ADR 0090). One picture (`?path=`) under the same root as the pane's Files read, as its own bytes, off **the member's own disk**; the member reads the type off the bytes (PNG, JPEG, GIF, WebP, AVIF) and answers `413` past 16 MiB and `415` for anything else. The same gate as the Files read (§12, `crewGate`'s write branch), a READ for forwarding, audited on neither side. The lead does not relay the member's cache or security headers: it sets `no-store`, `default-src 'none'; sandbox` and `inline` itself on whatever comes back. It does relay the plain-data `X-Pastor-File-Size` and `X-Pastor-File-Mtime` the member sends, the picture's version, so the phone can hold the picture in memory; a member that sends neither gets neither. A peer that predates it answers **404**, which the phone reads as "no picture" and shows the file's size instead |
 | `GET` | `/crew/v1/workspace/:id/files/image` | `GET …/workspace/:id/files/image` | proxied byte-for-byte — additive-optional (§7.1), added 2026-10-07 (ADR 0090). The same picture asked by workspace, with the same query, gate, statuses and headers as the pane row above |
 | `POST` | `/crew/v1/pane/:id/reply` | `POST …/reply` (`:279`) | forwarded |
 | `POST` | `/crew/v1/pane/:id/keys` | `POST …/keys` (`:280`) | forwarded |
@@ -303,10 +303,10 @@ answering build:
 - `protocol` and `member` are **REQUIRED** (`bridge/crew/router.ts`, the `CREW_HELLO_PATH` branch; a
   reply missing either is `hello: malformed response body`, `bridge/crew/peer-client.ts`).
 - `version` is **OPTIONAL**, added 2026-08-12: the answering build's own version string, exactly what
-  `collie version` prints (`cli/context.ts`'s `collieVersion` — `1.0.0-alpha.11`, or
+  `pastor version` prints (`cli/context.ts`'s `pastorVersion` — `1.0.0-alpha.11`, or
   `1.0.0-alpha.11+ab12cd3` when a build stamp is present). **An absent field means "a build older
   than this amendment", never an error** (§7.1). The request side gains nothing: the surface that
-  renders skew already dials `hello` in both directions — `collie crew status` probes every member on
+  renders skew already dials `hello` in both directions — `pastor crew status` probes every member on
   a lead and probes the lead on a peer — so the field rides an exchange that already happens *there*.
   The lead's poll (§10.1) deliberately does **not** dial `hello` — it dials `snapshot`, and gains no
   version leg: N extra round trips per poll to re-learn a fact that changes only on restart would be
@@ -326,7 +326,7 @@ answering build:
   currency costs a member that never receives the operator's designation at all. **The same pair
   rides `/crew/v1/snapshot`'s response**, beside the snapshot body rather than inside it — and
   §19's `updatePreflight` takes that same seat, for that same reason — that body
-  is the one this collie serves its own browser, and a crew-only fact has no business in the
+  is the one this pastor serves its own browser, and a crew-only fact has no business in the
   browser's shape. `snapshot` is what the lead's poll already dials (§10.1), which is what makes the
   comparison cost no extra round trip.
 
@@ -381,7 +381,7 @@ become a place to learn something an unadmitted caller wants; a version is admis
 same reason `member` is — it is already knowable to anyone who has cleared both factors. A warrant
 generation is admissible for the same reason, and it names no secret: an integer and a timestamp.
 
-**Deliberately not on the crew surface**, because they are properties of the collie the phone talks to
+**Deliberately not on the crew surface**, because they are properties of the pastor the phone talks to
 rather than of a herd: `POST /api/subscribe` (`:303`), `POST /api/notifications/snooze` (`:318`),
 `GET|POST /api/notifications/prefs` (`:340`), `POST /api/update/check` (`:367`). Push subscriptions
 live on the lead; notification policy is one crew-wide setting the lead owns; update checking is
@@ -395,7 +395,7 @@ ask push guard ([ADR 0100](./.adr/0100-an-ask-travels-as-data-and-is-answered-by
 the push is sent: on the lead, over each swept body, keyed on `(member id, toolCallId)`, with its
 memory in the lead's state dir. A peer runs no guard for its own asks while it is in a crew. The
 guard's hourly breaker counts per member, and its one summary push names the member id. A solo
-collie runs the same guard over its own panes, under host `""`. The push for an ask says only
+pastor runs the same guard over its own panes, under host `""`. The push for an ask says only
 "Permission needed in <pane>", where <pane> is the pane's push name, so nothing of the ask crosses
 the push service.
 
@@ -405,18 +405,18 @@ pane route family `bridge/server.ts:93` has no read action for uploads). If one 
 proxied byte-for-byte read like the mirror, and it reads from the **owning peer's** disk.
 
 **The membership routes are a separate, smaller table.** They are not re-exposed phone routes and
-never will be — they carry no pane data, take no `?session=`, and are addressed to the collie rather
+never will be — they carry no pane data, take no `?session=`, and are addressed to the pastor rather
 than to anything it fronts. They exist because three operator verbs are otherwise undeliverable:
 
 | Method | Path | Sent by | Meaning |
 |---|---|---|---|
 | `POST` | `/crew/v1/enroll` | a joining machine | The exchange of §8.2. Admitted by the **token**, not by the two factors — the joining peer holds neither yet. |
-| `POST` | `/crew/v1/secret` | the lead | Hands a peer the rotated crew secret (§8.4). Refused unless the caller is *this collie's own lead*: the secret is crew-wide, so any other admitted member accepting one could lock the lead out of its own crew. Authenticated by the **outgoing** secret and carrying the incoming one — there is no instant in which both are accepted. |
+| `POST` | `/crew/v1/secret` | the lead | Hands a peer the rotated crew secret (§8.4). Refused unless the caller is *this pastor's own lead*: the secret is crew-wide, so any other admitted member accepting one could lock the lead out of its own crew. Authenticated by the **outgoing** secret and carrying the incoming one — there is no instant in which both are accepted. |
 | `POST` | `/crew/v1/lead` | the member being promoted | "The member calling you is the lead now" (§14). The old lead demotes itself and answers with its roster (the only way the new lead can pin members it has never spoken to); a peer re-pins and keeps its id and the crew secret. A member may only claim leadership **for itself** — and a claim is **not self-authorising**: the lead demotes only against a live operator approval (§14). |
-| `POST` | `/crew/v1/leave` | any member | The caller removes **itself** from this collie's roster (§8.4). The member id is the admitted one, never a body field, and a second call is still `200` — the operator's question has the same answer either way. |
-| `POST` | `/crew/v1/pairing` | the lead | Syncs the lead's paired-device registry — **hashes only** — to the **deputy and to nobody else** (§18.14). Refused unless the caller is *this collie's own lead* AND this collie holds a verified warrant naming **itself**. A label that collides with one of this machine's own paired devices refuses the sync with `code: "pairing_label_collision"`, naming the labels; it is never silently renamed. |
-| `POST` | `/crew/v1/takeover` | the deputy | The witness question, then the re-pin (§18.16). **Two-phase**, with `phase` additive-optional and **absent meaning `probe`** — the reading that changes nothing. It is the one route a caller admitted **as the deputy** may use, and like `warrant` it has two kinds of recipient: arriving at a collie that still believes it leads, a `probe` answers `lead_is_alive` (it *is* the lead, and it *is* answering) and a `commit` is a deposition (§18.12). |
-| `POST` | `/crew/v1/warrant` | the lead | Delivers or refreshes the warrant naming the crew's deputy, with the deputy's certificate beside it (§18). Refused unless the caller is *this collie's own lead* — the same role check `secret` carries, for the same reason. A member that `404`s this route is a **pre-amendment build: not warrant-capable, and therefore not takeover-capable.** That is a closed reading and a named `crew status` finding, never an error. **It is also the one route with two kinds of recipient** — arriving at a collie that still believes it leads, a warrant it signed itself is a *deposition* rather than a push to store (§18.12), exactly as `/crew/v1/lead` is one fact arriving at two kinds of recipient. |
+| `POST` | `/crew/v1/leave` | any member | The caller removes **itself** from this pastor's roster (§8.4). The member id is the admitted one, never a body field, and a second call is still `200` — the operator's question has the same answer either way. |
+| `POST` | `/crew/v1/pairing` | the lead | Syncs the lead's paired-device registry — **hashes only** — to the **deputy and to nobody else** (§18.14). Refused unless the caller is *this pastor's own lead* AND this pastor holds a verified warrant naming **itself**. A label that collides with one of this machine's own paired devices refuses the sync with `code: "pairing_label_collision"`, naming the labels; it is never silently renamed. |
+| `POST` | `/crew/v1/takeover` | the deputy | The witness question, then the re-pin (§18.16). **Two-phase**, with `phase` additive-optional and **absent meaning `probe`** — the reading that changes nothing. It is the one route a caller admitted **as the deputy** may use, and like `warrant` it has two kinds of recipient: arriving at a pastor that still believes it leads, a `probe` answers `lead_is_alive` (it *is* the lead, and it *is* answering) and a `commit` is a deposition (§18.12). |
+| `POST` | `/crew/v1/warrant` | the lead | Delivers or refreshes the warrant naming the crew's deputy, with the deputy's certificate beside it (§18). Refused unless the caller is *this pastor's own lead* — the same role check `secret` carries, for the same reason. A member that `404`s this route is a **pre-amendment build: not warrant-capable, and therefore not takeover-capable.** That is a closed reading and a named `crew status` finding, never an error. **It is also the one route with two kinds of recipient** — arriving at a pastor that still believes it leads, a warrant it signed itself is a *deposition* rather than a push to store (§18.12), exactly as `/crew/v1/lead` is one fact arriving at two kinds of recipient. |
 
 Everything except `enroll` sits behind the same two factors as the rest of the prefix, and each
 carries a role check on top: *admitted* and *allowed to do this* are different questions.
@@ -440,7 +440,7 @@ travels a crew link — it is the deputy's own second listener, on its own port 
 the front door and denylisted in the same service-worker table, and for a sharper reason than
 hygiene: in the same-origin failover deployment the phone's first hit on the bad day is an installed
 service worker minted from the **lead's** origin, so a precached app shell there is the difference
-between reaching the takeover page and staring at the UI of the collie that just died.
+between reaching the takeover page and staring at the UI of the pastor that just died.
 
 ---
 
@@ -454,7 +454,7 @@ Every request on a crew link, and every response:
 | `X-Crew-Protocol: 1` | both | Protocol version. Required on every request **and** every response (§7). |
 | `X-Crew-Member: <member-id>` | both | Who is speaking. On a request, the lead's id; on a response, the peer's. Informational — identity is proven by the pinned certificate, never by this header. |
 | `X-Crew-Device: <device-id>` | request | The operator's device identity, forwarded for the peer's audit trail (§12). Absent when the lead's device gate is off. Printable ASCII as itself, any other id in RFC 8187 form (§12). |
-| `X-Crew-Preflight: fresh` | request | **Optional**, added 2026-09-04 (§19). On `GET /crew/v1/snapshot` only: a REQUEST that the answering member re-run its own `collie update --check --local` before it answers. `fresh` is the only value with meaning; anything else reads as absent. A member that ignores it is a **correct member** — its answer is then simply older, and `asOf` says so. Honoured at most once per `PREFLIGHT_TTL_MS` per member. |
+| `X-Crew-Preflight: fresh` | request | **Optional**, added 2026-09-04 (§19). On `GET /crew/v1/snapshot` only: a REQUEST that the answering member re-run its own `pastor update --check --local` before it answers. `fresh` is the only value with meaning; anything else reads as absent. A member that ignores it is a **correct member** — its answer is then simply older, and `asOf` says so. Honoured at most once per `PREFLIGHT_TTL_MS` per member. |
 | `X-Crew-Lead-Release: <x.y.z>` | request | **Optional**, added 2026-09-04 (§20). On `GET /crew/v1/snapshot` only: the bare version the LEAD is itself running, sent only while that version is a strict release and the lead's own health gate has settled it. Absent means the lead is on a dev or prerelease build, or is mid-run — and absent means the receiving member does nothing. It is a statement about the sender and carries no ref, no URL and no command. |
 | `X-Crew-Update-Turn: <member-name>;<run-id>` | request | **Optional**, added 2026-09-04 (§20). On `GET /crew/v1/snapshot` only: who may take that release now, and the id of the `UpdateRun` the operator confirmed on the lead. Sent to **at most one member at a time**. A member ignores a turn that does not name itself. Absent means it is not this member's turn. |
 | `X-Crew-Received-At` | response | Omitted deliberately. **A peer's clock is never trusted for freshness** — the lead stamps its own receipt time (§10). |
@@ -503,7 +503,7 @@ and peer are separately updated machines, so skew is the steady state, not an ed
   this peer names a grammar this build cannot speak, and that cannot resolve on its own. A missing
   header means the lead learned **nothing** about the peer's version. A process part way through a
   proxy in front of a peer that is restarting, a `502` from a reverse proxy, a `404` from a wrong
-  path, and a solo collie that serves no crew route at all (§11) all answer with no header, and none
+  path, and a solo pastor that serves no crew route at all (§11) all answer with no header, and none
   of them is a skew. (A peer dialled DIRECTLY while it restarts refuses the connection, which was
   never on this path.)
   - A response with **no** `X-Crew-Protocol` is therefore `unreachable` (§10.2), with the HTTP status
@@ -524,12 +524,12 @@ and peer are separately updated machines, so skew is the steady state, not an ed
     exact-match window.
 - **An incompatible peer is a distinct state from an unreachable one** (§10). It is not retried on the
   poll cadence, its sessions are shown from last-good state marked incompatible, and the reason string
-  is surfaced verbatim in the UI and in `collie crew status`.
+  is surfaced verbatim in the UI and in `pastor crew status`.
 
 ### 7.1 Version skew inside a protocol version
 
 Two version numbers ride a crew link and they are **not the same kind of thing**. `X-Crew-Protocol`
-is a *contract*: it says which grammar the bytes are in. A Collie build version (`1.0.0-alpha.11`) is
+is a *contract*: it says which grammar the bytes are in. A Pastor build version (`1.0.0-alpha.11`) is
 a *fact about a running process*: it says how new the code answering is. Lead and peer are separately
 updated machines, so build skew is the steady state (§7), and this section is the class rule for it.
 
@@ -540,7 +540,7 @@ updated machines, so build skew is the steady state (§7), and this section is t
   an outage.
 
   **One surface reads a build version as a refusal, and it is not the wire.** The lead's own
-  preflight (`collie update --check`, which walks the members over the operator's ssh) reds the
+  preflight (`pastor update --check`, which walks the members over the operator's ssh) reds the
   `version` check when a member's build is below the protocol floor, the oldest build that speaks
   this document's `CREW_PROTOCOL_VERSION` (`PROTOCOL_FLOOR_VERSION` in `cli/update-check.ts`,
   [ADR 0045](./.adr/0045-a-build-below-the-protocol-floor-is-a-red-preflight.md)). That is a
@@ -667,13 +667,13 @@ updated machines, so build skew is the steady state (§7), and this section is t
   `linkState`, and the peer's panes last-good, which is §10.2 without §10.2's presentation split
   and is precisely what that lead does with a member of its own age.
 
-- **Skew is an observation, and it is rendered.** `collie crew status` compares each member's reported
+- **Skew is an observation, and it is rendered.** `pastor crew status` compares each member's reported
   version against this build's and marks a difference as a `warn:`-class finding naming **both**
   versions and the remedy. **Which side is behind picks the remedy, and the other one is not
   printed** (added 2026-09-08, §16's version-skew leg found the unconditional form): a member behind
-  this lead is levelled with `collie crew update <member>` here, over the operator's own ssh (ADR
+  this lead is levelled with `pastor crew update <member>` here, over the operator's own ssh (ADR
   0016); a member AHEAD of this lead means the lead is the older machine, so the line says so and
-  names `collie update` HERE — `crew update` from an older lead pushes ITS build outwards and would
+  names `pastor update` HERE — `crew update` from an older lead pushes ITS build outwards and would
   take that member backwards, which is why the wrong remedy is worse than none. Two different
   strings for one semver — a build stamp, an `unknown` — have no direction, so the warn names both
   versions and no command. A member that answers `hello` without the field
@@ -688,7 +688,7 @@ updated machines, so build skew is the steady state (§7), and this section is t
   with the authority of the trust store. **No `TrustedMember` field, and `TRUST_STORE_VERSION` stays
   `1`** (§14.6's reasoning for not bumping it applies unchanged).
 
-- **Where the responder gets the string.** The CLI already has it (`collieVersion()`, from
+- **Where the responder gets the string.** The CLI already has it (`pastorVersion()`, from
   `web/dist/build-info.json` falling back to `herdr-plugin.toml`). **The bridge does not** — it reads
   only the bundle's build *id* (`bridge/server.ts`'s `buildId()`), which is not a version. The
   implementation MUST therefore thread the version into `CrewRouterDeps` **at boot**, resolved once by
@@ -709,14 +709,14 @@ starts reporting when it is updated, and until then the other side says so.
 
 ## 8. Trust: enrollment, factors, rotation
 
-Collie holds no TLS material and mints no credentials today (verified: searched `bridge/` for `tls`,
-`cert`, `pem`, `secret` — nothing). Enrollment introduces the first private key Collie owns.
+Pastor holds no TLS material and mints no credentials today (verified: searched `bridge/` for `tls`,
+`cert`, `pem`, `secret` — nothing). Enrollment introduces the first private key Pastor owns.
 
 ### 8.1 Two independent factors
 
 Every crew request must satisfy **both**, on the crew listener, or it is refused:
 
-1. **Pinned mutual TLS.** Each collie generates a self-signed certificate. Enrollment exchanges and
+1. **Pinned mutual TLS.** Each pastor generates a self-signed certificate. Enrollment exchanges and
    pins the two fingerprints; thereafter, an unpinned certificate is simply **not** that member. No
    CA, no directory, no overlay network — the Syncthing model. Pinning is **pairwise**.
 2. **The crew secret**, presented as `Authorization: Bearer`. The secret is **crew-wide** (one value
@@ -763,7 +763,7 @@ that something is listening.
 > **There is no live re-pin.** `server.reload({ tls })` does not swap a pinned `ca`; a membership
 > change takes effect through the restart every membership verb already performs.
 >
-> **`COLLIE_PEER_BROWSER=1` and a pinned listener are mutually exclusive.** A browser cannot present
+> **`PASTOR_PEER_BROWSER=1` and a pinned listener are mutually exclusive.** A browser cannot present
 > the lead's client certificate, so on a pinned peer that flag's surface is unreachable. The peer
 > warns and pins anyway — the crew's factor is not weakened for an opt-in convenience.
 >
@@ -815,11 +815,11 @@ that something is listening.
 > is empty. §8.5's mitigation still applies to what a takeover would grant — *make the deputy the
 > second machine you most trust* — but it is no longer load-bearing for the pre-takeover case.
 
-### 8.2 Enrollment — `collie join <lead-address> <token>`
+### 8.2 Enrollment — `pastor join <lead-address> <token>`
 
 Run **on the peer**, once.
 
-1. The operator mints a token on the lead (`collie crew invite`). The token is **single-use** and
+1. The operator mints a token on the lead (`pastor crew invite`). The token is **single-use** and
    **short-lived** (10 minutes).
 2. The peer dials `<lead-address>`, presenting the token. The token authenticates *the exchange*, and
    nothing after it.
@@ -835,32 +835,32 @@ Run **on the peer**, once.
    | The address the lead will dial, and the address the peer will listen on | negotiated | both |
 
    > **Note, added 2026-09-09 (1.7.0). The default human name changed.** A crew minted without
-   > `--name` is called `collie crew`; before 1.7.0 it was `collie pack`. The field itself is
+   > `--name` is called `pastor crew`; before 1.7.0 it was `pastor pack`. The field itself is
    > unchanged. The name is display data keyed by the crew id, and a crew that already has a name
    > keeps it.
 
 4. The lead's roster gains the peer; the peer's roster gains exactly one entry — its lead.
 
 **`<lead-address>` is whatever the operator can reach.** Any network: tailnet, LAN, WireGuard,
-someone else's overlay, an SSH tunnel. Collie owns authentication; **the operator owns reachability**.
+someone else's overlay, an SSH tunnel. Pastor owns authentication; **the operator owns reachability**.
 There is no discovery, no enumeration, and no overlay-network integration — ever.
 
 > **Note, added 2026-08-13 — what a lead advertises when the operator does not say.** The address a
-> lead hands a joiner (`collie crew invite`, `collie crew add`, `collie promote`) is resolved in this
-> order: an explicit `--address`, taken verbatim; then `COLLIE_PUBLIC_URL`, reduced to its origin
+> lead hands a joiner (`pastor crew invite`, `pastor crew add`, `pastor promote`) is resolved in this
+> order: an explicit `--address`, taken verbatim; then `PASTOR_PUBLIC_URL`, reduced to its origin
 > (scheme + host + port — the crew link mounts at `/crew/v1/*` off it, so a path is dropped with a
 > warning, and a value that does not parse warns and falls through); then this node's Tailscale name.
 > A machine whose real ingress is a reverse proxy (docs/deployment.md Variant C/E) therefore states that
 > ingress once in config instead of on every invite — a derived tailnet name is silently undialable
 > from a peer under a one-way tailnet ACL, and nothing in the enrollment names that as the cause. **A peer's
-> own listener address is never taken from `COLLIE_PUBLIC_URL`**: a peer publishes no front door (§3,
+> own listener address is never taken from `PASTOR_PUBLIC_URL`**: a peer publishes no front door (§3,
 > ADR 0013), and a public URL is a front door by definition.
 >
 > **Amended 2026-10-02.** The derived front door is spelled `https://<name>` when it is published on 443,
-> never the bare name: `collie join` reads a portless, schemeless address as the lead's own listener,
+> never the bare name: `pastor join` reads a portless, schemeless address as the lead's own listener,
 > `https://<host>:8787`, which a lead behind `tailscale serve` does not answer on. A front door on another
 > port stays `<name>:<port>`. A joiner's `--address` is the other direction and is checked: it must be
-> `host:port` (the same rule `collie crew set-address` applies), because a portless one is dialled on 443.
+> `host:port` (the same rule `pastor crew set-address` applies), because a portless one is dialled on 443.
 > An `https://host:port` override is accepted for compatibility and stored as `host:port`.
 
 > **Amended 2026-08-07 — what actually authenticates an enrollment, stated rather than implied.**
@@ -891,8 +891,8 @@ There is no discovery, no enumeration, and no overlay-network integration — ev
 > The enrollment lands in the **running** lead's trust store, through the lead's own
 > `/crew/v1/enroll`. That store is read **once per process**, at boot: the mode, the roster the lead
 > sweeps and the pinned `ca` a peer's listener enforces are all built from that one read. So a lead
-> that answers its first `collie join` persists the peer and goes on merging nothing until it
-> restarts. `collie crew invite` restarts the lead so it can *answer* the invite; the enrollment
+> that answers its first `pastor join` persists the peer and goes on merging nothing until it
+> restarts. `pastor crew invite` restarts the lead so it can *answer* the invite; the enrollment
 > arrives afterwards, and no restart follows it.
 >
 > **v1 does not re-wire in place, and this is the decision, not an omission.** Re-reading the store
@@ -903,9 +903,9 @@ There is no discovery, no enumeration, and no overlay-network integration — ev
 >
 > - the bridge records the roster it wired at boot in `<stateDir>/crew-runtime.json`
 >   (`bridge/crew/staleness.ts`), and **logs** when a membership change lands under it;
-> - `collie crew status` compares that marker to the store and prints **"enrolled but INACTIVE"**,
->   naming the members that are enrolled and not being served, and the `collie restart` that fixes it;
-> - `collie join` ends by naming the same restart, **on the lead** — the joining machine restarts
+> - `pastor crew status` compares that marker to the store and prints **"enrolled but INACTIVE"**,
+>   naming the members that are enrolled and not being served, and the `pastor restart` that fixes it;
+> - `pastor join` ends by naming the same restart, **on the lead** — the joining machine restarts
 >   itself, and it is the only party in a position to tell the operator about the other side.
 >
 > The marker is written only by an instance that **has** a trust store, so §11's zero-tax contract is
@@ -935,7 +935,7 @@ There is no discovery, no enumeration, and no overlay-network integration — ev
 > token can self-enroll **their own certificate** as a member — the lead admits on the token alone —
 > before the honest joiner spends it, and walks away holding the crew secret and a pinned link. F1's
 > fingerprint pin (above) authenticates the *lead to the joiner*; it does **not** defend the lead
-> against a token-thief racing the spend. So `collie join` now **refuses an `http://` address unless
+> against a token-thief racing the spend. So `pastor join` now **refuses an `http://` address unless
 > the operator passes `--insecure`**, making the trusted-hop assumption explicit rather than implied.
 > A scheme-less address is treated as `https://`, and an unreachable one whose scheme was assumed says
 > so. The wire is unchanged and `CREW_PROTOCOL_VERSION` is not bumped.
@@ -946,14 +946,14 @@ There is no discovery, no enumeration, and no overlay-network integration — ev
 the concrete failure recorded in [ADR 0001](./.adr/0001-one-managed-front-door.md). Therefore:
 
 - Tokens and the crew secret are read from **stdin or a 0600 file**, never from a command line
-  argument and never from a long-lived process's environment. `collie join <lead-address> <token>` is
+  argument and never from a long-lived process's environment. `pastor join <lead-address> <token>` is
   written that way for readability; the token argument accepts `-` (stdin) and `@<path>`, and the
   literal form warns.
 - At rest, crew material follows the discipline `push-subscriptions.json` already uses: atomic
   temp-file-then-rename, **file 0600, directory 0700** (`bridge/push.ts:187-192`), under `stateDir`
-  (`bridge/config.ts` `resolveStateDir`: `COLLIE_STATE_DIR` ?? the user state dir).
+  (`bridge/config.ts` `resolveStateDir`: `PASTOR_STATE_DIR` ?? the user state dir).
 
-### 8.4 Rotation — `collie crew rotate`
+### 8.4 Rotation — `pastor crew rotate`
 
 Run on the lead. Reissues the crew secret and distributes it to every **reachable** peer in one
 operation.
@@ -967,13 +967,13 @@ operation.
   peer fails — one interval of `stale` (§10.2), which is the price of not keeping a leaked value alive.
 - **A peer offline during rotation is dropped to `unenrolled`.** The lead marks it so; the peer, next
   time it is dialled, fails both factors and stays quiet. Recovery is deliberate and explicit: the
-  operator runs `collie join` on that peer again with a **fresh token**. There is **no grace window**:
+  operator runs `pastor join` on that peer again with a **fresh token**. There is **no grace window**:
   any peer offline at rotation time is dropped and must re-join, and that is precisely the cost the
-  remedy for a suspected secret leak — `collie crew rotate` — pays to invalidate the leaked value.
-- `collie crew status` shows, per member, whether it has picked up the current secret — rotation is
+  remedy for a suspected secret leak — `pastor crew rotate` — pays to invalidate the leaked value.
+- `pastor crew status` shows, per member, whether it has picked up the current secret — rotation is
   not "done" as a fire-and-forget; it is a state you can read.
-- **`collie leave`** (on a peer) drops its roster entry and its pinned material; on the lead,
-  `collie crew remove <member>` unpins and forgets. Either side alone is sufficient to end the link —
+- **`pastor leave`** (on a peer) drops its roster entry and its pinned material; on the lead,
+  `pastor crew remove <member>` unpins and forgets. Either side alone is sufficient to end the link —
   a lost disk on one end is handled by removing the member on the other.
 
 ### 8.5 Threat model
@@ -991,7 +991,7 @@ Stated plainly, because a crew link is remote shell access to a second machine.
   because the closure is only legible against it (F2, amended 2026-08-08, closed 2026-08-11).**
   Until this amendment, `POST /crew/v1/lead` (§14) accepted a signature-verified **self-claim** from
   **any** enrolled member with **no operator consent on the receiving lead** — the wire could not tell
-  an operator-run `collie promote` from a compromised peer running the same verb
+  an operator-run `pastor promote` from a compromised peer running the same verb
   (`bridge/crew/router.ts`, `newLead`). The signature authenticates *which member* is claiming, never
   *that an operator willed it*. Two consequences followed, and neither was contained by "its own
   terminals":
@@ -1005,8 +1005,8 @@ Stated plainly, because a crew link is remote shell access to a second machine.
 
   **What closes it (§14, [ADR 0014](./.adr/0014-promote-is-a-confirm-on-the-lead.md)): promotion is a
   confirm on the receiver, not a command from the claimant.** The demotion needs the old lead's
-  operator. `newLead()` on a leading collie demotes only if a **live handover approval** — minted on
-  that machine by `collie crew approve-promote <member>`, ten minutes, single-use — names the
+  operator. `newLead()` on a leading pastor demotes only if a **live handover approval** — minted on
+  that machine by `pastor crew approve-promote <member>`, ten minutes, single-use — names the
   claimant *and* matches the pinned member's fingerprint, and consumes it in the same committed
   transition. An unapproved claim is refused (§14), so (a) and (b) both require an operator at the
   keyboard of the machine being taken from. The approval is **not a secret**: the claim is already
@@ -1035,16 +1035,16 @@ Stated plainly, because a crew link is remote shell access to a second machine.
 - **An on-path attacker over `http://`** reads the token and the returned crew secret in the clear, and
   can self-enroll their **own** certificate as a member before the honest joiner spends the token (the
   lead admits on the token alone; F1's fingerprint pin authenticates the lead, not the joiner). This is
-  why `collie join` refuses an `http://` address unless the operator passes `--insecure` to own the
+  why `pastor join` refuses an `http://` address unless the operator passes `--insecure` to own the
   trusted-hop assumption explicitly (§8.2).
 - **Someone who reaches a peer's crew port with neither factor** learns that something is listening and
   speaks TLS. No PWA, no version banner, no member id, no distinction between refusal causes (§8.1).
 - **Local uid reach.** `ARCHITECTURE.md` §6 already documents that every uid in the host's network
-  namespace can reach `127.0.0.1:$COLLIE_PORT`. The crew prefix rides that same port; it adds no new
+  namespace can reach `127.0.0.1:$PASTOR_PORT`. The crew prefix rides that same port; it adds no new
   port, and it is *harder* to use than the existing surface, because it requires two credentials that
   a local uid does not get for free. The `/api/*` surface remains the softer target on that machine,
   and the device gate remains its answer.
-- **`tailscale whois` is an optional extra, never a factor.** A `COLLIE_TRUSTED_USER`-shaped narrowing
+- **`tailscale whois` is an optional extra, never a factor.** A `PASTOR_TRUSTED_USER`-shaped narrowing
   on top of a gate that already holds without it (`bridge/server.ts:1144-1149` is the existing shape).
   It is never discovery and the model never depends on it.
 
@@ -1057,7 +1057,7 @@ speak for any other. The second factor is therefore re-established over material
 pinned — no new key, no new trust, the same guarantee the handshake gives the other way.
 
 **`POST /crew/v1/leave`, `POST /crew/v1/lead` and `POST /crew/v1/warrant` MUST carry a signature.**
-`GET /crew/v1/hello` MAY, and does when a verb sends it, so `collie crew status` and `collie
+`GET /crew/v1/hello` MAY, and does when a verb sends it, so `pastor crew status` and `pastor
 reconnect` can probe a lead at all. (`warrant` joined the set on 2026-08-20: §18.12's deposition
 travels peer → lead, into a listener that pins nothing inbound.) Nothing else may: the proxy surface
 (§5) runs lead → peer over a pinned handshake, and hashing a body to verify a signature there would
@@ -1084,13 +1084,13 @@ instant nobody has pinned the caller (§8.2).
 - **Skew: ±5 minutes**, both directions. A future timestamp is refused as firmly as a past one —
   parking a captured request for later is what a future stamp buys.
 - **Replay: strictly monotonic per member.** A timestamp must be **greater than** the last one this
-  collie admitted from that member; the floor is persisted (`TrustedMember.signedAt`), because a
-  counter that resets on restart is no counter and every membership verb restarts this collie. The
+  pastor admitted from that member; the floor is persisted (`TrustedMember.signedAt`), because a
+  counter that resets on restart is no counter and every membership verb restarts this pastor. The
   floor moves **before** the request is handled. It is advanced only for the membership routes, which
   are the state-changing ones — a replayed `hello` changes nothing and is bounded by the skew window.
 - **A failure at any step is the uniform 401** of §8.1 — indistinguishable from a wrong secret, an
   unpinned certificate, or an unknown member. The signature is checked **before** the timestamp, so a
-  caller who cannot sign learns nothing about this collie's clock or about what it has already seen.
+  caller who cannot sign learns nothing about this pastor's clock or about what it has already seen.
 
 **The warrant is a SECOND signed object under the same key** (§18, added 2026-08-20). It reuses these
 primitives unchanged — base64 ECDSA-P256-SHA256, made with the signer's own key and verified against
@@ -1098,7 +1098,7 @@ the certificate the reader already pinned — and it is a *different canonical s
 different algorithm and never a different trust anchor.
 
 The two are kept apart **structurally**, by a fixed domain tag in the warrant's first field
-(`collie-crew-warrant-v2`), rather than by the field-count disjointness the four-field string above
+(`pastor-crew-warrant-v2`), rather than by the field-count disjointness the four-field string above
 relies on. That disjointness is real but it degrades with every signed object added, and the key is
 genuinely shared: a lead signs `hello` probes, `leave`, `lead` *and* warrants with one private key. A
 tag makes the property structural and costs one string. **Retrofitting the request string above is
@@ -1130,14 +1130,14 @@ reuse of the four-field one above, for two reasons that are both load-bearing:
   carries:
 
   ```
-  collie-crew-dial-v2\n<METHOD>\n<path>\n<timestamp>\n<the member being dialled>
+  pastor-crew-dial-v2\n<METHOD>\n<path>\n<timestamp>\n<the member being dialled>
   ```
 
 - **Skew: the same ±5 minutes.** **The replay FLOOR is deliberately not applied**, and that is not an
   omission: the lead dials several members concurrently within one millisecond, so a monotonic floor
   here would refuse all but one of every sweep. What bounds a captured dial instead is the receiver
   field — the only party positioned to capture one is the receiver itself, and the receiver is the
-  only collie it verifies at.
+  only pastor it verifies at.
 - **A failure at any step is the uniform 401**, indistinguishable from every other refusal.
 
 ---
@@ -1181,8 +1181,8 @@ version.
 - The 304-skips-the-transfer win (`bridge/server.ts:460-462`) is preserved end to end, which is the
   entire reason proxying is byte-for-byte rather than parse-and-re-emit.
 
-**The lead masks a member's text** *(added 2026-10-08, 1.18.0)*. Every collie masks known secret
-shapes in the text it sends a phone (`bridge/redact.ts`, `COLLIE_REDACT`, on by default), and a
+**The lead masks a member's text** *(added 2026-10-08, 1.18.0)*. Every pastor masks known secret
+shapes in the text it sends a phone (`bridge/redact.ts`, `PASTOR_REDACT`, on by default), and a
 member does so for its own answers. A member one release behind does not, so a lead with the mask on
 masks five answers again before the phone reads them: the mirror (`pane/:id`), `history`, `chat`,
 and `changes` and `files`, asked by pane or by workspace. It uses the functions its own routes use
@@ -1215,7 +1215,7 @@ peer surface, and `CREW_PROTOCOL_VERSION` does not move.
 - **It costs one parse per changed body.** Unchanged polls are `304`s and read nothing. A changed
   body is held whole while it is masked, about 1 ms for a 128 KB mirror and 2 ms for a 200-turn
   History page (measured 2026-10-08), then compressed for the phone as above.
-- **Either switch masks.** The lead masks by its own `COLLIE_REDACT`, and the member by its own. Text
+- **Either switch masks.** The lead masks by its own `PASTOR_REDACT`, and the member by its own. Text
   reaches the phone in clear only when both are off.
 - **The merged snapshot masks its titles too.** A pane's program-set `terminalTitle` is masked in the
   lead's own snapshot, so the lead masks it on its members' panes in the merged body (§9.2) as well.
@@ -1232,7 +1232,7 @@ the same reason it does not read a peer's session log. So `?host=` forwards the 
 answer is re-emitted unchanged, ETag included; the ETag here IS the hash, because the store is
 content-addressed, which makes a proxied `304` as strong as a local one. The addition is
 additive-optional (§7.1): **a lead without the route never calls it, and a peer without the route
-answers `404` to a lead that does** — the same shape a phone gets from a solo collie that holds no
+answers `404` to a lead that does** — the same shape a phone gets from a solo pastor that holds no
 such blob, so the client's rendering of "no image here" covers both without a version check.
 `CREW_PROTOCOL_VERSION` does not move.
 
@@ -1300,20 +1300,20 @@ contribution changes, and it says nothing about whether a given peer's snapshot 
 ### 10.1 Polling (v1)
 
 **v1 is polling. The lead polls each peer's `GET /crew/v1/snapshot` on its own adaptive interval** —
-the cadence it already runs (`COLLIE_POLL_MS` 1500 / `COLLIE_POLL_IDLE_MS` 12000,
-`bridge/config.ts:212-213`; `ARCHITECTURE.md` §5). There is no events endpoint on Collie's HTTP API
+the cadence it already runs (`PASTOR_POLL_MS` 1500 / `PASTOR_POLL_IDLE_MS` 12000,
+`bridge/config.ts:212-213`; `ARCHITECTURE.md` §5). There is no events endpoint on Pastor's HTTP API
 today and v1 does not add one; `events.subscribe` is a *Herdr socket* method (`HERDR_API.md`) and
 never crosses a crew link.
 
 - **Peer fetches are concurrent, not serial.** N peers must not add N round trips of latency.
 - **Each peer gets a timeout budget strictly below the lead's poll interval** — default
-  `COLLIE_CREW_TIMEOUT_MS = 1200` against a 1500 ms poll — so a slow peer can never stall the lead's
+  `PASTOR_CREW_TIMEOUT_MS = 1200` against a 1500 ms poll — so a slow peer can never stall the lead's
   own snapshot. A missed budget is a **stale** poll (§10.4), and the *verdict* that a member is gone
   is decided by a probe on its own budget, never by this one.
 - The peer sweep is a *part of* the existing poll, not a second timer. A solo lead runs no sweep at
   all (§11).
 - **An input makes the poll hot on both machines.** *(added 2026-10-05)* A `/reply` or `/keys` that
-  lands tightens the owning engine to `COLLIE_POLL_MS` for `HOT_POLLS` polls (`ARCHITECTURE.md` §5).
+  lands tightens the owning engine to `PASTOR_POLL_MS` for `HOT_POLLS` polls (`ARCHITECTURE.md` §5).
   Forwarded to a member, it lands through the member's own dispatch, so the member goes hot there;
   and the lead tightens its own primary engine too, because the sweep that brings the member's
   answer back rides that tick. Still one interval per engine, re-armed, never a second one.
@@ -1353,7 +1353,7 @@ never crosses a crew link.
 - **Every landed call is a receipt — the sweep is the floor, not the only source.** A proxied read or
   write (§5, §9.1) that the peer *answered* refreshes `lastSeenAt` exactly as a sweep does: same
   clock, same meaning. This matters because the sweep rides the lead's own adaptive interval and
-  relaxes to `COLLIE_POLL_IDLE_MS` (12 s), while a phone watching that peer's pane polls at 1.5 s —
+  relaxes to `PASTOR_POLL_IDLE_MS` (12 s), while a phone watching that peer's pane polls at 1.5 s —
   so a receipt only the sweep refreshed made a perfectly healthy peer read stale for most of every
   sweep. The fold is **successes only, for a member already believed `reachable`, and monotone**: how
   a *failure* is classified stays the sweep's and the probe's business (§10.4), so there is still one
@@ -1444,7 +1444,7 @@ So the two questions are budgeted separately:
   *stale this poll* — never *peer gone*. (Amended by §10.5: a *cold* link's first data request is
   owed one patient attempt, because the deadlock above is not exclusive to `hello`.)
 - **The reachability verdict comes from a `hello` probe with its own budget** —
-  `COLLIE_CREW_HELLO_TIMEOUT_MS`, default 5000 ms, **not** clamped by the poll fraction (clamping it
+  `PASTOR_CREW_HELLO_TIMEOUT_MS`, default 5000 ms, **not** clamped by the poll fraction (clamping it
   would restore the deadlock) and floored at the data budget. It runs **off the poll's hot path**:
   the lead starts one, never awaited, for a sweep that died on its own clock, at most one per member
   in flight, and arms no timer — §10.1's "no second timer" is untouched. Its answer is also what
@@ -1476,22 +1476,22 @@ steady-state budget (`takeDataBudget`, `bridge/crew/peer-client.ts`):
 
 The credit is spent **at issue**, so concurrent requests and later polls never stack patient dials:
 at most one is in flight per link. A host that is genuinely gone therefore still fails in one strict
-budget per poll. Warmth is remembered **per address** — a member that moved (`collie reconnect`) is a
+budget per poll. Warmth is remembered **per address** — a member that moved (`pastor reconnect`) is a
 different connection and correctly starts cold — is never persisted, and decides a timeout and never
 a verdict; losing it costs one patient dial.
 
 **Every reachability finding asks both questions.** `hello` alone was a lie by omission: it runs on
-the patient budget while every real read runs on the strict one, so `collie crew status` printed
-`reachable` and `collie doctor` printed `member-reach ✓` over a crew that was 503ing every pane. Both
+the patient budget while every real read runs on the strict one, so `pastor crew status` printed
+`reachable` and `pastor doctor` printed `member-reach ✓` over a crew that was 503ing every pane. Both
 verbs now send one real `GET /crew/v1/snapshot` after the probe, on the same client (so it rides the
 warmed connection, which is the bridge's steady state), and report each half with its timing. A
 member that answers and then starves is its own finding, with its own remedy: the address is right,
 the budget is not.
 
-**The clamp of §10.1 is not silent.** `COLLIE_CREW_TIMEOUT_MS` above 0.8 × `COLLIE_POLL_MS` is still
+**The clamp of §10.1 is not silent.** `PASTOR_CREW_TIMEOUT_MS` above 0.8 × `PASTOR_POLL_MS` is still
 clamped — that arithmetic is what stops a slow peer stalling the lead — but the bridge warns at boot
-and `crew status` prints the same line, naming `COLLIE_POLL_MS` as the other half an operator must
-raise. `COLLIE_CREW_TIMEOUT_MS=3000` at the default poll buys exactly nothing, and used to say so
+and `crew status` prints the same line, naming `PASTOR_POLL_MS` as the other half an operator must
+raise. `PASTOR_CREW_TIMEOUT_MS=3000` at the default poll buys exactly nothing, and used to say so
 nowhere.
 
 ### One sweep, end to end
@@ -1531,24 +1531,24 @@ and it backs off instead of being retried on the poll (§7, §10.2).
 
 ## 11. The solo zero-tax contract
 
-**With zero peers enrolled, Collie's observable behaviour is byte-for-byte what it is today.** This is
+**With zero peers enrolled, Pastor's observable behaviour is byte-for-byte what it is today.** This is
 a gate, not an aspiration — M2/05 lands the characterization tests that enforce it before any
 federation code exists to break it.
 
 | Surface | Solo behaviour | Decided at |
 |---|---|---|
-| Routes served to a browser | unchanged; **zero** routes added, zero status codes changed. Amended on purpose 2026-10-05 (ADR 0084): `GET /api/machines`, `GET /api/machines/:id/history` and `POST /api/machines/:id/alerts` answer on a solo collie for its one machine, id `local`; they name no crew state and are pinned in `bridge/solo-baseline.test.ts` | `bridge/server.ts:165-390` |
+| Routes served to a browser | unchanged; **zero** routes added, zero status codes changed. Amended on purpose 2026-10-05 (ADR 0084): `GET /api/machines`, `GET /api/machines/:id/history` and `POST /api/machines/:id/alerts` answer on a solo pastor for its one machine, id `local`; they name no crew state and are pinned in `bridge/solo-baseline.test.ts` | `bridge/server.ts:165-390` |
 | `/crew/v1/*` | **not routed at all** — no crew prefix is registered with zero peers | §5 |
 | Snapshot bytes | unchanged — `servers` is **omitted**, and no `host` field is added to sessions or panes | `bridge/types.ts:164-186` |
 | Snapshot ETag | **unchanged.** Follows from the row above: no added field, no shifted hash | `bridge/http-cache.ts:16-19` |
 | `?session=` with no param | primary session, bit-identical | `bridge/sessions.ts:154-157` |
 | `?h=` | never emitted by the client, never present in a URL | `web/src/lib/session.ts:28-31` |
-| Notification tags | unchanged — the primary keeps the bare `collie:herd` | `bridge/sessions.ts:33-35` |
+| Notification tags | unchanged — the primary keeps the bare `pastor:herd` | `bridge/sessions.ts:33-35` |
 | Push payload | unchanged — no `host` field, mirroring how `session` is stamped only for non-primary | `bridge/push.ts:124-131` |
 | Poll cadence | unchanged — **no second timer, no peer sweep**, same idle relaxation. Amended on purpose 2026-10-05: the one interval runs at the fast cadence for `HOT_POLLS` polls after an input or a new agent pane with no session (`ARCHITECTURE.md` §5), solo or not, and names no crew state | `bridge/event-poker.ts`, `bridge/config.ts:212-213` |
 | Audit line bytes | unchanged — `host` is omitted, not null, exactly as `session`/`device` are today | `bridge/audit.ts:55-61` |
 | Files written | **exactly today's set**: `uploads/`, `audit.log`, `push-subscriptions.json`, `snooze.json`, `notify-prefs.json`, `activity.json`, `update-state.json`. **No key, no certificate, no trust store, no roster.** Amended on purpose 2026-09-27 (M40/02, #289): `folders.json` joins the set as a file written **only after the first space created with a folder or the first star** — an instance that never does either writes nothing new, and it names no crew state. Amended on purpose 2026-10-05 (ADR 0084): `machine-history.json` is written from the tick at most once every five minutes once a minute is recorded, and `machine-alerts.json` only after the operator sets the first rule | `bridge/server.ts:1075`, `bridge/audit.ts:65`, `bridge/push.ts:86`, `bridge/snooze.ts:19`, `bridge/notify-prefs.ts:45`, `bridge/activity.ts:100`, `bridge/update.ts:147`, `bridge/folders.ts`, `bridge/machine-history.ts`, `bridge/machine-alerts.ts` |
-| Ports opened | exactly one, loopback, as today. The standby door's second listener (§18.15) is bound only when `COLLIE_STANDBY_PORT` is set **and** a trust store exists, which a solo instance has neither of | `bridge/config.ts:210-211`, `bridge/crew/standby.ts` |
+| Ports opened | exactly one, loopback, as today. The standby door's second listener (§18.15) is bound only when `PASTOR_STANDBY_PORT` is set **and** a trust store exists, which a solo instance has neither of | `bridge/config.ts:210-211`, `bridge/crew/standby.ts` |
 
 **Why `servers` is optional-and-absent rather than always-present.** An always-present field — even a
 single-entry one, the shape `sessions` chose — changes every solo snapshot body, and therefore every
@@ -1565,10 +1565,10 @@ whatever the new code does. They pin the table above in two layers: an exhaustiv
 line it was added, and `satisfies SnapshotResponse` in `server.ts` closes the loop), plus a
 byte-compared golden body and its ETag. **A failure there is not a stale golden** — it is a solo
 instance's behaviour moving. Regenerating is a deliberate act
-(`COLLIE_REGEN_SOLO_BASELINE=1 bun test bridge/solo-baseline.test.ts`) and **must** be called out in
+(`PASTOR_REGEN_SOLO_BASELINE=1 bun test bridge/solo-baseline.test.ts`) and **must** be called out in
 the PR description with the reason and the row it renegotiates.
 
-**What the unit baseline cannot reach.** Collie deliberately unit-tests only pure/injectable modules —
+**What the unit baseline cannot reach.** Pastor deliberately unit-tests only pure/injectable modules —
 anything needing `Bun.serve` is out of `bun test`'s reach (CLAUDE.md). So four claims above are pinned
 only *indirectly* (route literals, config defaults and payload shapes read out of the source) and need
 the M4 integration harness to be asserted for real: **status codes** unchanged per route, **the actual
@@ -1612,7 +1612,7 @@ happened on the peer's terminals.
   form reads it as an unknown device, the closed case. Before this, such an id never left the lead,
   because a header value must be a ByteString.
 - **The header is trusted because the crew link authenticated it**, not because it was sent. It is
-  meaningful only on an admitted crew request (§8.1) — exactly the trust basis `COLLIE_DEVICE_HEADER`
+  meaningful only on an admitted crew request (§8.1) — exactly the trust basis `PASTOR_DEVICE_HEADER`
   already rests on for a co-located proxy (`bridge/server.ts:1216-1223`).
 - The peer writes the entry to **its own** `<stateDir>/audit.log` (`bridge/audit.ts:64-67`), with the
   device carried through as `device` and a new `via: "crew"` marker plus the originating member id, so
@@ -1646,14 +1646,14 @@ The path is **phone → lead → owning peer's disk**.
 - Upload sweeping stays per-machine (`bridge/uploads.ts`, driven from `bridge/index.ts:195-202`) — the
   peer expires its own files.
 - **The size cap is per member, and the peer's is the one that decides.** It is the host's own
-  `COLLIE_MAX_UPLOAD_MB` (`cfg.maxUploadBytes`), not a protocol constant. The lead runs a
+  `PASTOR_MAX_UPLOAD_MB` (`cfg.maxUploadBytes`), not a protocol constant. The lead runs a
   `Content-Length` pre-check against **its own** number before forwarding, so a phone on cellular
   does not spend its uplink on a body that was always going to be refused; the peer then re-checks
   the decoded size against its own when the bytes land. The pre-check can only refuse early, never
   permit — so two members on two different numbers is legal, and merely confusing. Keep a crew on
   one number.
 - **What may be written is the peer's decision too.** The accepted types are the peer's shipped list
-  plus its own `COLLIE_UPLOAD_EXTRA_TYPES` (`bridge/uploads.ts`), and the lead does not filter by
+  plus its own `PASTOR_UPLOAD_EXTRA_TYPES` (`bridge/uploads.ts`), and the lead does not filter by
   type at all. `/api/config`'s `upload` block reports the answering host's limits, so a phone on
   `?h=peer` reads the LEAD's block and may offer a type the peer refuses. That refusal arrives as
   the peer's own `upload.bad_type`, which is the correct place for it.
@@ -1662,7 +1662,7 @@ The path is **phone → lead → owning peer's disk**.
 
 ## 14. Promotion
 
-**`collie promote` is a deliberate operator action, run on the peer that is to become lead.
+**`pastor promote` is a deliberate operator action, run on the peer that is to become lead.
 Transparent failover is a non-goal.**
 
 **Promotion is a confirm on the receiver, not a command from the claimant** (amended 2026-08-11,
@@ -1670,15 +1670,15 @@ closes F2 — [ADR 0014](./.adr/0014-promote-is-a-confirm-on-the-lead.md)). A si
 member is speaking* (§8.6); it cannot prove *that an operator willed it*. So the crown moves in **two
 steps on two machines**, and each step is refused without the one before it:
 
-1. on the **current lead**, `collie crew approve-promote <member-id>` — a ten-minute, single-use
+1. on the **current lead**, `pastor crew approve-promote <member-id>` — a ten-minute, single-use
    consent naming who may take over, which **restarts the lead** so the running process
    holds the approval (§14.1);
-2. on the **peer**, `collie promote` inside that window — which demotes the lead and takes its roster.
+2. on the **peer**, `pastor promote` inside that window — which demotes the lead and takes its roster.
 
 Touching both machines is the design, not friction: consent run on the lead is what proves the
 operator controls the machine that is about to lose its terminals, its roster and its front door.
 
-### 14.1 The approval — `collie crew approve-promote <member-id>` (on the lead)
+### 14.1 The approval — `pastor crew approve-promote <member-id>` (on the lead)
 
 Mints a **pending handover approval** and **restarts the lead** so the running process holds
 it. The approval is persisted in the trust store beside the crew's other state:
@@ -1698,9 +1698,9 @@ PendingHandover | null`. `parseTrustStore` builds its result from an explicit fi
 literal, or the approval is silently dropped on every read and gate 1 is permanently closed. Absent ⇒
 no live approval ⇒ refuse: the fail-closed reading holds through that parser.
 
-- **The mint restarts the lead, and this is load-bearing, not incidental.** A collie reads
+- **The mint restarts the lead, and this is load-bearing, not incidental.** A pastor reads
   its trust store **at most once per process** (`trust-store.ts`, the `loaded` latch), so an approval
-  a CLI writes to the store on disk is invisible to the already-running collie — the promotion would
+  a CLI writes to the store on disk is invisible to the already-running pastor — the promotion would
   then refuse forever. `approve-promote` therefore mints **and** restarts (`applyLocally`, exactly as
   every other membership verb does — "a membership change takes effect through the restart every
   membership verb performs", §8.1's 2026-08-07 amendment), so the process that later fields the claim
@@ -1722,17 +1722,17 @@ no live approval ⇒ refuse: the fail-closed reading holds through that parser.
 - **It is not a secret and carries no token.** The claim is already signature-authenticated against a
   pinned certificate (§8.6), so consent only has to name *who* may take over. **No new secret material
   crosses the wire**, and a leaked trust store yields nothing spendable from this field.
-- **`collie crew approve-promote --cancel`** clears the live approval — and, like the mint, restarts,
-  so the collie forgets it. `--cancel` parses as a **bare** flag (`bareFlags: ["cancel"]`) so it
+- **`pastor crew approve-promote --cancel`** clears the live approval — and, like the mint, restarts,
+  so the pastor forgets it. `--cancel` parses as a **bare** flag (`bareFlags: ["cancel"]`) so it
   consumes no following token; with nothing armed it exits cleanly (`EXIT.OK`, "nothing was armed").
   TTL and replacement are the only other ways an approval ends; the operator who armed it and changed
   their mind should not have to wait the window out.
 - **Validation.** It refuses when this machine is **not leading** (`EXIT.STATE`) and refuses a member
   id **not in the current roster** (`EXIT.STATE`) — an approval naming nobody the lead pins is a typo,
   not a consent. On success it prints who is approved, the ten-minute window, and the exact next step
-  (*now run `collie promote` on `<member>` within 10 minutes*). It registers in `CREW_SUBCOMMANDS` and
+  (*now run `pastor promote` on `<member>` within 10 minutes*). It registers in `CREW_SUBCOMMANDS` and
   the help block.
-- `collie crew status` shows a live approval as its own line — `handover approved: <member-id> —
+- `pastor crew status` shows a live approval as its own line — `handover approved: <member-id> —
   expires in Nm` — in the same spirit as §8.4's per-member secret column; a swept (expired) approval
   reads as absent. On a **peer**, where no approval can exist, it shows nothing.
 - **Absent field = no live approval, never a default-open reading.** A trust store written before this
@@ -1788,7 +1788,7 @@ caller is *admitted but not permitted* — §5's "admitted and allowed to do thi
 questions", answered on the wire. It carries a machine-readable `code`.
 
 ```json
-{ "error": "this lead has not approved \"nas\" to take over — run `collie crew approve-promote nas` here, then re-run `collie promote` on that machine within 10 minutes",
+{ "error": "this lead has not approved \"nas\" to take over — run `pastor crew approve-promote nas` here, then re-run `pastor promote` on that machine within 10 minutes",
   "code": "handover_not_approved" }
 ```
 
@@ -1796,7 +1796,7 @@ An approval that names a **different** member — or one whose fingerprint does 
 member's — produces the byte-identical response. The claimant is not told who *is* approved; that is
 the operator's business on the lead, not a fact the wire owes an unsuccessful claimant.
 
-**`collie promote` must surface this refusal honestly, and must not point at `--force`.** The
+**`pastor promote` must surface this refusal honestly, and must not point at `--force`.** The
 peer-client today collapses every non-2xx that is not 401/409 into `unreachable` and discards the
 body, after which `promote` prints "the current lead did not answer … re-run with `--force`" —
 aiming the operator at the destructive remedy for what is actually an *un-approved* promotion. So the
@@ -1824,7 +1824,7 @@ machine that must be convinced of it — a peer learns a new lead only by re-joi
 refused — that would give the crew two front doors and two rosters — so `--force` is the operator
 explicitly accepting the risk for a machine they know is down. It sweeps **nobody**: a peer pins its
 *current* lead at the handshake (§8.1's 2026-08-07 amendment), so a promoted lead a peer does not yet
-pin is refused at that peer's TLS handshake regardless. `collie promote --force` therefore **skips the
+pin is refused at that peer's TLS handshake regardless. `pastor promote --force` therefore **skips the
 peer sweep entirely** and prints the re-join for every member instead. (In the shipped code the forced
 path already carries an empty roster, so the sweep had nobody to dial — the promise now matches.
 2026-08-12: the *unforced* path's sweep is gone too, for the reason above — it could never land, and a
@@ -1833,9 +1833,9 @@ re-enrollment rule both paths now print.)
 
 This is accepted rather than worked around. §15 already declares transparent failover a non-goal, and
 §8.4 imposes the identical rule on a peer that misses a rotation. Re-enrollment is the recovery path
-for every remaining member: `collie join` against the new lead with a fresh token.
+for every remaining member: `pastor join` against the new lead with a fresh token.
 
-`--force` still leaves the old lead believing it leads, so it must be `collie leave`-d or re-`join`-ed
+`--force` still leaves the old lead believing it leads, so it must be `pastor leave`-d or re-`join`-ed
 before it is ever powered back on into the crew.
 
 ### 14.5 Unchanged by this amendment
@@ -1860,28 +1860,28 @@ before it is ever powered back on into the crew.
 - **Every remaining peer re-enrolls; the promotion updates none of them** (corrected 2026-08-12 — an
   earlier draft said reachable peers are updated by the promotion itself, which the previous bullet's
   handshake rule makes impossible: each peer pins its *current* lead's certificate, so the new lead's
-  dial is refused at TLS before any application code runs, reachable or not). `collie join` against
+  dial is refused at TLS before any application code runs, reachable or not). `pastor join` against
   the new lead with a fresh token, for every peer that is not the old lead — the same rule rotation
   uses (§8.4), for the same reason. With two members there are no such peers and nothing to do.
 - **The demoted lead's roster entry names an address the demotion itself retires** (added 2026-08-12).
   The new lead carries the old lead into its roster at the address it always dialed it at — the old
-  lead's **front door**, which the hand-over's own next step (`collie unserve` there) tears down. And
+  lead's **front door**, which the hand-over's own next step (`pastor unserve` there) tears down. And
   a machine that led from behind a front door typically binds loopback, so it has no dialable crew
-  listener until its operator sets `COLLIE_HOST` and restarts (§4 — an address is a fact about the
+  listener until its operator sets `PASTOR_HOST` and restarts (§4 — an address is a fact about the
   dialler's network; nothing in the protocol can conjure one for a machine that never had it). The
   repair is two existing verbs, and `promote` MUST print them as steps: on the demoted machine, set
-  `COLLIE_HOST` to an address the new lead can dial, then `collie restart` (the same `.env` change
-  every peer makes — §8.2); on the new lead, `collie reconnect <old-lead> <host:port>`. Until then
-  `crew status` and `collie doctor` here show that member unreachable, and `doctor` there names the
+  `PASTOR_HOST` to an address the new lead can dial, then `pastor restart` (the same `.env` change
+  every peer makes — §8.2); on the new lead, `pastor reconnect <old-lead> <host:port>`. Until then
+  `crew status` and `pastor doctor` here show that member unreachable, and `doctor` there names the
   loopback bind (both by design — the state is visible, not silent). No wire field is added for this:
   a bind is not a name, so nothing the demotion reply could carry is trustworthy as a dialling
   address (§7.1's class rule would permit the field; §4's addressing rule is why it would be wrong).
 - **The phone re-points manually.** The front-door URL is bound to a node; nothing rewrites a
   bookmark. This is stated as an operator step, not hidden.
-- **The old lead's front door is torn down by the old lead.** Collie tears down only a mapping its own
+- **The old lead's front door is torn down by the old lead.** Pastor tears down only a mapping its own
   ownership record matches ([ADR 0001](./.adr/0001-one-managed-front-door.md)), and that record lives
   beside the CLI on that machine — no process publishes or unpublishes a tunnel on another operator's
-  say-so. `promote` prints the exact command (`collie unserve`) to run there; it cannot run it.
+  say-so. `promote` prints the exact command (`pastor unserve`) to run there; it cannot run it.
 - **Nothing else follows the crown.** Push subscriptions, the audit log, outstanding notification tags
   and activity ledgers are host-local by rule (§2) and stay on the old lead. The phone re-subscribes
   against the new one. `promote` enumerates this in its own output.
@@ -1895,7 +1895,7 @@ The change is **additive**: one optional trust-store field, no new wire object.
   down between differently-updated members in order to close a hole in one, trading a
   denial-of-service for the escalation.
 - **`TRUST_STORE_VERSION` stays `1`.** The field is read as optional, and `parseTrustStore` refuses an
-  **unknown** store version — so bumping it would make an updated collie reject its own pre-amendment
+  **unknown** store version — so bumping it would make an updated pastor reject its own pre-amendment
   store. Do not bump it.
 - **Absent means closed, never open.** No approval field ⇒ no live approval ⇒ an unapproved claim is
   refused. A pre-spec store upgrades into refusing.
@@ -1923,16 +1923,16 @@ The change is **additive**: one optional trust-store field, no new wire object.
 > The old lead adopts its demotion **on disk**, in the request it answers. Its *process* does not
 > change: it keeps the lead-mode listener it bound at boot — which, under §8.1's amendment, **pins
 > nothing** — and its front door, until something restarts it. So `promote` now prints
-> `collie restart`, **then** `collie unserve`, for that machine, in that order: `restart` runs `start`,
+> `pastor restart`, **then** `pastor unserve`, for that machine, in that order: `restart` runs `start`,
 > which publishes, so tearing the front door down first would race the thing that re-publishes it (the
-> same ordering `collie join` uses). Locally, the demoted machine says it too — in its own log, and in
-> `collie crew status`, which reports it as a `peer` on disk and a `lead` in memory (§8.2's note).
+> same ordering `pastor join` uses). Locally, the demoted machine says it too — in its own log, and in
+> `pastor crew status`, which reports it as a `peer` on disk and a `lead` in memory (§8.2's note).
 >
-> **The demoted collie does not restart itself.** Exiting so a supervisor restarts it would work under
+> **The demoted pastor does not restart itself.** Exiting so a supervisor restarts it would work under
 > systemd (`Restart=on-failure`) and launchd (`KeepAlive`/`SuccessfulExit=false`) — and would take the
-> machine's Collie off the air entirely on the **unsupervised** tier, which nothing restarts and which
+> machine's Pastor off the air entirely on the **unsupervised** tier, which nothing restarts and which
 > is reached exactly where an operator is least present (a Mac whose `gui/<uid>` bootstrap refused).
-> A collie is launched identically on all three tiers and cannot tell which one it is under;
+> A pastor is launched identically on all three tiers and cannot tell which one it is under;
 > supervision is the CLI's knowledge. A demotion is not a licence to end a process that may not come
 > back, so the honest v1 answer is the operator's restart, named in three places.
 
@@ -1941,13 +1941,13 @@ The change is **additive**: one optional trust-store field, no new wire object.
 ```mermaid
 stateDiagram-v2
   [*] --> leading
-  leading --> deputised: collie crew deputy nas
+  leading --> deputised: pastor crew deputy nas
   note right of deputised
     warrant minted, pushed, anchored
     at each peer's restart (18.5)
     still just a healthy crew
   end note
-  deputised --> leading: collie crew deputy --revoke
+  deputised --> leading: pastor crew deputy --revoke
 
   leading --> lead_down: the lead process or its machine dies
   deputised --> lead_down: the lead process or its machine dies
@@ -1960,7 +1960,7 @@ stateDiagram-v2
   lead_down --> recovering: the operator restarts the lead
   recovering --> leading: boot reads crew-trust.json, first sweep repopulates
 
-  lead_down --> armed: deputy sees COLLIE_STANDBY_ARM_MS of silence
+  lead_down --> armed: deputy sees PASTOR_STANDBY_ARM_MS of silence
   armed --> lead_down: the lead calls again, instantly disarmed
   armed --> taken_over: operator taps take over, lead silent, no peer contradicts
   armed --> lead_down: a peer answers lead_is_alive, nothing changed
@@ -1978,7 +1978,7 @@ stateDiagram-v2
   lead_down --> promoted: no deputy, and the lead is gone for good
   promoted --> [*]
   note right of promoted
-    collie promote --force
+    pastor promote --force
     every remaining peer must re-join
     the old machine still believes it leads
   end note
@@ -1997,8 +1997,8 @@ in-memory — last-good snapshots and the health registry (§7.1) — so a resta
 from a network blip except for one poll cycle in which peers render from an empty cache rather than a
 stale one.
 
-**Keeping the lead alive is the operator's job, by design.** Collie never restarts itself — except at
-the instant a takeover commits (§18.16) — for the reason §14.7's closing note gives: a collie cannot
+**Keeping the lead alive is the operator's job, by design.** Pastor never restarts itself — except at
+the instant a takeover commits (§18.16) — for the reason §14.7's closing note gives: a pastor cannot
 tell which supervision tier it is under, so exiting to be revived is a bet it may lose. Put the lead
 **and the deputy** under `systemd --user` (or launchd) and let that supervise them.
 
@@ -2011,7 +2011,7 @@ warrant, deposes itself and heals to `peer` on material both sides already held,
 (§18.12). Two things it does not do for you: the warrant is **spent**, so name a new deputy; and the
 old machine's front door is its own operator's to tear down.
 
-**Without a deputy the floor is unchanged:** §14.4's `collie promote --force` — the path that skips
+**Without a deputy the floor is unchanged:** §14.4's `pastor promote --force` — the path that skips
 the consent the old lead can no longer give, and pays for it by stranding every other peer. Read that
 section before running it; its costs are not summarised here.
 
@@ -2021,14 +2021,14 @@ section before running it; its costs are not summarised here.
 
 - **Overlay-network integration of any kind.** No Tailscale / NetBird / ZeroTier enumeration,
   discovery or membership sync — ever. An address and a token is the whole contract. This extends
-  [ADR 0001](./.adr/0001-one-managed-front-door.md): Collie manages one front door **per crew**, the
+  [ADR 0001](./.adr/0001-one-managed-front-door.md): Pastor manages one front door **per crew**, the
   lead's, and peers manage none.
 - **A multiplexer's own machine linking.** Whatever a multiplexer can reach on another box is
   **not a crew transport**, and its adapter reports only panes whose terminal runs on its own machine.
   This is the same refusal as the overlay-network one, one layer down: the map of machines is
-  Collie's, a crew member is a full collie, and a pane's journal, uploads and audit log sit on the
+  Pastor's, a crew member is a full pastor, and a pane's journal, uploads and audit log sit on the
   machine that runs it
-  ([ADR 0036](./.adr/0036-the-map-of-machines-is-collies-a-mux-reports-one-machine.md)). Such a
+  ([ADR 0036](./.adr/0036-the-map-of-machines-is-pastors-a-mux-reports-one-machine.md)). Such a
   multiplexer may offer the operator a list of candidate hosts for `crew add`, and nothing else.
 - **A second managed front door.** A peer never runs `tailscale serve` and **never `tailscale
   funnel`** — the prohibition generalises to any tunnel offering a public URL.
@@ -2038,7 +2038,7 @@ section before running it; its costs are not summarised here.
   by rule (§2).
 - **Streaming events in v1.** §16.
 - **Standalone-from-Herdr graduation.** This document constrains the protocol's vocabulary so
-  graduation stays *possible* ([RFC #67](https://github.com/AltanS/collie/discussions/67)); it does
+  graduation stays *possible* ([RFC #67](https://github.com/Ad3Digital/pastor/discussions/67)); it does
   not commit to it and adds no driver abstraction.
 
 ## 16. Reserved for a future version — explicitly unbuilt
@@ -2119,17 +2119,17 @@ record is the reservation and the run that closed it, side by side:
 ## 17. Open items this document does not close
 
 - The **final product vocabulary** for operator-visible surfaces (env keys, action ids, CLI verbs).
-  Settled by [ADR 0012](./.adr/0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md);
-  `collie` / `lead` / `peer` / `crew` are the words *this* document
+  Settled by [ADR 0012](./.adr/0012-every-machine-runs-a-pastor-and-the-pack-has-a-lead.md);
+  `pastor` / `lead` / `peer` / `crew` are the words *this* document
   uses and they must stay greppable.
 - ~~**The general policy for a version-skewed crew.**~~ **Closed 2026-08-12 by §7.1** ("Version skew
   inside a protocol version"), which states the class rule this item asked for: the protocol integer
   is the only thing that refuses, every addition inside a protocol version MUST be additive-optional
   with absent-means-closed semantics — which is what makes an older build *behind* rather than a
-  downgrade being forced on anyone — and a build-version difference is an observation `collie crew
+  downgrade being forced on anyone — and a build-version difference is an observation `pastor crew
   status` renders, never a refusal. `hello` carries the observed version as an optional response
   field (§5); §14.6 is now an instance of the rule rather than a statement of its own.
-- **Concrete default values** marked as defaults above (`COLLIE_CREW_TIMEOUT_MS = 1200`, the 10-minute
+- **Concrete default values** marked as defaults above (`PASTOR_CREW_TIMEOUT_MS = 1200`, the 10-minute
   token lifetime, the 10-minute handover-approval window, the 10-year
   certificate lifetime, the `3 × pollMs` / 15 s staleness threshold) are
   starting points chosen to be consistent with today's cadence, not measured ones. M4 may move them;
@@ -2141,7 +2141,7 @@ record is the reservation and the run that closed it, side by side:
 ## 18. The deputy and the warrant *(added 2026-08-20)*
 
 **The problem this closes:** a lead that dies takes the front door with it, and today the only way
-back is `collie promote` at a keyboard on another machine (§14.4). A **deputy** is the one peer the
+back is `pastor promote` at a keyboard on another machine (§14.4). A **deputy** is the one peer the
 operator names, in advance and while everything is healthy, as eligible to take over. This section
 specifies the object that carries that consent — the **warrant** — and how it reaches every member.
 It does not specify the takeover itself.
@@ -2192,7 +2192,7 @@ membership.
 **The canonical string**, exactly — eight LF-separated fields behind a fixed domain tag (§8.6):
 
 ```
-collie-crew-warrant-v2\n<crewId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
+pastor-crew-warrant-v2\n<crewId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
 ```
 
 `deputyMemberId` and `deputyFingerprint` are the literal string `-` in a revocation warrant. An
@@ -2234,7 +2234,7 @@ So: **the generation is standing; the signature is refreshed.**
   crew was healthy. A crew in daily use never approaches it; a crew that has been dark for a month
   disarms itself.
 - **An expired warrant is not refreshed.** It is dead on every clock that holds it, and re-signing it
-  would silently re-arm a crew nobody has touched in a month. `collie crew deputy` is the way back.
+  would silently re-arm a crew nobody has touched in a month. `pastor crew deputy` is the way back.
 - **Expiry is not revocation.** A revocation is immediate but only reaches machines that are up; an
   expiry reaches every machine but takes 30 days. Both are needed and neither substitutes for the
   other.
@@ -2267,7 +2267,7 @@ carries no certificate; one that arrives with a certificate is refused.
 
 **The receiving order is the rule**, and it runs outside-in: shape, then whose warrant this is, then
 the signature, then the certificate that rode with it, then the clock, then supersession. A caller who
-cannot sign therefore never learns which generation this collie holds. **A refusal costs no write**:
+cannot sign therefore never learns which generation this pastor holds. **A refusal costs no write**:
 a warrant that does not verify leaves the member holding exactly what it held before.
 
 **Re-push rides the sweep the lead already runs — there is no second timer** (§10.1, §11). Each poll's
@@ -2287,7 +2287,7 @@ The warrant and the lead's designation land in the **trust store** as optional t
 none of it (§11). `parseTrustStore` builds its result from an explicit field whitelist, so each field
 is named in both the validator and the returned result or it is silently dropped on every read —
 §14.1 records that exact trap. **`TRUST_STORE_VERSION` stays `1`**: the fields are read as optional
-and an *unknown* store version is refused, so bumping it would make an updated collie reject its own
+and an *unknown* store version is refused, so bumping it would make an updated pastor reject its own
 pre-amendment store (§14.6's reasoning, verbatim). A malformed warrant or designation invalidates the
 **whole** store rather than being read around — a hole in a trust file is an unpinned member.
 
@@ -2314,7 +2314,7 @@ updated members in order to add a feature that degrades gracefully on its own.
 **Nothing.** Every item that was on this list has landed.
 
 *(The deposed state, the self-heal and the boot gate were on it until 2026-08-20 and are now §18.11
-and §18.12. The `collie crew deputy` verb was on it until 2026-08-20 and is now §18.13. The pairing
+and §18.12. The `pastor crew deputy` verb was on it until 2026-08-20 and is now §18.13. The pairing
 sync, the standby door and the takeover exchange were on it until 2026-08-20 and are now §18.14,
 §18.15 and §18.16.)*
 
@@ -2323,14 +2323,14 @@ sync, the standby door and the takeover exchange were on it until 2026-08-20 and
 **`lastDialledAt`: the epoch-ms receipt of the last **admitted** crew request from this peer's lead,
 stamped on the peer's own clock.** Every admitted request refreshes it — a poll, a proxied pane read,
 a forwarded write — which is §10.2's *every landed call is a receipt* rule, reached from the other
-side of the link and for the same reason: the sweep relaxes to `COLLIE_POLL_IDLE_MS` while a phone
+side of the link and for the same reason: the sweep relaxes to `PASTOR_POLL_IDLE_MS` while a phone
 watching a pane polls at 1.5 s, so a receipt only the sweep refreshed would describe a perfectly
 healthy link as quiet.
 
 - **In memory, never persisted.** It describes a *process*, and §7.1's rule for exactly this shape
   applies: a persisted receipt would survive the restart it is meant to report and would then state a
   falsehood with the authority of the trust store. The **process start time** covers the boot case —
-  a collie that has just started has never been dialled by anybody, so silence is measured from the
+  a pastor that has just started has never been dialled by anybody, so silence is measured from the
   **later** of the last dial and that start, or a reboot would read as maximal silence from its first
   instant.
 - **A refusal is not a receipt.** Both factors must pass first; the number describes calls that
@@ -2347,7 +2347,7 @@ healthy link as quiet.
 **Nothing about it crosses the wire.** It is a fact a peer holds about calls it received; no field,
 no header, no route.
 
-**How a different process reads it** *(amended 2026-08-20)*. `collie crew status` is not the bridge —
+**How a different process reads it** *(amended 2026-08-20)*. `pastor crew status` is not the bridge —
 it is a one-shot verb in its own process, and a number held only in the bridge's memory is a number
 it cannot print. So the running process **checkpoints** the two receipts, the generation its listener
 actually anchored, and its deposed state (§18.12) into the **runtime marker**
@@ -2367,7 +2367,7 @@ every reader reads its one copy.
 store, and no route reads it or reports it.
 
 The marker also records the build (`crewVersion`, the bare string §5's hello carries), written at boot
-with the rest of the boot half. `collie update` reads it to check a peer with no standby door: that
+with the rest of the boot half. `pastor update` reads it to check a peer with no standby door: that
 peer is reached by its TLS certificate, which names no build, so the update compares the marker's
 build as it does on every other machine. A marker from a bridge that predates the field has no build
 and reads as it did before.
@@ -2378,28 +2378,28 @@ and reads as it did before.
 (if it was no longer in that peer's anchors) or an admitted request served against a roster that
 silently disagreed with it. Neither says what happened.
 
-**Now:** a collie whose pinned lead is **not** the caller answers **`409 Conflict`** — the status §7
+**Now:** a pastor whose pinned lead is **not** the caller answers **`409 Conflict`** — the status §7
 already uses for "we do not agree about who we are talking to" — with:
 
 ```json
-{ "error": "this collie follows lead \"nas\" since warrant generation 7",
+{ "error": "this pastor follows lead \"nas\" since warrant generation 7",
   "code": "lead_conflict",
   "leadMemberId": "nas",
   "warrantGeneration": 7,
-  "warrant": { "…": "the warrant that deposed the caller, when this collie holds it" } }
+  "warrant": { "…": "the warrant that deposed the caller, when this pastor holds it" } }
 ```
 
-- **Only a collie that HAS a lead answers it.** A lead pins its members individually and each of them
+- **Only a pastor that HAS a lead answers it.** A lead pins its members individually and each of them
   is a legitimate caller, so the same comparison on a lead would refuse its whole roster.
 - **It is decided on the caller's claimed identity, and that is sound *for a refusal*.** A verified
   §8.6 signature names the member outright; absent one, `X-Crew-Member` is a hint the transport
   cannot corroborate (§6). A hint is never enough to *admit* and nothing here admits anything — the
   caller has already cleared both factors — and the worst a forged header buys is a `409` naming this
-  collie's own lead plus a deliberately public object.
+  pastor's own lead plus a deliberately public object.
 - **It names the new lead's member id, its generation, and the warrant — and nothing else.** Not an
   address, not a certificate: the answering member is not a directory, and a member id is already
   knowable to any admitted caller (§5).
-- **The warrant rides along only when it IS the proof** — a warrant naming the member this collie now
+- **The warrant rides along only when it IS the proof** — a warrant naming the member this pastor now
   follows. A revocation, or one naming somebody else, proves nothing about this conflict. That
   distinction is what turns a deposition into a **self-heal** rather than a park (§18.12).
 - **It carries §6's headers.** The status is shared with §7's protocol mismatch; a `409` with no
@@ -2408,7 +2408,7 @@ already uses for "we do not agree about who we are talking to" — with:
   `conflicted` — and does not poll it: there is nothing useful to fetch from a machine that belongs
   to someone else's view of the crew.
 - **It survives into the lead's own belief about that member** *(amended 2026-08-20)*. The registry
-  holds `health: "conflicted"` with the lead and generation the peer named, and `collie crew status`
+  holds `health: "conflicted"` with the lead and generation the peer named, and `pastor crew status`
   prints **`this peer follows another lead "nas" (warrant generation 7)`**. Folding it into
   `unreachable` would render "this peer belongs to someone else's crew now" as "the laptop is shut",
   and no amount of waiting fixes the first. The generation is carried beside the id rather than only
@@ -2426,7 +2426,7 @@ anything. It comes back up hours later, reads a trust store that still says `lea
 answers the failover proxy's health check with `200` — and the proxy swings the operator's phone back
 onto a machine with a stale roster and no knowledge of what happened since.
 
-**So: a collie booting into `lead` mode with a non-empty roster probes its members before it
+**So: a pastor booting into `lead` mode with a non-empty roster probes its members before it
 publishes anything.**
 
 - **Budget:** §10.4's patient budget, concurrent, **once**. It arms no timer and it repeats never.
@@ -2475,7 +2475,7 @@ already moved on, which is the split brain this section exists to close.
 
 Two delivery paths, in order of reliability:
 
-1. **The new lead tells it** — `POST /crew/v1/warrant`, arriving at a collie that still believes it
+1. **The new lead tells it** — `POST /crew/v1/warrant`, arriving at a pastor that still believes it
    leads. The old lead's listener pins nothing inbound (§8.1), so the call is admitted on the crew
    secret plus a §8.6 signature, which is why that route joined the signable set (§5). The caller
    must be the member the warrant **names**: a warrant is public (§8.5), so anyone who ever held one
@@ -2485,7 +2485,7 @@ Two delivery paths, in order of reliability:
    time-boxed**: it works only while that peer's anchor list still contains the old lead's
    certificate, i.e. until its next restart. Do not build on this path; build on (1) and on §18.11.
 
-### What a deposed collie does immediately
+### What a deposed pastor does immediately
 
 - **Stops polling.** Its roster is void as a *lead's* roster; dialling it would be a second lead's
   traffic. It keeps the roster's **contents** — the self-heal reads the new lead's certificate out of
@@ -2502,7 +2502,7 @@ Two delivery paths, in order of reliability:
   log line. A machine rejoining a crew by itself must be a thing the operator reads about, not a
   thing they discover; the announcement is part of the security property, not the UX.
 - **Does NOT tear down its own front door.** `tailscale serve` is a publishing act owned by
-  `collie serve`/`unserve` and by *this* machine's operator, who may be elsewhere (ADR 0001). Failing
+  `pastor serve`/`unserve` and by *this* machine's operator, who may be elsewhere (ADR 0001). Failing
   the health check is what makes the un-torn-down door harmless meanwhile, and the page names the
   command.
 
@@ -2541,7 +2541,7 @@ what makes an automatic membership change tolerable here and nowhere else.
 | Outcome | Condition | State |
 |---|---|---|
 | **healed** | The warrant verifies and the roster holds a certificate matching `deputyFingerprint`. | Transitional. An ordinary peer at the next restart, and a *reachable* one at the new lead's next sweep. |
-| **parked — unverifiable** | The signature does not verify against this machine's own certificate, **or** the roster holds no certificate matching `deputyFingerprint`, **or** the conflict arrived with no warrant at all. | **Terminal.** One page, failing health, and the failing check named. Recovery is `collie crew add` from the new lead, or `collie join` with a fresh token. |
+| **parked — unverifiable** | The signature does not verify against this machine's own certificate, **or** the roster holds no certificate matching `deputyFingerprint`, **or** the conflict arrived with no warrant at all. | **Terminal.** One page, failing health, and the failing check named. Recovery is `pastor crew add` from the new lead, or `pastor join` with a fresh token. |
 | **parked — stranded by a rotation** | Healed, but the crew secret rotated while this machine was away (§8.4). | **Terminal until the operator acts**, for §8.4's reason and not this feature's. |
 
 **Why a failed proof parks rather than retries.** A warrant that does not verify is not a stale
@@ -2561,13 +2561,13 @@ for a failure of the self-heal, or for `unreachable` (§10.2's states are not to
 
 The takeover exchange that produces the deposition in the first place, and the standby door.
 
-### 18.13 `collie crew deputy` — the operator's verb *(added 2026-08-20)*
+### 18.13 `pastor crew deputy` — the operator's verb *(added 2026-08-20)*
 
 The verb that mints §18.2's warrant, distributes it and completes §18.5's second phase. **It adds no
 wire surface**: the mint is local, the push is `POST /crew/v1/warrant` exactly as §18.5 already
 specifies it, and the restart rides the operator's own SSH and is never a crew message (ADR 0016).
 
-- **`collie crew deputy <member>`**, on the lead. Refuses a collie that is not a lead, a member it
+- **`pastor crew deputy <member>`**, on the lead. Refuses a pastor that is not a lead, a member it
   does not pin, an `unenrolled` member, one behind on the secret generation, and itself (§18.1's
   validation, each refusal named separately so the operator knows which one it was). Then: mint,
   restart this lead, push to every enrolled peer, probe every peer read-only over SSH, ask **once**
@@ -2577,7 +2577,7 @@ specifies it, and the restart rides the operator's own SSH and is never a crew m
   a machine had no SSH record, the operator fixed it and ran the same command again. Minting there
   would climb the generation on every attempt and make every peer already armed stale, so the re-run
   would undo the arming it was run to finish. An **expired** warrant is not re-used; that one mints.
-- **`collie crew deputy --revoke`** mints §18.3's revocation, pushes it, and offers the same restart
+- **`pastor crew deputy --revoke`** mints §18.3's revocation, pushes it, and offers the same restart
   batch — a stored revocation is provable, but a peer keeps *admitting* the old deputy's certificate
   until its listener is rebuilt. Revoking when nobody is named writes nothing and is not an error.
 - **A member with no SSH record, or one that could not be restarted, is REPORTED, never silently
@@ -2606,8 +2606,8 @@ token the *lead* minted, so the lead pushes its registry.
 | | |
 |---|---|
 | **Route** | `POST /crew/v1/pairing`, lead → **deputy only** |
-| **Gate** | the crew's two factors (§8.1), plus a role check: the caller must be *this collie's own lead*, **and this collie must hold a verified warrant naming itself**. Every other peer that ever receives one refuses it. |
-| **Body** | `{ crewId, leadMemberId, devices: [{ label, tokenHash, createdAt, expiresAt? }] }`. Every field is required except `expiresAt`, because the route is new and a new route may require its own fields (§7.1). `expiresAt` *(added 2026-10-06, M46)* is additive-optional: sent only for a device paired with `collie pair --expires` or given one by `devices set-expiry`, and folded into `pairingDigest` only then, so a registry without expiries digests exactly as before. A non-numeric value refuses the body. The standby door refuses a token past its `expiresAt`, and a takeover adopts the field with the device. A deputy one release behind ignores it and honours the token until it updates. |
+| **Gate** | the crew's two factors (§8.1), plus a role check: the caller must be *this pastor's own lead*, **and this pastor must hold a verified warrant naming itself**. Every other peer that ever receives one refuses it. |
+| **Body** | `{ crewId, leadMemberId, devices: [{ label, tokenHash, createdAt, expiresAt? }] }`. Every field is required except `expiresAt`, because the route is new and a new route may require its own fields (§7.1). `expiresAt` *(added 2026-10-06, M46)* is additive-optional: sent only for a device paired with `pastor pair --expires` or given one by `devices set-expiry`, and folded into `pairingDigest` only then, so a registry without expiries digests exactly as before. A non-numeric value refuses the body. The standby door refuses a token past its `expiresAt`, and a takeover adopts the field with the device. A deputy one release behind ignores it and honours the token until it updates. |
 | **Sent** | at designation and on every change: a `pair`, a `devices revoke`, a `devices set-expiry` or `clear-expiry`, nothing else. |
 | **Absent (404)** | no credential to verify ⇒ **the standby door refuses to arm.** Closed. |
 
@@ -2622,7 +2622,7 @@ token the *lead* minted, so the lead pushes its registry.
   sweep the lead already runs (§10.1, §11) and costs no round trip to decide.
 
   **It is a REPORT and not a memory, and that distinction was paid for.** The lead used to remember
-  what it had pushed in a process-local field. `collie crew deputy` restarts the local bridge as its
+  what it had pushed in a process-local field. `pastor crew deputy` restarts the local bridge as its
   last step (§18.13), so the process that knew it still owed a sync was replaced by one that had never
   offered it — and nothing ever asked the deputy. A live drill found a designated deputy that never
   received a registry at all, with no error anywhere: the lead believed there was nothing to do. Asked
@@ -2637,7 +2637,7 @@ token the *lead* minted, so the lead pushes its registry.
   door, and pairing is always on (ADR 0086, amended 2026-10-07: before it, *the registry is
   non-empty* armed the gate, so a merge would have armed it). A merge would silently let every phone
   paired with the lead read and drive the deputy directly, on a machine where its operator never ran
-  `collie pair` for them. The synced entries are adopted into the deputy's own registry **at takeover
+  `pastor pair` for them. The synced entries are adopted into the deputy's own registry **at takeover
   commit and only then** (§18.16), because after the commit that machine *is* the lead and the phone
   must keep working against the credential it already holds.
 - **A label collision is a FINDING, and it never refuses the sync** *(amended 2026-08-20, after a
@@ -2647,7 +2647,7 @@ token the *lead* minted, so the lead pushes its registry.
 
   **Refusing it was a security bug, not a stricter reading.** The refusal froze the deputy's copy at
   whatever it held when the clash first appeared, so a device revoked on the lead stayed valid at that
-  machine's standby door **indefinitely** — observed on a live crew: `collie devices revoke` succeeded,
+  machine's standby door **indefinitely** — observed on a live crew: `pastor devices revoke` succeeded,
   and thirty-five seconds and many sweeps later the deputy's file still listed the revoked device. It
   protected nothing, either: **a sync never touches the receiver's own registry.** It replaces
   `standby-devices.json`, a separate file holding the hashes the *door* checks against.
@@ -2668,10 +2668,10 @@ token the *lead* minted, so the lead pushes its registry.
   deputy read the body perfectly and declined it for a fact on its own disk. Classifying it as a skew
   would blame the protocol for a duplicate device label and would leave the lead — the one machine
   whose operator can rename it — unable to say which label. The labels are the deputy's own device
-  names, so they are surfaced by `collie crew status` **there as received**, never re-derived.
+  names, so they are surfaced by `pastor crew status` **there as received**, never re-derived.
 
 > **The boundary this amends, stated rather than quietly outlived.** `bridge/server.ts` records that
-> pairing is "**NOT** threaded into the crew surface … a lead does not hold one of this collie's
+> pairing is "**NOT** threaded into the crew surface … a lead does not hold one of this pastor's
 > pairing tokens and must never need one." **The rule survives verbatim: no crew request is ever
 > admitted by a pairing token**, and this route is admitted by the crew's own two factors plus a role
 > check like every other one. What is new is that a *browser* credential's hash rides a crew route and
@@ -2685,31 +2685,31 @@ token the *lead* minted, so the lead pushes its registry.
 nothing** (ADR 0013).
 
 It cannot ride the crew listener, and that is a measurement rather than a preference: §8.1's
-amendment records that `COLLIE_PEER_BROWSER=1` and a pinned listener are mutually exclusive, because
+amendment records that `PASTOR_PEER_BROWSER=1` and a pinned listener are mutually exclusive, because
 a browser cannot present the lead's client certificate. A phone is a browser, so the choice was a
 second listener or no feature.
 
-- **Bind:** `COLLIE_STANDBY_HOST` (default `127.0.0.1`) and `COLLIE_STANDBY_PORT`. **Absent
-  `COLLIE_STANDBY_PORT` means no standby door at all** — nothing is bound, nothing is served, and the
+- **Bind:** `PASTOR_STANDBY_HOST` (default `127.0.0.1`) and `PASTOR_STANDBY_PORT`. **Absent
+  `PASTOR_STANDBY_PORT` means no standby door at all** — nothing is bound, nothing is served, and the
   deputy is a plain peer that can still be taken over from a keyboard by §14's promotion. Absent means
   closed. **A LEAD with the key set binds the port too and answers only the health check**, because a
   failover proxy's fallback backend points at it: a deputy that took over and came back up as the lead
   would otherwise leave the proxy health-checking a closed port and swinging the phone back onto the
   machine that died.
-- **Plain HTTP behind the operator's own ingress.** Collie **binds** it and publishes nothing: no
+- **Plain HTTP behind the operator's own ingress.** Pastor **binds** it and publishes nothing: no
   `tailscale serve`, never `funnel`, no ownership record. ADR 0001's criterion is untouched — we still
   manage only what we run and can test.
 - **Three routes, and no more.** No PWA, no `/api/*`, no SPA fallback, no `/auth` placeholder; every
   other path on that port is a bare `404`. *A route that does not exist cannot be mis-gated.*
 
-- **Every response on this port carries `X-Collie-Version: <semver>+<sha>` *(added 2026-09-03)*.**
+- **Every response on this port carries `X-Pastor-Version: <semver>+<sha>` *(added 2026-09-03)*.**
   Any path, any status, armed or cold, the `404` included. It is additive: no body changes and no
   route is added. The detached updater's health gate needs to know which build came back after a
   restart, and on a peer it cannot ask `GET /api/health` — that port is behind the crew's mutual TLS,
   and a wide-bound instance is not on loopback for it either. This port is plain HTTP on its own
-  address in every one of those states, so the answer rides it. The front door's `X-Collie-Build`
+  address in every one of those states, so the answer rides it. The front door's `X-Pastor-Build`
   header answers a different question, which is the web bundle's id; the standby door's
-  `X-Collie-Version` header answers the running version. Two ports, two headers, two questions, and
+  `X-Pastor-Version` header answers the running version. Two ports, two headers, two questions, and
   `/standby/health`'s body names both facts under their own names too.
 
 | Method | Path | Gate | Answer |
@@ -2722,19 +2722,19 @@ second listener or no feature.
 
 ```
 armed  ⇔  a VERIFIED warrant on this machine's own disk names THIS machine
-        ∧  now - max(lastDialledAt, processStartedAt) >= COLLIE_STANDBY_ARM_MS
+        ∧  now - max(lastDialledAt, processStartedAt) >= PASTOR_STANDBY_ARM_MS
         ∧  the synced pairing registry is non-empty
 
-COLLIE_STANDBY_ARM_MS  default = max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)
+PASTOR_STANDBY_ARM_MS  default = max(30_000, 2.5 × PASTOR_POLL_IDLE_MS)
 ```
 
 - **The default is a formula, not a number, and that is the point.** At today's defaults both terms
   are 30 s. An operator who relaxes the idle poll to save a laptop's battery moves the threshold with
   it automatically, instead of discovering months later that their idle crew arms its own door every
-  night. The threshold **must** exceed `COLLIE_POLL_IDLE_MS` or an idle crew arms itself; the formula
+  night. The threshold **must** exceed `PASTOR_POLL_IDLE_MS` or an idle crew arms itself; the formula
   guarantees it, and an operator who overrides it below that line gets a boot warning and is **not**
   refused.
-- **`lastDialledAt` is §18.9's number, and there is only one of it.** The door and `collie crew
+- **`lastDialledAt` is §18.9's number, and there is only one of it.** The door and `pastor crew
   status` read the same value: a door that arms on a fact `crew status` does not print is a door
   nobody can explain.
 - **`processStartedAt` is in the max on purpose.** A deputy that has just restarted has never been
@@ -2746,7 +2746,7 @@ COLLIE_STANDBY_ARM_MS  default = max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)
   correct, because it grants nothing.
 
 **The device-header gate is NOT applied here, and that is a deliberate, documented narrowing.**
-`COLLIE_DEVICE_HEADER` and pairing compose by AND on `/api/*` and that stays true everywhere else. The
+`PASTOR_DEVICE_HEADER` and pairing compose by AND on `/api/*` and that stays true everywhere else. The
 standby door is the exception because **the failover path is precisely when an ingress is
 misbehaving**: a header the *broken* proxy should have injected is not a second factor there, it is a
 dependency on the component that just failed. The pairing credential has no such failure mode — the
@@ -2835,7 +2835,7 @@ That is a **capability** gap, not a **compatibility** gap.
 
 ### 18.17 The peer reports what its listener activated *(added 2026-08-20)*
 
-**`warrantActiveGeneration`: the generation this collie's listener came up holding — additive-optional
+**`warrantActiveGeneration`: the generation this pastor's listener came up holding — additive-optional
 on `hello` and `snapshot` (§5), absent meaning "nothing active here, or a build that cannot say".**
 
 §18.6 recorded the opposite rule — *"a peer never reports which generation its listener was built
@@ -2894,7 +2894,7 @@ additive-optional with absent-means-closed semantics (§7.1).
 ### The field
 
 `GET /crew/v1/snapshot`'s response carries an optional `updatePreflight` object, **beside the
-snapshot body and never inside it** — that body is the one this collie serves its own browser, and a
+snapshot body and never inside it** — that body is the one this pastor serves its own browser, and a
 crew-only fact has no business in the browser's shape. It takes the same seat `warrantGeneration`
 and `pairingDigest` already occupy (§5, §18.14, §18.17), for the same reason.
 
@@ -2928,7 +2928,7 @@ and `pairingDigest` already occupy (§5, §18.14, §18.17), for the same reason.
   check could not run, or that predates this amendment sends nothing; the lead shows it as `unknown`
   and the confirm treats that as blocking, with the reason `we could not check <member>`.
 
-The report is produced by the member's own `collie update --check --local --json`
+The report is produced by the member's own `pastor update --check --local --json`
 (`bridge/update-action.ts`'s `preflightCommand`). **`--local` is unchanged and no SSH is anywhere on
 this path**: a member answers for itself, and never walks anybody else's machines.
 
@@ -2981,7 +2981,7 @@ same protocol integer: `X-Crew-Protocol` stays `2`.
   because their bytes cross a physical interface too), absent where they cannot be read (every OS
   but Linux today).
 - `disks` (optional) is the filesystems holding the member's home folder, its root (the system drive
-  on Windows) and its Collie state folder: one entry per device, at most four. `used` is `df`'s Used
+  on Windows) and its Pastor state folder: one entry per device, at most four. `used` is `df`'s Used
   and `total` is `used` plus the space an unprivileged process can still write, so `used / total` is
   `df`'s Use%. `mount` is the label to show (`/var/home`, `/`, `C:`). A filesystem under 1 GiB, or one
   that is read-only with no free block (a composefs or squashfs root image), is left out. The member
@@ -3065,7 +3065,7 @@ Both are additive-optional and absent-means-closed (§7.1).
 recorded run. A lead in `preflight`, `staging`, `restarting` or `verifying` sends the header absent.
 
 `X-Crew-Lead-Release` **cannot express a version the lead is not running**: it is read from the same
-`collieVersionBare` the lead answers `hello` and `/api/health` with. A member that receives a version
+`pastorVersionBare` the lead answers `hello` and `/api/health` with. A member that receives a version
 its lead is not running is a member whose lead lied about itself, which gains an attacker nothing
 they did not already have (§8.5).
 
@@ -3156,7 +3156,7 @@ queue from the roster and re-grants, and a member already on the new version is 
 The lead fires an **immediate sweep** on three events, so a member starts within one sweep of its
 turn rather than within the periodic cadence: the operator confirms; the lead's own health gate
 settles; a turn is released. The periodic sweep is unchanged — part of the existing poll, never a
-second timer (§10.1), at `COLLIE_POLL_MS` 1500 relaxing to `COLLIE_POLL_IDLE_MS` 12000, with its
+second timer (§10.1), at `PASTOR_POLL_MS` 1500 relaxing to `PASTOR_POLL_IDLE_MS` 12000, with its
 1000 ms floor intact. That floor matters more than it did: a sweep configurable to fire arbitrarily
 fast would be a member-restart amplifier, and the member's one-attempt-an-hour limit is the other
 half of that guard.
@@ -3185,7 +3185,7 @@ its whole duration, and nothing here needs to shorten it.
 A lead **rolled back by hand** after its members have advanced leaves them ahead of it. Nothing steps
 a member down: there is no downgrade path, and there will not be one — a lead that could move a
 member backwards is a lead that could move it anywhere, which is the credential ADR 0016 refuses.
-§7.1 makes the resulting skew harmless, and the remedy is `collie crew update <member>` from the
+§7.1 makes the resulting skew harmless, and the remedy is `pastor crew update <member>` from the
 lead, which pushes the lead's own commit over the operator's SSH.
 
 ### Compatibility

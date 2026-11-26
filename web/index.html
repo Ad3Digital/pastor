@@ -32,12 +32,12 @@
       name="apple-mobile-web-app-status-bar-style"
       content="default"
     />
-    <meta name="apple-mobile-web-app-title" content="Collie" />
+    <meta name="apple-mobile-web-app-title" content="Pastor" />
     <!-- Where this document is mounted (ADR 0052). `/` as built; the bridge rewrites it, and every
-         root-absolute reference in this file, to the path a proxy gave Collie when it serves the
+         root-absolute reference in this file, to the path a proxy gave Pastor when it serves the
          file. One build serves any mount, so the value is not known here. lib/base-path.ts reads it. -->
-    <meta name="collie-base" content="/" />
-    <title>Collie</title>
+    <meta name="pastor-base" content="/" />
+    <title>Pastor</title>
     <!-- The UI typeface, fetched in parallel with the CSS that asks for it rather than after it.
          index.css already guarantees no layout shift with a metric-matched fallback, so this is not
          load-bearing — it just means the swap usually never happens at all. `crossorigin` is
@@ -59,7 +59,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <!-- First-paint splash: the Collie mark shown the instant the PWA opens, bridging the OS
+    <!-- First-paint splash: the Pastor mark shown the instant the PWA opens, bridging the OS
          launch splash and React mount (createRoot replaces #root, so it clears itself). Critical CSS
          is inlined here so it paints and animates before the app bundle/index.css load — pure CSS,
          no JS. It mirrors routes/root.tsx's BootSplash: the same mark at the same 4rem and the same
@@ -181,15 +181,15 @@
       }
       /* THE MARK, AND IT IS THE SAME ANIMAL EVERY OTHER SCREEN SHOWS. This used to be the gallop
          sprite, and it was the last place in the app still drawing it: <DogGallop/> was retired when
-         the new mark landed, routes/root.tsx's BootSplash moved to <CollieMark loading/>, and this
+         the new mark landed, routes/root.tsx's BootSplash moved to <PastorMark loading/>, and this
          copy never followed. So every cold open showed a galloping dog for a beat and then swapped
          it for a different animal.
 
-         It cannot be <CollieMark/> itself — that is React, and the whole point of this splash is
+         It cannot be <PastorMark/> itself — that is React, and the whole point of this splash is
          that it paints before any bundle. It is the brand's own header-weight mark, copied from
-         collie-brand/assets/collie-mark-header-{light,dark}.svg, which is the same drawing at the
-         same viewBox (152.5 84.0 881.9 881.9) that <CollieMark weight="header"/> renders. Re-copy
-         from collie-brand rather than editing these files.
+         pastor-brand/assets/pastor-mark-header-{light,dark}.svg, which is the same drawing at the
+         same viewBox (152.5 84.0 881.9 881.9) that <PastorMark weight="header"/> renders. Re-copy
+         from pastor-brand rather than editing these files.
 
          TWO FILES AND NOT ONE, because the ink is baked into each: a background-image cannot read
          `currentColor` or `light-dark()`. The media query covers the unpinned case and the two
@@ -202,19 +202,19 @@
       .boot-splash__mark {
         width: 4rem;
         height: 4rem;
-        background: url("/collie-mark-header-light.svg") no-repeat center / contain;
+        background: url("/pastor-mark-header-light.svg") no-repeat center / contain;
         animation: boot-mark-breathe 2.4s ease-in-out infinite;
       }
       @media (prefers-color-scheme: dark) {
         .boot-splash__mark {
-          background-image: url("/collie-mark-header-dark.svg");
+          background-image: url("/pastor-mark-header-dark.svg");
         }
       }
       :root.light .boot-splash__mark {
-        background-image: url("/collie-mark-header-light.svg");
+        background-image: url("/pastor-mark-header-light.svg");
       }
       :root.dark .boot-splash__mark {
-        background-image: url("/collie-mark-header-dark.svg");
+        background-image: url("/pastor-mark-header-dark.svg");
       }
       /* Opacity only, so the box never changes size and the caption under it cannot move. */
       @keyframes boot-mark-breathe {
@@ -236,7 +236,7 @@
   </head>
   <body>
     <div id="root">
-      <div class="boot-splash" role="status" aria-label="Loading Collie">
+      <div class="boot-splash" role="status" aria-label="Loading Pastor">
         <span class="boot-splash__mark" aria-hidden="true"></span>
         <span>Connecting to the herd…</span>
       </div>

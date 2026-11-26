@@ -28,12 +28,12 @@ import type { SessionSummary } from "./types.ts";
 /** The default session's name, the one whose endpoint sits directly in the config root. */
 export const DEFAULT_SESSION_NAME = "default";
 /** The base notification tag; the whole herd of one session shares this slot. */
-const HERD_TAG_BASE = "collie:herd";
+const HERD_TAG_BASE = "pastor:herd";
 
 /**
- * The herd notification tag for a session. The primary keeps the bare `collie:herd` (so
+ * The herd notification tag for a session. The primary keeps the bare `pastor:herd` (so
  * notifications outstanding from before this feature don't orphan); every other session gets
- * `collie:herd:<name>` so its alerts occupy their own slot. Pure + exported for tests.
+ * `pastor:herd:<name>` so its alerts occupy their own slot. Pure + exported for tests.
  */
 export function herdTagFor(isPrimary: boolean, name: string): string {
   return isPrimary ? HERD_TAG_BASE : `${HERD_TAG_BASE}:${name}`;
@@ -87,7 +87,7 @@ interface SessionRegistryOpts {
   /** Builds a live runtime for a session. */
   factory: SessionFactory;
   /**
-   * The OPERATOR's switch (`COLLIE_MULTI_SESSION`). When false, the registry pins to the primary
+   * The OPERATOR's switch (`PASTOR_MULTI_SESSION`). When false, the registry pins to the primary
    * only and refresh() asks nothing.
    *
    * The outer of the two falseable things, and deliberately separate from the inner one: the

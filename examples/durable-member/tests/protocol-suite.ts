@@ -16,12 +16,12 @@ export interface Opened {
 }
 export interface Transport {
   name: string;
-  open(o: { hostName: string; caps?: Partial<Caps> }): Promise<{ collie: Opened; dial: Dial }>;
+  open(o: { hostName: string; caps?: Partial<Caps> }): Promise<{ pastor: Opened; dial: Dial }>;
 }
 
 export function protocolSuite(transport: Transport) {
   describe(transport.name, () => {
-    let collie: Opened;
+    let pastor: Opened;
     let d: Dial;
     let pane: PaneHandle;
     const sent: [string, boolean, string][] = [];
@@ -48,15 +48,15 @@ export function protocolSuite(transport: Transport) {
       pending.catch(() => {});
       return pending;
     };
-    const mk = (id: string) => collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id.toUpperCase(), harness: "x" });
+    const mk = (id: string) => pastor.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id.toUpperCase(), harness: "x" });
     const paneInfo = async (id: string) => (await api.snapshot(d)).body.panes.find((x) => x.id === id)!;
 
     beforeAll(async () => {
-      ({ collie, dial: d } = await transport.open({ hostName: "t" }));
+      ({ pastor, dial: d } = await transport.open({ hostName: "t" }));
       pane = mk("p1");
       pane.onSend((text, o) => void sent.push([text, o.steer, o.requestId]));
       pane.onAbort(() => void aborted++);
-      collie.starters([
+      pastor.starters([
         {
           id: "s1",
           label: "S",
@@ -66,10 +66,10 @@ export function protocolSuite(transport: Transport) {
           },
         },
       ]);
-      collie.ready();
+      pastor.ready();
     });
     afterAll(async () => {
-      await collie.close();
+      await pastor.close();
       cleanup();
     });
 
@@ -89,7 +89,7 @@ export function protocolSuite(transport: Transport) {
           expect(r.body as unknown).toEqual({ code: "incompatible", range: { min: 1, max: 1 } });
         }
         for (const bad of ["abc", "1.0", "-1", "", "1x", "0x1"]) {
-          const r = await call({ ...d, version: undefined }, "GET", "/snapshot", undefined, { "x-collie-session": bad });
+          const r = await call({ ...d, version: undefined }, "GET", "/snapshot", undefined, { "x-pastor-session": bad });
           expect([bad, r.status, r.body.code]).toEqual([bad, 409, "incompatible"]);
         }
         expect((await api.snapshot({ ...d, version: 2 })).status).toBe(409);
@@ -100,7 +100,7 @@ export function protocolSuite(transport: Transport) {
         expect((await call({ ...d, version: undefined }, "POST", "/pane/p1/send", {})).status).toBe(409);
       });
       test("the check order is version, hello, ready, route", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "o" });
+        const { pastor: c, dial: t } = await transport.open({ hostName: "o" });
         // not ready: a bad version is 409 before 503, a good one is 503 before 404
         expect((await call({ ...t, version: 9 }, "GET", "/snapshot")).status).toBe(409);
         expect((await call({ ...t, version: 9 }, "GET", "/nothing")).status).toBe(409);
@@ -144,21 +144,21 @@ export function protocolSuite(transport: Transport) {
       });
       test("a workspace, tab, pane or starter with a bad id is refused when the program makes it", () => {
         for (const id of bad) {
-          expect(() => collie.workspace(id, { title: "x" })).toThrow("id rule");
-          expect(() => collie.workspace("w", { title: "W" }).tab(id, { title: "x" })).toThrow("id rule");
-          expect(() => collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: "x", harness: "x" })).toThrow("id rule");
-          expect(() => collie.starters([{ id, label: "x", run: async () => ({ paneId: "p1" }) }])).toThrow("id rule");
+          expect(() => pastor.workspace(id, { title: "x" })).toThrow("id rule");
+          expect(() => pastor.workspace("w", { title: "W" }).tab(id, { title: "x" })).toThrow("id rule");
+          expect(() => pastor.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: "x", harness: "x" })).toThrow("id rule");
+          expect(() => pastor.starters([{ id, label: "x", run: async () => ({ paneId: "p1" }) }])).toThrow("id rule");
         }
-        collie.starters([{ id: "s1", label: "S", run: async () => ((starts++), { paneId: "p1" }) }]); // put the good one back
+        pastor.starters([{ id: "s1", label: "S", run: async () => ((starts++), { paneId: "p1" }) }]); // put the good one back
       });
       test("the tab id is <workspace>:<tab>, unique across workspaces, and a colon in a part is refused", async () => {
-        collie.workspace("w2", { title: "W2" }).tab("t", { title: "T2" });
+        pastor.workspace("w2", { title: "W2" }).tab("t", { title: "T2" });
         const s = (await api.snapshot(d)).body;
         expect(s.tabs.map((t) => t.id)).toEqual(expect.arrayContaining(["w:t", "w2:t"]));
         expect(s.tabs.some((t) => t.id.includes("/"))).toBe(false);
-        expect(() => collie.workspace("a:b", { title: "x" })).toThrow();
-        expect(() => collie.workspace("w", { title: "W" }).tab("c:d", { title: "x" })).toThrow();
-        expect(() => collie.workspace("w", { title: "W" }).tab("x".repeat(127), { title: "x" })).toThrow("id rule"); // "w:xxx..." is 129 bytes
+        expect(() => pastor.workspace("a:b", { title: "x" })).toThrow();
+        expect(() => pastor.workspace("w", { title: "W" }).tab("c:d", { title: "x" })).toThrow();
+        expect(() => pastor.workspace("w", { title: "W" }).tab("x".repeat(127), { title: "x" })).toThrow("id rule"); // "w:xxx..." is 129 bytes
       });
       test("an item id, a remove id and a settled id are checked", () => {
         const p = mk("p-ids");
@@ -252,7 +252,7 @@ export function protocolSuite(transport: Transport) {
         await rises("event", () => p.event({ type: "item", item: { id: "i", kind: "reply", text: "x" } }));
         await rises("ask", () => hold(p, askInput({ id: "a-rev" })));
         await rises("ask update", () => p.updateAsk("a-rev", { title: "changed" }));
-        await rises("starter", () => collie.starters([{ id: "s1", label: "S", run: async () => ({ paneId: "p1" }) }]));
+        await rises("starter", () => pastor.starters([{ id: "s1", label: "S", run: async () => ({ paneId: "p1" }) }]));
         p.close();
       });
       test("a pane has a turnId from the start, and a new one each time it goes from not working to working", async () => {
@@ -277,14 +277,14 @@ export function protocolSuite(transport: Transport) {
         p.close();
       });
       test("a pane may carry an absolute cwd, and a relative one reads as absent", async () => {
-        collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-cwd", { title: "C", harness: "x", cwd: "/srv/work" });
-        collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-rel", { title: "R", harness: "x", cwd: "work" });
+        pastor.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-cwd", { title: "C", harness: "x", cwd: "/srv/work" });
+        pastor.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-rel", { title: "R", harness: "x", cwd: "work" });
         expect((await paneInfo("p-cwd")).cwd).toBe("/srv/work");
         expect("cwd" in (await paneInfo("p-rel"))).toBe(false);
         expect("cwd" in (await paneInfo("p1"))).toBe(false);
       });
       test("the snapshot keeps its first 64 workspaces, 256 tabs and 256 panes, and 50 starters", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "m" });
+        const { pastor: c, dial: t } = await transport.open({ hostName: "m" });
         for (let i = 0; i < 70; i++) c.workspace(`w${i}`, { title: "W" });
         const ws = c.workspace("big", { title: "B" });
         for (let i = 0; i < 300; i++) ws.tab(`t${i}`, { title: "T" }).pane(`p${i}`, { title: "P", harness: "x" });
@@ -305,7 +305,7 @@ export function protocolSuite(transport: Transport) {
         const all = (await api.events(d, "p2", 0)).body;
         expect(all.events.length).toBe(2);
         expect(all.next).toBe(2);
-        expect(all.epoch).toBe(collie.epoch);
+        expect(all.epoch).toBe(pastor.epoch);
         p.event({ type: "item", item: { id: "3", kind: "reply", text: "c" } });
         const tail = (await api.events(d, "p2", all.next)).body;
         expect(tail.events).toEqual([{ type: "item", item: { id: "3", kind: "reply", text: "c" } }]);
@@ -321,7 +321,7 @@ export function protocolSuite(transport: Transport) {
         expect(r.reset).toBe(true);
         expect(r.events.map((e) => e.type)).toEqual(["reset", "item", "item", "item", "state", "synced"]);
         expect(r.next).toBe(3);
-        expect(r.epoch).toBe(collie.epoch);
+        expect(r.epoch).toBe(pastor.epoch);
       });
       test("a bad cursor, or no epoch, is 400 bad-cursor", async () => {
         expect((await call(d, "GET", "/pane/p2/events?after=-1&epoch=x")).status).toBe(400);
@@ -537,7 +537,7 @@ export function protocolSuite(transport: Transport) {
         expect([r.status, r.body.code]).toEqual([409, "not-supported"]);
       });
       test("steer: true with caps.steer false is 409 not-supported; send with caps.send false is too", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "c", caps: { steer: false } });
+        const { pastor: c, dial: t } = await transport.open({ hostName: "c", caps: { steer: false } });
         const p = c.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         let got = 0;
         p.onSend(() => void got++);
@@ -551,7 +551,7 @@ export function protocolSuite(transport: Transport) {
         expect(got).toBe(1);
         await c.close();
 
-        const { collie: none, dial: u } = await transport.open({ hostName: "c", caps: { send: false, abort: false, starters: false } });
+        const { pastor: none, dial: u } = await transport.open({ hostName: "c", caps: { send: false, abort: false, starters: false } });
         const q = none.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         q.onSend(() => {});
         q.onAbort(() => {});
@@ -632,7 +632,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a repeat with the same request id returns the first paneId with replayed: true and runs nothing", async () => {
         let made = 0;
-        collie.starters([
+        pastor.starters([
           {
             id: "once",
             label: "Once",
@@ -655,7 +655,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a failure is 422 starter-failed with its message, stores nothing, and the same id may run again", async () => {
         let tries = 0;
-        collie.starters([
+        pastor.starters([
           {
             id: "flaky",
             label: "Flaky",
@@ -674,12 +674,12 @@ export function protocolSuite(transport: Transport) {
         expect(tries).toBe(2);
       });
       test("a starter that names a pane that is not in the layout fails with 422", async () => {
-        collie.starters([{ id: "ghost", label: "Ghost", run: async () => ({ paneId: "nowhere" }) }]);
+        pastor.starters([{ id: "ghost", label: "Ghost", run: async () => ({ paneId: "nowhere" }) }]);
         expect((await api.start(d, "ghost")).status).toBe(422);
       });
       test("a repeat while the first is still starting waits for it, and nothing runs twice", async () => {
         let runs = 0;
-        collie.starters([
+        pastor.starters([
           {
             id: "slow",
             label: "Slow",

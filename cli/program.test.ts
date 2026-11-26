@@ -19,11 +19,11 @@ import {
 } from "./program.ts";
 
 // The dispatch surface is a contract with the plugin manifest and with anyone's muscle memory from
-// `collie-ctl.sh`, so the verb table and the 0/1/2 exit codes are pinned here rather than left to
+// `pastor-ctl.sh`, so the verb table and the 0/1/2 exit codes are pinned here rather than left to
 // whatever the last edit happened to leave behind.
 
-// Every verb the shell dispatched, in its order, before M6/01 reduced `scripts/collie-ctl.sh` to a
-// bootstrap shim that `exec`s this binary. A `collie-ctl.sh <verb>` spelling — a README recipe, a
+// Every verb the shell dispatched, in its order, before M6/01 reduced `scripts/pastor-ctl.sh` to a
+// bootstrap shim that `exec`s this binary. A `pastor-ctl.sh <verb>` spelling — a README recipe, a
 // <0.8.0 Herdr install's cached action set (ADR 0006) — still lands on exactly this table.
 const SHELL_VERBS = [
   "start",
@@ -33,7 +33,7 @@ const SHELL_VERBS = [
   "update",
   "_apply-update",
   // `_mux-probe` has no shell ancestor either. It is declared beside `_apply-update` because it is
-  // the same kind of verb — plumbing another Collie spells, never an operator — and `crew add` runs
+  // the same kind of verb — plumbing another Pastor spells, never an operator — and `crew add` runs
   // it on the member it has just installed (cli/mux-probe.ts).
   "_mux-probe",
   // `_whistle-transcribe` has no shell ancestor either: the bridge's whistle provider spawns it
@@ -50,7 +50,7 @@ const SHELL_VERBS = [
   "url",
   "qr",
   "version",
-  // `push-keys` has no shell ancestor on this branch — main implemented it in `collie-ctl.sh`
+  // `push-keys` has no shell ancestor on this branch — main implemented it in `pastor-ctl.sh`
   // because it has no `cli/`; here it is a verb like every other, and the shim delegates it. It
   // sits beside `push-test` because both keep the hyphenated spelling the Herdr action names.
   "push-keys",
@@ -58,7 +58,7 @@ const SHELL_VERBS = [
   "logs",
 ];
 
-// The crew verbs (M4/07, renamed in M24). They have no shell ancestor — `collie-ctl.sh` never knew
+// The crew verbs (M4/07, renamed in M24). They have no shell ancestor — `pastor-ctl.sh` never knew
 // about federation — so they are listed separately: the assertion above is "the port kept every verb
 // the shell had", and this one is "the binary grew exactly these". `crew` is the alias of `crew`
 // (ADR 0038); it sits right after it in the table and is internal, so the usage line never names it.
@@ -92,7 +92,7 @@ const PUSH_VERBS = ["push"];
 const STT_VERBS = ["stt"];
 /** The config-file tree (ADR 0040). Declared right after `stt`, for the same reasons. */
 const CONFIG_VERBS = ["config"];
-// The manual, printed out of the binary: `collie skill` for an AI agent, `collie docs` for the
+// The manual, printed out of the binary: `pastor skill` for an AI agent, `pastor docs` for the
 // operator pages. Neither was ever a shell verb — there was nothing to print before it was embedded.
 const MANUAL_VERBS = ["skill", "docs"];
 
@@ -139,7 +139,7 @@ describe("the verb table", () => {
       if (c.internal === true) continue;
       expect(line).toContain(c.name);
     }
-    expect(line.startsWith("usage: collie {")).toBe(true);
+    expect(line.startsWith("usage: pastor {")).toBe(true);
   });
 
   test("no verb name is duplicated", () => {
@@ -151,7 +151,7 @@ describe("the verb table", () => {
     for (const c of COMMANDS) expect(c.summary.length).toBeGreaterThan(0);
   });
 
-  // ADR 0038 removes the `collie pack` alias in 2.0.0. Today this passes because the version is
+  // ADR 0038 removes the `pastor pack` alias in 2.0.0. Today this passes because the version is
   // 1.x and the assertion is not reached; the day the major moves to 2, it fails until the entry
   // is deleted, so the removal is remembered by the test suite and not by anyone's memory.
   test("the `crew` alias is gone in 2.0.0", () => {
@@ -210,7 +210,7 @@ describe("dispatch", () => {
     ]);
   });
 
-  // #392: `collie update --help` began a real update. The table below is the REAL verb list with
+  // #392: `pastor update --help` began a real update. The table below is the REAL verb list with
   // every body swapped for a spy, so a verb that runs on `--help` shows up here by name and nothing
   // in this file can touch the machine.
   interface Spied {
@@ -254,7 +254,7 @@ describe("dispatch", () => {
       expect(await run(argv, io, table)).toBe(EXIT.OK);
       expect(ran).toEqual([]);
       expect(io.stderr).toEqual([]);
-      expect(io.stdout[0]).toBe(`usage: collie ${argv.filter((a) => !a.startsWith("-")).join(" ")} [options]`);
+      expect(io.stdout[0]).toBe(`usage: pastor ${argv.filter((a) => !a.startsWith("-")).join(" ")} [options]`);
     }
   });
 
@@ -264,7 +264,7 @@ describe("dispatch", () => {
       for (const argv of argvs) {
         const { table, ran } = spied();
         const io = capture();
-        // An internal verb fails loudly instead: only another Collie spells it, so `--help` there is
+        // An internal verb fails loudly instead: only another Pastor spells it, so `--help` there is
         // a wrong argv, and exit 0 would let an update report success with nothing swapped.
         const internal = c.name.startsWith("_");
         expect(await run([...argv, "--help"], io, table)).toBe(internal ? EXIT.USAGE : EXIT.OK);
@@ -317,7 +317,7 @@ describe("dispatch", () => {
     const io = capture();
     expect(await run(["crew", "status", "--help"], io, [command])).toBe(EXIT.OK);
     expect(seen).toEqual([]);
-    expect(io.stdout[0]).toBe("usage: collie crew status [options]");
+    expect(io.stdout[0]).toBe("usage: pastor crew status [options]");
     expect(await run(["crew", "invite", "--no-probe"], capture(), [command])).toBe(EXIT.OK);
     expect(seen).toEqual([["invite", "--no-probe"]]);
   });
@@ -339,7 +339,7 @@ describe("dispatch", () => {
     const internal: Command = { ...command, internal: true };
     expect(await go(["_exec-bridge"], [internal])).toBe(EXIT.OK);
     expect(seen).toEqual([["(parent)"]]);
-    expect(usageLine([internal])).toBe("usage: collie {}");
+    expect(usageLine([internal])).toBe("usage: pastor {}");
   });
 
   test("--plain is accepted anywhere and never reaches the verb", async () => {
@@ -455,7 +455,7 @@ describe("exit codes", () => {
   // write a unit into the developer's own ~/.config and `enable --now` it; dispatching `build` did
   // exactly this once during M3/04 and rebuilt the DEPLOYMENT HOST's live bundle from a dirty tree.
   // Those verbs are covered in their own suites against fakes, and end to end in
-  // scripts/collie-cli.test.sh against a scratch PATH and a throwaway $HOME.
+  // scripts/pastor-cli.test.sh against a scratch PATH and a throwaway $HOME.
   //
   // `version` and `help` are the only verbs this file may run: they read, they never write.
   test("every verb is dispatchable, and only the two read-only ones may be run here", () => {
@@ -510,7 +510,7 @@ describe("exit codes", () => {
       // `beacon` is world-touching in the other direction: it would write a beacon into this host's
       // real state dir. cli/beacon.test.ts drives it against fakes.
       ...BEACON_VERBS,
-      // `config init` writes a file into the developer's own `~/.collie`, and `show`/`check` resolve
+      // `config init` writes a file into the developer's own `~/.pastor`, and `show`/`check` resolve
       // that same real path before they decide anything. cli/config.test.ts drives all three against
       // fakes in a temp dir.
       ...CONFIG_VERBS,
@@ -552,7 +552,7 @@ describe("exit codes", () => {
   // F20: both of these answered `error: unknown command \`--version\`` — a verb table that knows
   // `version` refusing the flag spelling of it is a distinction only the implementer can see.
   for (const spelling of ["--version", "-V"]) {
-    test(`\`collie ${spelling}\` prints the version, exactly as \`collie version\` does`, async () => {
+    test(`\`pastor ${spelling}\` prints the version, exactly as \`pastor version\` does`, async () => {
       const plain = capture();
       const flagged = capture();
       expect(await run(["version"], plain)).toBe(EXIT.OK);

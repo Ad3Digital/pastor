@@ -28,7 +28,7 @@ import { inFlight } from "../update-run.ts";
  * `X-Crew-Lead-Release: <bare version>` — the release the LEAD is itself running, sent only when
  * that version is a strict release and the lead's own health gate has settled it (§20).
  *
- * It cannot express any other version: it is read from the same `collieVersionBare` the lead answers
+ * It cannot express any other version: it is read from the same `pastorVersionBare` the lead answers
  * `hello` and `/api/health` with. A peer that receives a version its lead is not running is a peer
  * whose lead lied about itself, which gains an attacker nothing they did not already have (§8.5).
  *
@@ -170,7 +170,7 @@ export function followGuards(f: FollowFacts): FollowDecision {
 
   // ── 1. RELEASE BUILDS ONLY ─────────────────────────────────────────────────
   // A `1.4.1-dev+ab12cd3` build never self-levels, full stop. **This is what keeps the dev lane
-  // still**: the dev crew's peer is the `~/apps/collie-next` checkout on minibuch, built from a
+  // still**: the dev crew's peer is the `~/apps/pastor-next` checkout on minibuch, built from a
   // working copy that its operator is editing, and a machine that levelled itself to a published
   // release would silently discard the very build it exists to test.
   const own = bareVersion(f.own);
@@ -255,7 +255,7 @@ export function followGuards(f: FollowFacts): FollowDecision {
 /** The two guards that cost a subprocess, injected so the decision is testable without spawning one. */
 export interface FollowEffects {
   /**
-   * Run `collie update --check --local --json --to-tag <tag>` **now** and answer its report.
+   * Run `pastor update --check --local --json --to-tag <tag>` **now** and answer its report.
    *
    * Two guards ride this one run, and it is one run on purpose. Guard 6 is the report's own verdict:
    * not the cached one from §19 — that is what the lead's page showed a moment ago — but the fresh
@@ -385,7 +385,7 @@ export class CrewFollower {
    *
    * It stays OFF THE WIRE. §20's headers are the lead's, not the peer's, and a refusal reason coming
    * back over the link would be a new field on a protocol version that is frozen. The operator reads
-   * it where the machine that decided it runs: `journalctl --user -u collie` on the peer.
+   * it where the machine that decided it runs: `journalctl --user -u pastor` on the peer.
    *
    * **A REFUSAL IS ONLY WORTH A LINE WHILE A TURN NAMES THIS MEMBER.** The first shape of this keyed
    * on the refusal's reason alone, and the rehearsal put a line on the journal roughly once a second:
@@ -1183,7 +1183,7 @@ function legOf(
   // there is no downgrade path on this link and there will not be one, so the queue must not spend a
   // turn on it. That leaves the accepted gap intact and visible: a lead rolled back by hand after
   // its peers advanced sits below them, §7.1 makes the skew harmless, and the remedy is
-  // `collie crew update <member>` over the operator's own SSH.
+  // `pastor crew update <member>` over the operator's own SSH.
   if (version !== null && compareSemver(version, a.target) >= 0) {
     return { ...base, state: "done", updatedAt: a.now };
   }

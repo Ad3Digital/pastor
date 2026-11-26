@@ -4,7 +4,7 @@
 // Here that fetch is answered by `readPane` and `replyPane` from bridge/server.ts, called directly,
 // with a Herdr adapter built on the canary session's socket. So a canary send runs the same client
 // guard and the same bridge reply code as a phone, and never touches a port, a paired device or a
-// running Collie. Anything else the client asks for is refused, loudly: a route the shim does not
+// running Pastor. Anything else the client asks for is refused, loudly: a route the shim does not
 // know means the send path changed, and the canary must say so rather than guess.
 
 import { AuditLog } from "../../bridge/audit";
@@ -17,9 +17,9 @@ import { CANARY_SESSION, type CanarySession } from "./herdr";
 
 const PANE_PATH = /\/api\/pane\/([^/?]+)(?:\/(reply))?$/;
 /** Where the client's root-absolute paths are resolved against. Never dialled. */
-const ORIGIN = "http://collie-canary.invalid/";
+const ORIGIN = "http://pastor-canary.invalid/";
 /** The device name the audit lines carry, so a canary send is never mistaken for a phone's. */
-const CANARY_DEVICE = "collie-canary";
+const CANARY_DEVICE = "pastor-canary";
 
 export interface Transport {
   /** The pane as the phone reads it: `GET /api/pane/:id` through `readPane`. */
@@ -38,7 +38,7 @@ export interface Transport {
  * `document`) and the fetch shim. Call once, before `loadReaders`.
  */
 export function installTransport(session: CanarySession, home: string): Transport {
-  const cfg: Config = loadConfig({ HOME: home, HERDR_SOCKET_PATH: session.socket, COLLIE_MUX: "herdr" });
+  const cfg: Config = loadConfig({ HOME: home, HERDR_SOCKET_PATH: session.socket, PASTOR_MUX: "herdr" });
   const mux: MuxAdapter = herdrMuxFactory.create({ endpoint: session.socket, timeoutMs: 5000, options: {} });
   const audit: string[] = [];
   const log = new AuditLog((line) => {

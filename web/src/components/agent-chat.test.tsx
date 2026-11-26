@@ -597,7 +597,7 @@ describe("AgentChat — the one-time masked-text hint", () => {
     expect(screen.getByText(/read them on the machine/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Dismiss hint" }));
     expect(maskedHintRetired()).toBe(true);
-    expect(localStorage.getItem("collie:masked-hint:v1")).toBe("1");
+    expect(localStorage.getItem("pastor:masked-hint:v1")).toBe("1");
     // Gone, or on its way out through Collapse.
     const left = screen.queryByText(HINT);
     if (left !== null) expect(left.closest('[data-slot="collapse"]')!.getAttribute("data-state")).toBe("closed");
@@ -666,7 +666,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it("shows the plain mirror (no buttons, menu as raw text) when raw terminal is on", () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: true }),
     );
     renderChat({ text: MENU_TEXT });
@@ -688,7 +688,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it("leaves focus alone on a mirror tap when Tap to type is off", async () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: false, tapToFocus: false }),
     );
     renderChat({ text: "just some output\n" });
@@ -700,7 +700,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it("still lifts a menu into buttons with Tap to type off — it gates focus, not the grammars", async () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: false, tapToFocus: false }),
     );
     renderChat({ text: MENU_TEXT });
@@ -717,7 +717,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it("raw terminal bypasses the wizard too — the dialog shows verbatim, keys-pad drivable", () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: true }),
     );
     renderChat({ text: WIZARD_TEXT });
@@ -742,7 +742,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it("opting a codex pane into native rendering does not re-enable its grammars under raw terminal", () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: true }),
     );
     const agent = { ...fixtureAgents[0]!, agent: "codex" };
@@ -780,7 +780,7 @@ describe("AgentChat — raw-terminal escape hatch", () => {
 
   it.each([["muse"]])("keeps native rendering for %s with raw terminal on — the pref bypasses grammars, not display", (agentName) => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 11, rawTerminal: true }),
     );
     const agent = { ...fixtureAgents[0]!, agent: agentName };
@@ -799,7 +799,7 @@ const CODEX_CHROME_TEXT = [
   "",
   "\u203a a half typed draft",
   "",
-  "  gpt-5 \u00b7 ~/code/collie \u00b7 Context 90% left",
+  "  gpt-5 \u00b7 ~/code/pastor \u00b7 Context 90% left",
 ].join("\n");
 
 const MENU_TEXT = [
@@ -1377,7 +1377,7 @@ describe("AgentChat — top-of-mirror history affordance", () => {
   // These cases are about the terminal mirror, and Chat is the default body now (ADR 0082), so the
   // device is pinned to the terminal the way an operator who chose it is.
   beforeEach(() => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   });
 
   const showHistory = () => screen.queryByRole("button", { name: /show entire history/i });
@@ -1470,7 +1470,7 @@ describe("AgentChat — no session reported", () => {
   // These cases are about the terminal mirror, and Chat is the default body now (ADR 0082), so the
   // device is pinned to the terminal the way an operator who chose it is.
   beforeEach(() => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   });
 
   const noSessionNote = () => screen.queryByText(/has not reported a session to Herdr/i);
@@ -1546,7 +1546,7 @@ const crewRoster: ServerSummary[] = [
     isLead: false,
     reachable: false,
     protocol: "incompatible",
-    protocolDetail: "crew protocol 2 (this collie speaks 1)",
+    protocolDetail: "crew protocol 2 (this pastor speaks 1)",
     lastSeenAt: 0,
   },
 ];
@@ -1619,8 +1619,8 @@ describe("AgentChat — a pane on a host the lead can't reach", () => {
   it("gives an incompatible member its own reason, verbatim", () => {
     renderCrewChat("attic");
     const notice = screen.getByRole("status");
-    expect(notice).toHaveTextContent(/attic is running an incompatible Collie/i);
-    expect(notice).toHaveTextContent(/crew protocol 2 \(this collie speaks 1\)/);
+    expect(notice).toHaveTextContent(/attic is running an incompatible Pastor/i);
+    expect(notice).toHaveTextContent(/crew protocol 2 \(this pastor speaks 1\)/);
     // Never seen at all → there is no last-good screen under the banner, and it says so rather than
     // implying the empty mirror is the machine's real state.
     expect(notice).toHaveTextContent(/nothing cached/i);
@@ -1643,7 +1643,7 @@ describe("AgentChat — a pane on a host the lead can't reach", () => {
 // Verified to fail in both directions: remove the margin and the doubling assertion trips; restore
 // the scroller's top padding and the last one does.
 describe("AgentChat — the mirror's top edge", () => {
-  // `div[role="presentation"]`, not `[role="presentation"]`: the Collie mark's SVG carries the same
+  // `div[role="presentation"]`, not `[role="presentation"]`: the Pastor mark's SVG carries the same
   // role, and an SVG's `className` is an SVGAnimatedString rather than a string — the assertion then
   // fails on the wrong element with a type error instead of a diff.
   function mirrorAndTabs(container: HTMLElement) {
@@ -1741,12 +1741,12 @@ describe("AgentChat — closing the current tab", () => {
     const agentIn = (paneId: string, tabId: string): AgentView => ({
       paneId,
       workspaceId: "w2",
-      workspaceLabel: "collie",
+      workspaceLabel: "pastor",
       workspaceNumber: 2,
       tabId,
       agent: "claude",
       status: "idle",
-      cwd: "/home/you/collie",
+      cwd: "/home/you/pastor",
       focused: false,
     });
     const threeTabs: TabView[] = [
@@ -2034,7 +2034,7 @@ describe("AgentChat — zen mode", () => {
     expect(screen.queryByRole("button", { name: "Find in output" })).not.toBeInTheDocument();
   });
 
-  it("takes every Collie surface off the screen and leaves the pane's own output", async () => {
+  it("takes every Pastor surface off the screen and leaves the pane's own output", async () => {
     setZenEnabled(true);
     const user = userEvent.setup();
     const { container } = renderChat({ tabs: fixtureTabs, text: STATUS_TEXT });
@@ -2059,7 +2059,7 @@ describe("AgentChat — zen mode", () => {
     expect(header).not.toBeNull();
     expect(header?.className).toContain("[padding-top:env(safe-area-inset-top)]");
 
-    // Content stays. Zen hides Collie's chrome, never the pane's output — the mirror keeps polling
+    // Content stays. Zen hides Pastor's chrome, never the pane's output — the mirror keeps polling
     // and keeps rendering exactly as it did.
     expect(screen.getByText("Welcome back!")).toBeInTheDocument();
   });
@@ -2478,7 +2478,7 @@ describe("AgentChat — folding the tab and pane rows", () => {
       screen.queryByRole("button", { name: "Show tabs and panes. 1 tab, 2 panes hidden." }),
     ).not.toBeNull();
     // Device-level and persisted: the same bit lib/strips-collapsed.ts pins from the other side.
-    expect(localStorage.getItem("collie:strips-collapsed:v1")).toBe("1");
+    expect(localStorage.getItem("pastor:strips-collapsed:v1")).toBe("1");
   });
 
   it("draws ONE seam between the folded chrome and the mirror, and draws it from below", async () => {
@@ -2555,7 +2555,7 @@ describe("AgentChat — folding the tab and pane rows", () => {
     // so getting them back may not also cost aim.
     await user.click(screen.getByRole("button", { name: /^Show tabs and panes/ }));
     await waitFor(() => expect(screen.queryByRole("navigation", { name: "Tabs" })).not.toBeNull());
-    expect(localStorage.getItem("collie:strips-collapsed:v1")).toBe("0");
+    expect(localStorage.getItem("pastor:strips-collapsed:v1")).toBe("0");
   });
 
   it("names only the rows that are actually there", async () => {
@@ -2616,7 +2616,7 @@ describe("AgentChat — folding the tab and pane rows", () => {
       await waitFor(() => expect(screen.queryByRole("navigation", { name: "Tabs" })).toBeNull());
       // The PREFERENCE is untouched — the keyboard is spending the pixels, not choosing for the
       // operator, so nothing is written.
-      expect(localStorage.getItem("collie:strips-collapsed:v1")).toBeNull();
+      expect(localStorage.getItem("pastor:strips-collapsed:v1")).toBeNull();
 
       // "I need to see the tabs right now" is not "show me the tabs from now on". The expand holds
       // for this keyboard session and writes nothing.
@@ -2624,7 +2624,7 @@ describe("AgentChat — folding the tab and pane rows", () => {
       await waitFor(() =>
         expect(screen.queryByRole("navigation", { name: "Tabs" })).not.toBeNull(),
       );
-      expect(localStorage.getItem("collie:strips-collapsed:v1")).toBeNull();
+      expect(localStorage.getItem("pastor:strips-collapsed:v1")).toBeNull();
 
       // …and it dies with the keyboard: the persisted preference (shown) rules again, so the rows
       // are back on their own terms rather than on the override's.
@@ -2632,7 +2632,7 @@ describe("AgentChat — folding the tab and pane rows", () => {
       await waitFor(() =>
         expect(screen.queryByRole("navigation", { name: "Tabs" })).not.toBeNull(),
       );
-      expect(localStorage.getItem("collie:strips-collapsed:v1")).toBeNull();
+      expect(localStorage.getItem("pastor:strips-collapsed:v1")).toBeNull();
     } finally {
       kb.restore();
     }
@@ -2855,7 +2855,7 @@ describe("AgentChat — full latest reply", () => {
   // These cases are about the terminal mirror, and Chat is the default body now (ADR 0082), so the
   // device is pinned to the terminal the way an operator who chose it is.
   beforeEach(() => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   });
 
   const REPLY = [
@@ -2964,7 +2964,7 @@ describe("AgentChat — full latest reply", () => {
   // costs no journal read either, which is the reason it is a pref rather than always-on.
   it("reads no journal at all once the operator turns it off", async () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "pastor:display-prefs:v4",
       JSON.stringify({ wrap: true, fontSize: 12, expandClippedReply: false }),
     );
     const hits = withJournalReply(REPLY);
@@ -3146,7 +3146,7 @@ describe("AgentChat — the hand setting", () => {
   });
 
   it("hands the stored left hand to the composer: the belt runs right to left and the box is mirrored", () => {
-    localStorage.setItem("collie:display-prefs:v4", JSON.stringify({ hand: "left" }));
+    localStorage.setItem("pastor:display-prefs:v4", JSON.stringify({ hand: "left" }));
     const { container } = renderChat();
     expect(scrollerOf(container).className).toContain("[direction:rtl]");
     expect(boxOf(container).className).toMatch(/(?:^|\s)flex-row-reverse(?=\s|$)/);
@@ -3319,7 +3319,7 @@ describe("AgentChat — copy the pane's output", () => {
 describe("AgentChat — the chat body", () => {
   /** Pick a body, the way the ⋮ row does. Chat is the default (ADR 0082), so this only pins it. */
   function chooseChat(paneView: "chat" | "terminal") {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView, showToolCalls: true }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView, showToolCalls: true }));
   }
 
   const journalAgent = () => ({ ...fixtureAgents[0]!, hasSession: true });
@@ -3334,7 +3334,7 @@ describe("AgentChat — the chat body", () => {
   });
 
   it("ignores a stored chatExperiment: false and still draws the chat", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ chatExperiment: false }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ chatExperiment: false }));
     renderChat({ agent: journalAgent() });
     expect(await screen.findByText("what changed today?")).toBeInTheDocument();
   });
@@ -3903,8 +3903,8 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
     swapsOnlyUnderCover(view.frames);
   });
 
-  // The server cannot read at all: reading is switched off (`disabled`, COLLIE_TRANSCRIPT=0), or a
-  // member's Collie predates the chat route (404). Chat would stay empty for good, so the terminal.
+  // The server cannot read at all: reading is switched off (`disabled`, PASTOR_TRANSCRIPT=0), or a
+  // member's Pastor predates the chat route (404). Chat would stay empty for good, so the terminal.
   it.each([
     ["disabled", () => HttpResponse.json({ paneId: shell.paneId, available: false, reason: "disabled" })],
     ["a 404 from an older member", () => new HttpResponse(null, { status: 404 })],
@@ -3934,7 +3934,7 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
   });
 
   it("(e) a device on the terminal sees the terminal throughout, and the cover still lifts once", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
     const view = renderShell();
     await handOver(view, agentOf("codex", "idle", false));
     expect(screen.getByText(/reports its session to Herdr only after its first message/i)).toBeInTheDocument();
@@ -3948,7 +3948,7 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
   });
 
   it("(e) on the terminal, a harness with its session at start is not drawn as Chat either", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
     const view = renderShell();
     await handOver(view, agentOf("claude", "working", true));
     expect(bodies(view.frames)).toEqual(["terminal"]);
@@ -3993,7 +3993,7 @@ describe("AgentChat — a failed poll keeps the Chat on screen", () => {
 
   beforeEach(() => {
     mode = "live";
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
     server.use(
       http.get(/\/api\/pane\/[^/]+\/chat/, () => {
         if (mode === "drop") return HttpResponse.error();
@@ -4156,9 +4156,9 @@ describe("AgentChat — the model label and a footer that already names it", () 
     model,
     ...extra,
   });
-  const terminal = () => localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+  const terminal = () => localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   const chat = () =>
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
+    localStorage.setItem("pastor:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
 
   it("Claude Code: a statusline that prints the model hides the label, and one that does not keeps it", () => {
     terminal();

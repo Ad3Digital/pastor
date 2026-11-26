@@ -9,13 +9,13 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { dirname } from "node:path";
 import { Readable } from "node:stream";
 import { Conn } from "./conn.ts";
-import type { CollieCore } from "./core/index.ts";
+import type { PastorCore } from "./core/index.ts";
 import { HttpError } from "./core/receipts.ts";
 import { peerCredsAvailable } from "./peer.ts";
 import { assertPrivateSocket, checkSocketPath, clearStaleSocket, preparePrivateDir, withNarrowUmask } from "./socket.ts";
 
 export interface ServerOptions {
-  core: CollieCore;
+  core: PastorCore;
   /**
    * The same-user defence. `descendant` (the default): `answer`, `send`, `abort` and starters are refused with 403
    * `caller-refused` when the caller is the program itself or one of its descendants, or cannot be told apart from

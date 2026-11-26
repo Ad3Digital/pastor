@@ -37,13 +37,13 @@ function fakeCaches(): PushTitleCaches & { stores: Map<string, Map<string, strin
 
 describe("where the table lives", () => {
   test("the root mount keeps the plain name; a path mount gets its own cache", () => {
-    expect(pushTitlesCacheName("/")).toBe("collie-push-titles");
-    expect(pushTitlesCacheName("/collie/")).toBe("collie-push-titles:/collie/");
+    expect(pushTitlesCacheName("/")).toBe("pastor-push-titles");
+    expect(pushTitlesCacheName("/pastor/")).toBe("pastor-push-titles:/pastor/");
   });
 
   test("the key is a URL under the mount", () => {
     expect(pushTitlesKey("https://h.ts.net", "/")).toBe("https://h.ts.net/push-titles.json");
-    expect(pushTitlesKey("https://h.ts.net", "/collie/")).toBe("https://h.ts.net/collie/push-titles.json");
+    expect(pushTitlesKey("https://h.ts.net", "/pastor/")).toBe("https://h.ts.net/pastor/push-titles.json");
   });
 });
 

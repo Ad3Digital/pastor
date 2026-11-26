@@ -12,7 +12,7 @@ import type { UpdateRun } from "./update-run.ts";
 // Update-availability signal, surfaced on the (access-gated) /api/snapshot as `update`. Two
 // independent questions the running plugin can answer about itself:
 //
-//   • releaseAvailable — is a newer Collie RELEASE published upstream? We read the repo's git tags
+//   • releaseAvailable — is a newer Pastor RELEASE published upstream? We read the repo's git tags
 //     over anonymous HTTPS (the repo is public) and compare the newest `vX.Y.Z` to the running
 //     version. No `git` subprocess (the SSH origin has no agent under systemd --user, and a
 //     non-git install has no origin at all), no auth (the 60/hr anonymous limit is irrelevant at a
@@ -34,7 +34,7 @@ const SEMVER_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 const PRERELEASE_SEMVER_TAG = /^v(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 // The upstream tag check is bounded — a hung request must never wedge the monitor's timer.
 const TAGS_TIMEOUT_MS = 10_000;
-// The release reading (`collie-release.json`, M27/06) is bounded far tighter than the tag list,
+// The release reading (`pastor-release.json`, M27/06) is bounded far tighter than the tag list,
 // because it is an EXTRA inside the same check budget: the tags are the answer, this is a footnote
 // on it. A release that does not answer in three seconds reads as one that says nothing.
 const RELEASE_READING_TIMEOUT_MS = 3_000;
@@ -74,7 +74,7 @@ const DIGEST_EARLIEST_HOUR = 9;
  *  is to a stable one. See {@link followsTrain}. Crossing a major is still `update --major`, and
  *  still strict-only.
  *
- *  Anything outside Collie resolving "the newest release" must read git tags, never
+ *  Anything outside Pastor resolving "the newest release" must read git tags, never
  *  `releases/latest`: docs/upgrading.md -> *Resolving the newest release from a script*. */
 export function parseSemverTag(tag: string): [number, number, number] | null {
   const m = SEMVER_TAG.exec(tag.trim());
@@ -318,7 +318,7 @@ export function shouldNotify(a: {
   lastPushedAt: string | null;
   now: Date;
   /**
-   * The newest release in the delta that marked itself urgent in its own `collie-release.json`
+   * The newest release in the delta that marked itself urgent in its own `pastor-release.json`
    * (ADR 0046), or absent when none did — which is every ordinary release and every read that
    * failed. The RECORD, not a flag: the version is what tells a fix nobody has been told about yet
    * from one this install already pushed, and it is the same object the snapshot shows.
@@ -370,7 +370,7 @@ export function shouldNotify(a: {
  *  An URGENT release puts its own sentence FIRST (ADR 0046), because that sentence is why the phone
  *  buzzed at all. It is the release's own English, quoted, never translated — the push has no locale
  *  to read, which is the same reason {@link LINK_CHANGE_SENTENCE} is written here. The TITLE does not
- *  move: the notification is still "Collie update available", and the urgency is in what it says. */
+ *  move: the notification is still "Pastor update available", and the urgency is in what it says. */
 export function updateDigestBody(
   current: string,
   versions: readonly string[],
@@ -380,7 +380,7 @@ export function updateDigestBody(
   const first = versions[0];
   const body =
     versions.length <= 1
-      ? `Collie ${first ?? current} is available`
+      ? `Pastor ${first ?? current} is available`
       : `${versions.length} updates since ${current}: ${versions.join(", ")}`;
   const withLink = linkChange === null ? body : `${body}. ${LINK_CHANGE_SENTENCE}`;
   return urgent === null ? withLink : `${urgent.reason} ${withLink}`;
@@ -422,7 +422,7 @@ export function bridgeStampSync(bridgeDir: string, rootDir: string): string {
   return stampOf(entries);
 }
 
-/** The GitHub release page for a version, e.g. `…/releases/tag/v0.12.0`. Collie tags are `vX.Y.Z`
+/** The GitHub release page for a version, e.g. `…/releases/tag/v0.12.0`. Pastor tags are `vX.Y.Z`
  *  (the versioning convention), so the `v` prefix is reconstructed from the bare version. GitHub
  *  serves the tag page even when there's no formal release attached, so this is always a live link. */
 export function githubReleaseUrl(repo: string, version: string): string {
@@ -475,18 +475,18 @@ export async function readAllTags<F>(
 }
 
 // ── The rehearsal mirror (M43 spec 08) ───────────────────────────────────────
-// A TEST SEAM, not a way to update. A rehearsal of `collie update` on a test machine must not touch
+// A TEST SEAM, not a way to update. A rehearsal of `pastor update` on a test machine must not touch
 // a real release, so it serves its own releases from a local HTTP server, in the shape GitHub serves
 // them: `<mirror>/repos/<repo>/tags` for the tag list and `<mirror>/<repo>/releases/download/<tag>/
 // <file>` for every asset. `scripts/install.ps1` reads the same shape from its own mirror variable.
 //
 // Only this machine's loopback address is accepted, so the seam cannot point an install at another
-// host. A value that is set and not loopback is refused, never ignored: `collie update` stops, and
+// host. A value that is set and not loopback is refused, never ignored: `pastor update` stops, and
 // the bridge's release check keeps asking GitHub and says why. No token goes to a mirror, because a
 // token goes to `api.github.com` alone ({@link githubHeaders}). A loud line says the seam is set.
 
 /** The variable that names a rehearsal mirror. A test seam only; see the section above. */
-export const UPDATE_MIRROR_ENV = "COLLIE_UPDATE_MIRROR";
+export const UPDATE_MIRROR_ENV = "PASTOR_UPDATE_MIRROR";
 
 /** `http://127.0.0.1` or `http://localhost`, an optional port and an optional plain path. Nothing else. */
 const LOOPBACK_MIRROR = /^http:\/\/(127\.0\.0\.1|localhost)(:[0-9]{1,5})?(\/[A-Za-z0-9._~/-]*)?$/;
@@ -557,13 +557,13 @@ export const mirrorValue = (env: Readonly<Record<string, string | undefined>>): 
 // ── The GitHub credential (#254) ─────────────────────────────────────────────
 // GitHub allows an anonymous caller 60 API calls an hour, counted per network address, so every
 // machine behind one router shares a budget the release check can exhaust. A token makes the limit
-// the caller's own. Collie READS one and never asks for one: the tag list is public, so a token
+// the caller's own. Pastor READS one and never asks for one: the tag list is public, so a token
 // with no scopes at all is enough. It is sent to `api.github.com` alone — a release asset lives on
 // github.com, which counts nothing, and redirects to a storage host that must never see it.
 
 /** The names read for a GitHub token, in the order they win. `GH_TOKEN` and `GITHUB_TOKEN` are the
- *  two the `gh` CLI and Actions already set; the first is Collie's own, for a service's `.env`. */
-export const GITHUB_TOKEN_ENVS = ["COLLIE_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"] as const;
+ *  two the `gh` CLI and Actions already set; the first is Pastor's own, for a service's `.env`. */
+export const GITHUB_TOKEN_ENVS = ["PASTOR_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"] as const;
 
 /** A token and the NAME it was read from. A message names the variable and never the value. */
 export interface GithubCredential {
@@ -601,7 +601,7 @@ export function githubHeaders(
 
 /**
  * GitHub's `/tags` payload → {@link ApiTag}[]. The ONE parser of that document: the bridge's banner
- * fetches it over `fetch`, and `collie update`'s binary path fetches it through the CLI's `net`
+ * fetches it over `fetch`, and `pastor update`'s binary path fetches it through the CLI's `net`
  * seam, and both land here (M14/01 §2.3).
  *
  * A tag with no readable name is dropped, and so is one with no `commit.sha`: an EMPTY sha is worse
@@ -634,7 +634,7 @@ export function githubTagsFetcher(
     const init: RequestInit = {
       headers: githubHeaders(url, credential, {
         accept: "application/vnd.github+json",
-        "user-agent": "collie-update-check",
+        "user-agent": "pastor-update-check",
       }),
       signal: AbortSignal.timeout(TAGS_TIMEOUT_MS),
     };
@@ -642,7 +642,7 @@ export function githubTagsFetcher(
     const res = await fetch(url, init);
     // Once, not every tick: the check runs for the life of the process, and a line an hour is the
     // sort of log nobody reads. The price is that a token revoked later is said once and then only
-    // shows as a banner that stops moving; `collie update --check` names it any time it is asked.
+    // shows as a banner that stops moving; `pastor update --check` names it any time it is asked.
     if (res.status === 401 && credential !== null && !refusedSaid) {
       refusedSaid = true;
       console.warn(
@@ -660,7 +660,7 @@ export function githubTagsFetcher(
   };
 }
 
-// ── The release reading (`collie-release.json`, M27/06) ──────────────────────
+// ── The release reading (`pastor-release.json`, M27/06) ──────────────────────
 // One tiny document per release, published beside the payloads by `.github/workflows/release.yml`:
 // the version, and the CREW WIRE VERSION that release speaks. It exists so an install can be told,
 // BEFORE it confirms, that the update changes the link its crew talks over — and be told generically,
@@ -744,9 +744,9 @@ export interface UpdateUrgentReading {
 
 /** Where the asset sits. Constructed from (repo, version), never taken from a document, for the
  *  reason the manifest carries no URLs: a release must not be able to redirect a read to another
- *  host. The trust boundary stays "which repo", which is what COLLIE_UPDATE_REPO names. */
+ *  host. The trust boundary stays "which repo", which is what PASTOR_UPDATE_REPO names. */
 export function releaseReadingUrl(repo: string, version: string, mirror: string | null = null): string {
-  return `${mirror ?? "https://github.com"}/${repo}/releases/download/v${version}/collie-release.json`;
+  return `${mirror ?? "https://github.com"}/${repo}/releases/download/v${version}/pastor-release.json`;
 }
 
 /** The asset, parsed. Null for anything that is not the document we asked for — a wrong shape, a
@@ -806,7 +806,7 @@ export function releaseReadingFetcher(
   return async (version) => {
     try {
       const init: RequestInit = {
-        headers: { accept: "application/json", "user-agent": "collie-update-check" },
+        headers: { accept: "application/json", "user-agent": "pastor-update-check" },
         signal: AbortSignal.timeout(RELEASE_READING_TIMEOUT_MS),
       };
       if (mirror !== null) init.redirect = MIRROR_FETCH.redirect;
@@ -852,13 +852,13 @@ export const LINK_CHANGE_SENTENCE = "Changes the crew link. Update the lead firs
 // One document per release, attached to the GitHub Release and copied into every tarball as
 // `RELEASE.json`. It carries NO URLs: every download URL is constructed from (repo, version, name),
 // so a manifest can never redirect a download to another host. The trust boundary stays "which
-// repo", which is exactly what COLLIE_UPDATE_REPO names.
+// repo", which is exactly what PASTOR_UPDATE_REPO names.
 
 /** The schema this build understands. An unknown one aborts loudly — never "try anyway". */
 export const MANIFEST_SCHEMA_VERSION = 1;
 
 export interface ReleaseArtifact {
-  /** The release asset's filename, e.g. `collie-1.1.0-linux-x64.tar.gz`. */
+  /** The release asset's filename, e.g. `pastor-1.1.0-linux-x64.tar.gz`. */
   name: string;
   /** The canonical platform id (`linux-x64`, `macos-arm64`) — see `cli/update.ts`'s `platformId`. */
   platform: string;
@@ -1036,26 +1036,26 @@ export class UpdateStateStore {
 }
 
 /**
- * The command that restarts THIS Collie, spelled for the install kind — the one place it is spelled.
+ * The command that restarts THIS Pastor, spelled for the install kind — the one place it is spelled.
  *
  * TWO spellings, and the split is Herdr-managed against everything else (M14/01 §5.3):
  *   • `detached-checkout` is Herdr-managed, and Herdr resolves the plugin's checkout, so its action
- *     runs from any directory where `bin/collie` would not.
+ *     runs from any directory where `bin/pastor` would not.
  *   • Everything else — a linked clone, a binary install, an unknown layout and a PACKAGED install —
- *     takes the `collie` verb, which drives the `systemd --user` unit and works anywhere the CLI is
+ *     takes the `pastor` verb, which drives the `systemd --user` unit and works anywhere the CLI is
  *     on PATH.
  *
  * **A packaged install is not a system unit**, which is the mistake worth naming here because it is
- * the obvious guess. Our package ships NO unit file: `collie start` writes the operator's own
+ * the obvious guess. Our package ships NO unit file: `pastor start` writes the operator's own
  * `~/.config/systemd/user` unit and drives it with `systemctl --user`
- * (`packaging/aur/PKGBUILD`). So `sudo systemctl restart collie` names a unit that does not exist,
+ * (`packaging/aur/PKGBUILD`). So `sudo systemctl restart pastor` names a unit that does not exist,
  * and asks for a password to do it. Only UPDATING is someone else's on a packaged install (ADR
  * 0035); restarting is still the operator's own, exactly as `update-banner.tsx` already had it.
  *
  * Pure and exported: the phone renders what the host answered, so this is the only derivation.
  */
 export function restartCommandFor(kind: UpdateStatus["installKind"], instance: string | null): string {
-  return kind === "detached-checkout" ? herdrActionCommand("restart", instance) : "collie restart";
+  return kind === "detached-checkout" ? herdrActionCommand("restart", instance) : "pastor restart";
 }
 
 // ── The monitor ───────────────────────────────────────────────────────────────
@@ -1095,7 +1095,7 @@ export interface UpdateStore {
 }
 
 export interface UpdateMonitorDeps {
-  /** The `owner/name` repo the release check + release links point at (default `AltanS/collie`). */
+  /** The `owner/name` repo the release check + release links point at (default `Ad3Digital/pastor`). */
   repo: string;
   /** The running plugin version (captured at process start — never re-read from disk, or a post-pull
    *  package.json would mask the very update we're detecting). */
@@ -1103,19 +1103,19 @@ export interface UpdateMonitorDeps {
   /** The bridge source stamp captured at process start (see {@link bridgeStampSync}). */
   startupStamp: string;
   /** Fetch the upstream release tags (throws on failure — the monitor is fail-soft). One fetcher and
-   *  one JSON parser, shared with `collie update`'s binary path; this consumer maps to names at its
+   *  one JSON parser, shared with `pastor update`'s binary path; this consumer maps to names at its
    *  own edge and its pure resolver chain is untouched. */
   fetchTags: () => Promise<readonly ApiTag[]>;
   /** Recompute the on-disk bridge source stamp for the staleness check. */
   bridgeStamp: () => string;
-  /** How this Collie is installed, probed once at startup — it cannot change under a running process
+  /** How this Pastor is installed, probed once at startup — it cannot change under a running process
    *  (an update restarts the service), so the monitor just reports it. */
   installKind: UpdateStatus["installKind"];
-  /** `COLLIE_INSTANCE`, or `null` for the host's first Collie — it names the plugin id the restart
+  /** `PASTOR_INSTANCE`, or `null` for the host's first Pastor — it names the plugin id the restart
    *  command prints. Injected, not read here: the monitor resolves nothing from the environment. */
   instance: string | null;
   /**
-   * The version this process was running when it started, read the way `collie version` reads it.
+   * The version this process was running when it started, read the way `pastor version` reads it.
    *
    * Captured ONCE, at boot, beside the install kind — for the same reason the kind is: it cannot
    * change under a running process. `liveVersion` re-reads the same files, and a difference between
@@ -1128,7 +1128,7 @@ export interface UpdateMonitorDeps {
    * Has the binary this process is EXECUTING been replaced on disk (`bridge/exe-replaced.ts`)?
    *
    * The half {@link liveVersion} cannot see. A package manager that rebuilds the SAME version — a
-   * new Arch pkgrel, say — replaces `bin/collie` under the live service and moves no version string
+   * new Arch pkgrel, say — replaces `bin/pastor` under the live service and moves no version string
    * at all, so the version comparison stays quiet while the process serves the old code. The
    * executable is the only witness to that, and it is one readlink plus two `stat`s.
    *
@@ -1164,7 +1164,7 @@ export interface UpdateMonitorDeps {
    */
   crewMode: () => CrewMode;
   /**
-   * Read one release's own `collie-release.json` (M27/06). Never throws, and answers one of three
+   * Read one release's own `pastor-release.json` (M27/06). Never throws, and answers one of three
    * things — see {@link ReleaseReadingResult}: the reading, `"absent"` for a release that published
    * none (every release before 1.8.0), and null for a read that failed.
    *
@@ -1305,7 +1305,7 @@ export class UpdateMonitor {
   }
 
   /**
-   * One release's `collie-release.json`, memoised. Never throws. A reading and a definite absence are
+   * One release's `pastor-release.json`, memoised. Never throws. A reading and a definite absence are
    * both kept; a FAILED read is kept out of the map, so a network blip is never remembered as "this
    * release says nothing" and the next check asks again.
    */

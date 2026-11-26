@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Release-tag gate for Collie.
+# Release-tag gate for Pastor.
 #
 # A version is CUT when the three version files and the newest `## [x.y.z]` heading in CHANGELOG.md
 # agree on it (scripts/check-version.sh proves that). A version is PUBLISHED when a `v<x.y.z>` tag
@@ -88,7 +88,7 @@ fi
   echo
   while IFS=$'\t' read -r version sha; do
     [ -n "$version" ] || continue
-    echo "    git tag -a v${version} ${sha} -m \"Collie ${version}\""
+    echo "    git tag -a v${version} ${sha} -m \"Pastor ${version}\""
   done <<<"$missing"
   echo
   echo "  Then push the tag with the release: git push --follow-tags"

@@ -21,7 +21,7 @@ import { OPERATOR_FONT_PREFIX, type OperatorFontFace } from "@/lib/operator-font
 // STORE SHAPE is lib/zen.ts / lib/haptics.ts: module state, a listener set, and a
 // useSyncExternalStore hook — no context, no provider, no prop drilling to a settings card.
 
-const STORAGE_KEY = "collie:design:v1";
+const STORAGE_KEY = "pastor:design:v1";
 
 /**
  * The shipped faces, and the only strings that may ever become a class name.

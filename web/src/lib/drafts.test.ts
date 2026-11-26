@@ -4,7 +4,7 @@ import { clearDraft, fitsDraftStore, loadDraft, loadDraftEntry, pruneDrafts, sav
 // tab mid-composition, so the cases below pin the three things that would silently lose one: the
 // round trip, the empty-means-delete rule, and every storage failure mode staying non-fatal.
 
-const KEY = "collie:draft:default:w1:p1";
+const KEY = "pastor:draft:default:w1:p1";
 
 beforeEach(() => {
   localStorage.clear();
@@ -38,9 +38,9 @@ describe("drafts", () => {
   // find the drafts it already stored. A host segment is emitted ONLY when there is a host.
   it("keeps the lead's storage keys exactly as they shipped", () => {
     saveDraft({ host: "  ", session: "  " }, "w1:p1", "still the lead");
-    expect(localStorage.getItem("collie:draft:default:w1:p1")).not.toBeNull();
+    expect(localStorage.getItem("pastor:draft:default:w1:p1")).not.toBeNull();
     saveDraft({ session: "demo" }, "w1:p2", "named");
-    expect(localStorage.getItem("collie:draft:demo:w1:p2")).not.toBeNull();
+    expect(localStorage.getItem("pastor:draft:demo:w1:p2")).not.toBeNull();
   });
 
   it("removes the key when the text is empty or whitespace", () => {
@@ -117,14 +117,14 @@ describe("drafts", () => {
     const old = Date.now() - 49 * 60 * 60 * 1000;
     localStorage.setItem(KEY, JSON.stringify({ text: "ancient", at: old }));
     localStorage.setItem(
-      "collie:draft:default:w1:p2",
+      "pastor:draft:default:w1:p2",
       JSON.stringify({ text: "fresh", at: Date.now() }),
     );
-    localStorage.setItem("collie:haptics:v1", "1"); // an unrelated key must survive
+    localStorage.setItem("pastor:haptics:v1", "1"); // an unrelated key must survive
     pruneDrafts();
     expect(localStorage.getItem(KEY)).toBeNull();
     expect(loadDraft(undefined, "w1:p2")).toBe("fresh");
-    expect(localStorage.getItem("collie:haptics:v1")).toBe("1");
+    expect(localStorage.getItem("pastor:haptics:v1")).toBe("1");
   });
 
   it("does not resurface an expired draft even before a prune runs", () => {

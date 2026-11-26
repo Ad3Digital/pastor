@@ -821,7 +821,7 @@ async function metadataRoot(path: string): Promise<string | null> {
 /**
  * Muse's journal adapter. `agent` matches the Herdr snapshot's `agent` string.
  *
- * No `cacheProbe`: the log carries usage records but Muse publishes no cache TTL Collie could
+ * No `cacheProbe`: the log carries usage records but Muse publishes no cache TTL Pastor could
  * quote, so like grok and hermes this ships no rule.
  */
 export function museJournal(roots: string | readonly string[]): JournalAdapter {

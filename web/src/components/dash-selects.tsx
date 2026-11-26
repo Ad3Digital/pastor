@@ -33,7 +33,7 @@ function stateWord(key: TriageKey | null): string | null {
 
 /**
  * The workspace filter: "All workspaces", then one option per workspace in the list's own order, each
- * followed by its state in words ("collie-workspace · needs you"). The chosen workspace shows alone,
+ * followed by its state in words ("pastor-workspace · needs you"). The chosen workspace shows alone,
  * the others stay in the list; "All workspaces" shows everything. It carries the chip strip's other
  * two jobs as options, so nothing the strip could do is stranded:
  *

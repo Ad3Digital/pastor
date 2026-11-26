@@ -26,8 +26,8 @@ test.beforeEach(async ({ page }, testInfo) => {
   await installApiStub(page);
 });
 
-const FOLDER = "/home/you/src/collie";
-const SHOWN = "~/src/collie";
+const FOLDER = "/home/you/src/pastor";
+const SHOWN = "~/src/pastor";
 
 const recent = (page: Page) => page.getByRole("list", { name: en["space.new.folders.recent"] });
 const favourites = (page: Page) => page.getByRole("list", { name: en["space.new.folders.favourites"] });
@@ -70,7 +70,7 @@ test("a created folder is under Recent next time, a star moves it, and a tap fil
   const row = recent(page).getByRole("button", { name: fill(en["space.new.folders.use"], { path: SHOWN }) });
   await expect(row).toBeVisible();
   await expect(recent(page).getByRole("listitem")).toHaveCount(1);
-  await expect(row).toContainText("collie");
+  await expect(row).toContainText("pastor");
   await expect(row).toContainText(SHOWN);
 
   // The row keeps the 44px floor and the star is a 44px square beside it.

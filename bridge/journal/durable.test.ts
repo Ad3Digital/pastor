@@ -15,7 +15,7 @@ import type { AgentSessionRef, TranscriptEntry } from "./types.ts";
 const dirs: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-durable-journal-"));
+  const dir = await mkdtemp(join(tmpdir(), "pastor-durable-journal-"));
   dirs.push(dir);
   return dir;
 }

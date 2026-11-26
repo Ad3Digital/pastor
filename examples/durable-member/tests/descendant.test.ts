@@ -6,11 +6,11 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { api } from "./client.ts";
-import { type Collie, openCollie, type PaneHandle } from "../sdk/index.ts";
+import { type Pastor, openPastor, type PaneHandle } from "../sdk/index.ts";
 import { peerCredsAvailable, peerOf, relationOf } from "../sdk/peer.ts";
 import { cleanup, dialFrom, tmp, waitFor } from "./util.ts";
 
-let collie: Collie;
+let pastor: Pastor;
 let socket: string;
 let pane: PaneHandle;
 const sent: string[] = [];
@@ -20,17 +20,17 @@ let held: Promise<unknown>;
 
 beforeAll(async () => {
   socket = join(tmp(), "d.sock");
-  collie = await openCollie({ socket, hostName: "t" }); // the default: callerCheck "descendant"
-  pane = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
+  pastor = await openPastor({ socket, hostName: "t" }); // the default: callerCheck "descendant"
+  pane = pastor.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
   pane.onSend((text) => void sent.push(text));
   pane.onAbort(() => void aborts++);
-  collie.starters([{ id: "s", label: "S", run: async () => (starts++, { paneId: "p" }) }]);
+  pastor.starters([{ id: "s", label: "S", run: async () => (starts++, { paneId: "p" }) }]);
   held = pane.ask({ id: "a1", kind: "permission", toolCallId: "c1", itemId: "c1", title: "t", options: [{ id: "allow", label: "Allow", effect: "allow" }] });
   held.catch(() => {});
-  collie.ready();
+  pastor.ready();
 });
 afterAll(async () => {
-  await collie.close();
+  await pastor.close();
   cleanup();
 });
 

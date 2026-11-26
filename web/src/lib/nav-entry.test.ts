@@ -24,7 +24,7 @@ function fakeWindow(
   href: string,
   opts: { state?: JsonValue; length?: number; standalone?: boolean; seeded?: string; booted?: boolean } = {},
 ) {
-  const url = new URL(href, "https://collie.test");
+  const url = new URL(href, "https://pastor.test");
   const writes: Array<{ op: "replace" | "push"; data: RouterEntry | JsonValue | undefined; url: string }> = [];
   const store = new Map<string, string>(opts.seeded ? [[SEEDED_KEY, opts.seeded]] : []);
   if (opts.booted) store.set(BOOTED_KEY, "1");
@@ -145,12 +145,12 @@ describe("seedColdEntry", () => {
 
 describe("appPathOf", () => {
   it("strips the origin", () => {
-    expect(appPathOf("https://collie.test/pane/p1?h=a", "https://collie.test")).toBe("/pane/p1?h=a");
+    expect(appPathOf("https://pastor.test/pane/p1?h=a", "https://pastor.test")).toBe("/pane/p1?h=a");
   });
 
   it("refuses another origin and garbage", () => {
-    expect(appPathOf("https://evil.test/pane/p1", "https://collie.test")).toBeNull();
-    expect(appPathOf("not a url", "https://collie.test")).toBeNull();
+    expect(appPathOf("https://evil.test/pane/p1", "https://pastor.test")).toBeNull();
+    expect(appPathOf("not a url", "https://pastor.test")).toBeNull();
   });
 });
 

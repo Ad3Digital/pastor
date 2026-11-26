@@ -10,7 +10,7 @@ import type { HarnessInfo } from "./types.ts";
 //
 // The phone holds no list of harness names. It asks the machine a start would go to
 // (`GET /api/launchers`, forwarded on `?host=` like the operator's rows), and that machine answers
-// with the harnesses Collie knows and whether each binary is there. The phone then names one by its
+// with the harnesses Pastor knows and whether each binary is there. The phone then names one by its
 // id, and the bridge, never the phone, turns the id into the line that is typed. So a phone cannot
 // start a binary nobody listed, exactly as it cannot run a command line `launchers.toml` does not hold.
 //
@@ -29,7 +29,7 @@ import type { HarnessInfo } from "./types.ts";
 // cannot be asked. `findTool` then adds its fixed folders (`bridge/tools.ts`). A found result is kept
 // for {@link FOUND_TTL_MS}, so a phone that opens the sheet twice in a row costs one look.
 
-/** One agent Collie can start. */
+/** One agent Pastor can start. */
 export interface HarnessLaunch {
   /** The id the phone sends, and the agent name the pane will report. */
   id: string;
@@ -59,10 +59,10 @@ export const HARNESS_LAUNCHES: readonly HarnessLaunch[] = [
  */
 export const NOT_STARTED = {
   antigravity: "the desktop app; its terminal agent is agy",
-  openclaw: "its TUI is a client of the operator's gateway; Collie reads its history only",
+  openclaw: "its TUI is a client of the operator's gateway; Pastor reads its history only",
 } as const satisfies Readonly<Record<string, string>>;
 
-/** The launch for `id`, or `undefined` for a name Collie does not start. Exact match only. */
+/** The launch for `id`, or `undefined` for a name Pastor does not start. Exact match only. */
 export function harnessLaunch(id: string): HarnessLaunch | undefined {
   return HARNESS_LAUNCHES.find((h) => h.id === id);
 }
@@ -125,7 +125,7 @@ export interface HarnessProbeDeps {
 /** What the routes need: this machine's harnesses with their found flag. */
 export interface HarnessProbe {
   list(): Promise<HarnessInfo[]>;
-  /** Whether `id` is a harness Collie starts here, found or not. */
+  /** Whether `id` is a harness Pastor starts here, found or not. */
   launch(id: string): HarnessLaunch | undefined;
 }
 

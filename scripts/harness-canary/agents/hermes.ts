@@ -1,4 +1,4 @@
-// Hermes Agent in the canary, with the provider in the operator's own config. Collie has no adapter
+// Hermes Agent in the canary, with the provider in the operator's own config. Pastor has no adapter
 // for hermes: raw mirror, one-step send. Asked for by name only (args.ts § DEFAULT_AGENTS).
 
 import { backspaceSweep, launchLine, pointedRow, type AgentProfile } from "./profile";

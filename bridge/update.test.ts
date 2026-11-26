@@ -205,20 +205,20 @@ describe("updatesNewerThan", () => {
 
 describe("updateDigestBody", () => {
   it("names the one version, or the count AND every folded version", () => {
-    expect(updateDigestBody("1.3.0", ["1.3.1"])).toBe("Collie 1.3.1 is available");
+    expect(updateDigestBody("1.3.0", ["1.3.1"])).toBe("Pastor 1.3.1 is available");
     expect(updateDigestBody("1.3.0", ["1.3.1", "1.3.2"])).toBe("2 updates since 1.3.0: 1.3.1, 1.3.2");
   });
 
   it("an urgent release opens the body with its own sentence, ahead of the link change", () => {
     const urgent = { version: "1.3.1", reason: "The reaper deletes live entries." };
     expect(updateDigestBody("1.3.0", ["1.3.1"], null, urgent)).toBe(
-      "The reaper deletes live entries. Collie 1.3.1 is available",
+      "The reaper deletes live entries. Pastor 1.3.1 is available",
     );
     expect(updateDigestBody("1.3.0", ["1.3.1"], { from: 1, to: 2 }, urgent)).toBe(
-      `The reaper deletes live entries. Collie 1.3.1 is available. ${LINK_CHANGE_SENTENCE}`,
+      `The reaper deletes live entries. Pastor 1.3.1 is available. ${LINK_CHANGE_SENTENCE}`,
     );
     // Without one, the body is byte-identical to what it always was.
-    expect(updateDigestBody("1.3.0", ["1.3.1"], null, null)).toBe("Collie 1.3.1 is available");
+    expect(updateDigestBody("1.3.0", ["1.3.1"], null, null)).toBe("Pastor 1.3.1 is available");
   });
 });
 
@@ -465,8 +465,8 @@ describe("the update run record on the snapshot", () => {
     // Assigned, never spread as `undefined`: an install with none must carry NO key. The phone's
     // fallback to the preflight remedy depends on the difference between absent and empty.
     expect("packageCommand" in makeMonitor().monitor.status()).toBe(false);
-    const packaged = makeMonitor({ installKind: "packaged", packageCommand: "sudo pacman -Syu collie-bin" });
-    expect(packaged.monitor.status().packageCommand).toBe("sudo pacman -Syu collie-bin");
+    const packaged = makeMonitor({ installKind: "packaged", packageCommand: "sudo pacman -Syu pastor-bin" });
+    expect(packaged.monitor.status().packageCommand).toBe("sudo pacman -Syu pastor-bin");
   });
 
   it("an install that has never updated carries no run key at all", () => {
@@ -519,7 +519,7 @@ describe("restart needed — the files moved under a running process", () => {
     tick(10_000); // the same throttle the version read is behind
     const status = monitor.status();
     expect(status.restartNeeded).toBe(true);
-    expect(status.restartCommand).toBe("collie restart");
+    expect(status.restartCommand).toBe("pastor restart");
 
     // Not latched, exactly as the version half is not.
     replaced = false;
@@ -529,17 +529,17 @@ describe("restart needed — the files moved under a running process", () => {
 
   it("restart command for the install kind, never a hard-coded string", () => {
     // Two spellings, and the kind is the whole of what picks one (M14/01 §5.3).
-    expect(restartCommandFor("detached-checkout", null)).toBe("herdr plugin action invoke restart --plugin herdr.collie");
+    expect(restartCommandFor("detached-checkout", null)).toBe("herdr plugin action invoke restart --plugin ad3.pastor");
     // A named instance is registered with Herdr under its own suffixed plugin id, and the bare id is
-    // the host's FIRST Collie — so printing it would restart a service this one does not own.
+    // the host's FIRST Pastor — so printing it would restart a service this one does not own.
     expect(restartCommandFor("detached-checkout", "next")).toBe(
-      "herdr plugin action invoke restart --plugin herdr.collie-next",
+      "herdr plugin action invoke restart --plugin ad3.pastor-next",
     );
-    // A PACKAGED install takes the `collie` verb like any other non-Herdr kind. Our package ships no
-    // unit file at all — `collie start` writes the operator's own `--user` unit — so the system-unit
+    // A PACKAGED install takes the `pastor` verb like any other non-Herdr kind. Our package ships no
+    // unit file at all — `pastor start` writes the operator's own `--user` unit — so the system-unit
     // spelling would name a unit that does not exist and ask for a password to restart it.
     for (const kind of ["packaged", "linked-clone", "binary", "unknown"] as const) {
-      expect(restartCommandFor(kind, "next")).toBe("collie restart");
+      expect(restartCommandFor(kind, "next")).toBe("pastor restart");
     }
     expect(restartCommandFor("packaged", null)).not.toContain("sudo");
 
@@ -570,7 +570,7 @@ function makeMonitor(over: Partial<UpdateMonitorDeps> = {}) {
   // rather than the clock. `tick` moves it forward within the same morning unless a test says otherwise.
   let clock = new Date(2026, 0, 15, 10, 0, 0).getTime();
   const monitor = new UpdateMonitor({
-    repo: "AltanS/collie",
+    repo: "Ad3Digital/pastor",
     current: "0.11.0",
     installKind: "detached-checkout",
     instance: null,
@@ -603,7 +603,7 @@ function makeMonitor(over: Partial<UpdateMonitorDeps> = {}) {
 
 describe("UpdateMonitor", () => {
   it("surfaces releaseAvailable + latest + latestUrl after a successful check", async () => {
-    // Use a REAL Collie release (v0.10.3) with `current` below it, so the asserted release URL exists.
+    // Use a REAL Pastor release (v0.10.3) with `current` below it, so the asserted release URL exists.
     const { monitor } = makeMonitor({
       current: "0.9.0",
       fetchTags: async () => apiTags("v0.2.0", "v0.10.0", "v0.10.3"),
@@ -612,7 +612,7 @@ describe("UpdateMonitor", () => {
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
       latest: "0.10.3",
-      latestUrl: "https://github.com/AltanS/collie/releases/tag/v0.10.3",
+      latestUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v0.10.3",
       releaseAvailable: true,
     });
     expect(monitor.status().checkedAt).not.toBeNull();
@@ -635,7 +635,7 @@ describe("UpdateMonitor", () => {
       latest: "0.32.0",
       releaseAvailable: true,
       majorAvailable: "1.0.1",
-      majorUrl: "https://github.com/AltanS/collie/releases/tag/v1.0.1",
+      majorUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v1.0.1",
     });
   });
 
@@ -662,7 +662,7 @@ describe("UpdateMonitor", () => {
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
       latest: "1.0.0-beta.45",
-      latestUrl: "https://github.com/AltanS/collie/releases/tag/v1.0.0-beta.45",
+      latestUrl: "https://github.com/Ad3Digital/pastor/releases/tag/v1.0.0-beta.45",
       releaseAvailable: true,
       majorAvailable: null,
     });
@@ -700,8 +700,8 @@ describe("UpdateMonitor", () => {
   });
 
   it("githubReleaseUrl reconstructs the vX.Y.Z tag page", () => {
-    expect(githubReleaseUrl("AltanS/collie", "0.10.3")).toBe(
-      "https://github.com/AltanS/collie/releases/tag/v0.10.3",
+    expect(githubReleaseUrl("Ad3Digital/pastor", "0.10.3")).toBe(
+      "https://github.com/Ad3Digital/pastor/releases/tag/v0.10.3",
     );
   });
 
@@ -869,17 +869,17 @@ describe("parseTagsResponse", () => {
 describe("parseReleaseManifest", () => {
   const doc = {
     schemaVersion: 1,
-    repo: "AltanS/collie",
+    repo: "Ad3Digital/pastor",
     tag: "v1.1.0",
     version: "1.1.0",
     artifacts: [
       {
-        name: "collie-1.1.0-linux-x64.tar.gz",
+        name: "pastor-1.1.0-linux-x64.tar.gz",
         platform: "linux-x64",
         os: "linux",
         sha256: "deadbeef",
         size: 42,
-        payloadRoot: "collie-1.1.0-linux-x64",
+        payloadRoot: "pastor-1.1.0-linux-x64",
       },
     ],
     extras: [{ name: "web-dist-1.1.0.tar.gz", role: "web-bundle", sha256: "cafe" }],
@@ -892,11 +892,11 @@ describe("parseReleaseManifest", () => {
     expect(v.manifest.version).toBe("1.1.0");
     expect(v.manifest.artifacts).toEqual([
       {
-        name: "collie-1.1.0-linux-x64.tar.gz",
+        name: "pastor-1.1.0-linux-x64.tar.gz",
         platform: "linux-x64",
         sha256: "deadbeef",
         size: 42,
-        payloadRoot: "collie-1.1.0-linux-x64",
+        payloadRoot: "pastor-1.1.0-linux-x64",
       },
     ]);
   });
@@ -932,7 +932,7 @@ describe("parseReleaseManifest", () => {
 
 const dismissDirs: string[] = [];
 async function tempCfg() {
-  const stateDir = await mkdtemp(join(tmpdir(), "collie-update-dismiss-"));
+  const stateDir = await mkdtemp(join(tmpdir(), "pastor-update-dismiss-"));
   dismissDirs.push(stateDir);
   return { ...loadConfig(), stateDir };
 }
@@ -1092,8 +1092,8 @@ describe("the dismissed version", () => {
 
 describe("the release reading", () => {
   it("names the asset under the release's own tag, constructed from repo and version", () => {
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0")).toBe(
-      "https://github.com/AltanS/collie/releases/download/v1.8.0/collie-release.json",
+    expect(releaseReadingUrl("Ad3Digital/pastor", "1.8.0")).toBe(
+      "https://github.com/Ad3Digital/pastor/releases/download/v1.8.0/pastor-release.json",
     );
   });
 
@@ -1301,7 +1301,7 @@ describe("UpdateMonitor — the link change", () => {
     // The push says it too, appended to a body that is otherwise what it always was.
     expect(pushes).toEqual([{ versions: ["1.8.0"], linkChange: { from: 1, to: 2 }, urgent: null }]);
     expect(updateDigestBody("1.7.0", ["1.8.0"], { from: 1, to: 2 })).toBe(
-      "Collie 1.8.0 is available. Changes the crew link. Update the lead first, members follow.",
+      "Pastor 1.8.0 is available. Changes the crew link. Update the lead first, members follow.",
     );
   });
 
@@ -1317,7 +1317,7 @@ describe("UpdateMonitor — the link change", () => {
     expect(monitor.status().linkChange).toBeUndefined();
     expect(pushes[0]?.linkChange).toBeNull();
     // And the body is byte-identical to the one every release before this always produced.
-    expect(updateDigestBody("1.8.0", ["1.8.1"], null)).toBe("Collie 1.8.1 is available");
+    expect(updateDigestBody("1.8.0", ["1.8.1"], null)).toBe("Pastor 1.8.1 is available");
   });
 
   it("is absent when the release published no asset at all — every release before 1.8.0", async () => {
@@ -1363,17 +1363,17 @@ describe("UpdateMonitor — the link change", () => {
 
 describe("the GitHub credential (#254)", () => {
   it("reads the three names in their order, trimmed, and skips a blank one", () => {
-    expect(GITHUB_TOKEN_ENVS).toEqual(["COLLIE_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"]);
+    expect(GITHUB_TOKEN_ENVS).toEqual(["PASTOR_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"]);
     expect(githubCredential({})).toBeNull();
     expect(githubCredential({ GH_TOKEN: "   " })).toBeNull();
     expect(githubCredential({ GITHUB_TOKEN: " ghp_x " })).toEqual({ token: "ghp_x", source: "GITHUB_TOKEN" });
     expect(githubCredential({ GH_TOKEN: "a", GITHUB_TOKEN: "b" })).toEqual({ token: "a", source: "GH_TOKEN" });
-    expect(githubCredential({ COLLIE_GITHUB_TOKEN: "c", GH_TOKEN: "a" })).toEqual({
+    expect(githubCredential({ PASTOR_GITHUB_TOKEN: "c", GH_TOKEN: "a" })).toEqual({
       token: "c",
-      source: "COLLIE_GITHUB_TOKEN",
+      source: "PASTOR_GITHUB_TOKEN",
     });
     // A blank first name does not shadow a set second one.
-    expect(githubCredential({ COLLIE_GITHUB_TOKEN: "", GH_TOKEN: "a" })?.source).toBe("GH_TOKEN");
+    expect(githubCredential({ PASTOR_GITHUB_TOKEN: "", GH_TOKEN: "a" })?.source).toBe("GH_TOKEN");
   });
 
   it("sends the token to api.github.com alone — never to a release asset, a look-alike host, or a bad url", () => {
@@ -1393,13 +1393,13 @@ describe("the GitHub credential (#254)", () => {
   });
 });
 
-describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam", () => {
+describe("the rehearsal mirror (PASTOR_UPDATE_MIRROR), a loopback-only test seam", () => {
   it("is off when unset or blank, and GitHub is asked as before", () => {
     expect(updateMirror({})).toEqual({ ok: true, base: null });
-    expect(updateMirror({ COLLIE_UPDATE_MIRROR: "  " })).toEqual({ ok: true, base: null });
-    expect(githubTagsUrl("AltanS/collie")).toBe("https://api.github.com/repos/AltanS/collie/tags?per_page=100");
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0", null)).toBe(
-      "https://github.com/AltanS/collie/releases/download/v1.8.0/collie-release.json",
+    expect(updateMirror({ PASTOR_UPDATE_MIRROR: "  " })).toEqual({ ok: true, base: null });
+    expect(githubTagsUrl("Ad3Digital/pastor")).toBe("https://api.github.com/repos/Ad3Digital/pastor/tags?per_page=100");
+    expect(releaseReadingUrl("Ad3Digital/pastor", "1.8.0", null)).toBe(
+      "https://github.com/Ad3Digital/pastor/releases/download/v1.8.0/pastor-release.json",
     );
   });
 
@@ -1409,12 +1409,12 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       ["http://localhost:8899", "http://localhost:8899"],
       ["http://127.0.0.1/mirror/", "http://127.0.0.1/mirror"],
     ] as const) {
-      expect(updateMirror({ COLLIE_UPDATE_MIRROR: value })).toEqual({ ok: true, base });
+      expect(updateMirror({ PASTOR_UPDATE_MIRROR: value })).toEqual({ ok: true, base });
     }
     const base = "http://127.0.0.1:8899";
-    expect(githubTagsUrl("AltanS/collie", base)).toBe(`${base}/repos/AltanS/collie/tags?per_page=100`);
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0", base)).toBe(
-      `${base}/AltanS/collie/releases/download/v1.8.0/collie-release.json`,
+    expect(githubTagsUrl("Ad3Digital/pastor", base)).toBe(`${base}/repos/Ad3Digital/pastor/tags?per_page=100`);
+    expect(releaseReadingUrl("Ad3Digital/pastor", "1.8.0", base)).toBe(
+      `${base}/Ad3Digital/pastor/releases/download/v1.8.0/pastor-release.json`,
     );
   });
 
@@ -1438,16 +1438,16 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       "http://127.0.0.1:123456",
       "http://127.0.0.1:8899/x\\y",
     ]) {
-      expect(updateMirror({ COLLIE_UPDATE_MIRROR: value })).toEqual({ ok: false, value });
+      expect(updateMirror({ PASTOR_UPDATE_MIRROR: value })).toEqual({ ok: false, value });
     }
   });
 
   it("the bridge refuses a bad value outright: no request at all, never GitHub in its place", async () => {
-    const reads = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: "http://10.0.0.5:8899", GH_TOKEN: "t" });
+    const reads = releaseFetchers("Ad3Digital/pastor", { PASTOR_UPDATE_MIRROR: "http://10.0.0.5:8899", GH_TOKEN: "t" });
     await expect(reads.fetchTags()).rejects.toThrow("is not an http://127.0.0.1 or http://localhost URL");
     expect(await reads.fetchReleaseReading("1.0.0")).toBeNull();
     expect(reads.warning).toContain("The release check is off until it is fixed or unset.");
-    expect(releaseFetchers("AltanS/collie", {}).warning).toBeNull();
+    expect(releaseFetchers("Ad3Digital/pastor", {}).warning).toBeNull();
   });
 
   it("the bridge asks the mirror with no token and refuses its redirect (a local server)", async () => {
@@ -1463,8 +1463,8 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       },
     });
     try {
-      const reads = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: `http://127.0.0.1:${server.port}`, GH_TOKEN: "t" });
-      expect(reads.warning).toContain("WARNING: COLLIE_UPDATE_MIRROR is set");
+      const reads = releaseFetchers("Ad3Digital/pastor", { PASTOR_UPDATE_MIRROR: `http://127.0.0.1:${server.port}`, GH_TOKEN: "t" });
+      expect(reads.warning).toContain("WARNING: PASTOR_UPDATE_MIRROR is set");
       expect(await reads.fetchTags()).toEqual([{ name: "v1.2.3", sha: "abc" }]);
       hop = true;
       await expect(reads.fetchTags()).rejects.toThrow();
@@ -1478,11 +1478,11 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
   it("never gets the GitHub token", () => {
     const credential = { token: "t", source: "GH_TOKEN" as const };
     const base = { accept: "application/json" };
-    expect(githubHeaders(githubTagsUrl("AltanS/collie", "http://127.0.0.1:8899"), credential, base)).toBe(base);
+    expect(githubHeaders(githubTagsUrl("Ad3Digital/pastor", "http://127.0.0.1:8899"), credential, base)).toBe(base);
   });
 });
 
-describe("COLLIE_UPDATE_MIRROR is read in one module, and stays out of the operator's pages", () => {
+describe("PASTOR_UPDATE_MIRROR is read in one module, and stays out of the operator's pages", () => {
   const ROOT = join(import.meta.dir, "..");
   const sources = (dir: string): string[] =>
     readdirSync(join(ROOT, dir), { recursive: true, encoding: "utf8" })
@@ -1491,14 +1491,14 @@ describe("COLLIE_UPDATE_MIRROR is read in one module, and stays out of the opera
 
   it("no file but bridge/update.ts names it; everything else asks `updateMirror` or `releaseFetchers`", () => {
     const naming = [...sources("bridge"), ...sources("cli")]
-      .filter((f) => readFileSync(f, "utf8").includes("COLLIE_UPDATE_MIRROR"))
+      .filter((f) => readFileSync(f, "utf8").includes("PASTOR_UPDATE_MIRROR"))
       .map((f) => relative(ROOT, f).replaceAll("\\", "/"));
     expect(naming).toEqual(["bridge/update.ts"]);
   });
 
   it("neither the CHANGELOG nor docs/ mention it: it is a test seam, not a setting", () => {
     const pages = [join(ROOT, "CHANGELOG.md"), ...readdirSync(join(ROOT, "docs")).filter((p) => p.endsWith(".md")).map((p) => join(ROOT, "docs", p))];
-    expect(pages.filter((p) => readFileSync(p, "utf8").includes("COLLIE_UPDATE_MIRROR"))).toEqual([]);
+    expect(pages.filter((p) => readFileSync(p, "utf8").includes("PASTOR_UPDATE_MIRROR"))).toEqual([]);
   });
 });
 
@@ -1522,13 +1522,13 @@ describe("the tag list past one page (counsel: about 92 tags, and GitHub pages a
     expect(ORDER.indexOf("v1.1.0")).toBe(119);
     const asked: string[] = [];
     const fetchPage = pages(ORDER);
-    const all = await readAllTags("AltanS/collie", null, (url) => {
+    const all = await readAllTags("Ad3Digital/pastor", null, (url) => {
       asked.push(url);
       return fetchPage(url);
     });
     expect(asked).toEqual([
-      "https://api.github.com/repos/AltanS/collie/tags?per_page=100",
-      "https://api.github.com/repos/AltanS/collie/tags?per_page=100&page=2",
+      "https://api.github.com/repos/Ad3Digital/pastor/tags?per_page=100",
+      "https://api.github.com/repos/Ad3Digital/pastor/tags?per_page=100&page=2",
     ]);
     expect(all.ok && all.tags.map((t) => t.name)).toEqual(ORDER);
     // The newest stable is the same one a single page of all 130 would give; the rc is still a prerelease.
@@ -1539,11 +1539,11 @@ describe("the tag list past one page (counsel: about 92 tags, and GitHub pages a
   it("asks once for a repository with one page, as before, and on a mirror too", async () => {
     const asked: string[] = [];
     const base = "http://127.0.0.1:8899";
-    const all = await readAllTags("AltanS/collie", base, (url) => {
+    const all = await readAllTags("Ad3Digital/pastor", base, (url) => {
       asked.push(url);
       return pages(ORDER.slice(0, 92))(url);
     });
-    expect(asked).toEqual([`${base}/repos/AltanS/collie/tags?per_page=100`]);
+    expect(asked).toEqual([`${base}/repos/Ad3Digital/pastor/tags?per_page=100`]);
     expect(all.ok && all.tags).toHaveLength(92);
   });
 

@@ -22,7 +22,7 @@ import { FileLinksProvider } from "./file-links";
 // The blocks of a session stream. The load-bearing behaviours: a finished run folds to one line and
 // a live one does not, a refusal is not drawn like a fault, every string renders as TEXT (the same
 // XSS boundary as the mirror), and the host's waiting slot is the ONLY way a dialog reaches a card —
-// collie itself has nothing to put there.
+// pastor itself has nothing to put there.
 
 const tool = (t: ChatToolCall, over: Partial<Extract<ChatItem, { kind: "tool" }>> = {}): ChatItem => ({
   id: "t1",

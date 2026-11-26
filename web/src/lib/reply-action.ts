@@ -63,7 +63,7 @@ export const MIN_MATCH_CHARS = 8;
 const REGEXP_META = /[.*+?^${}()|[\]\\]/g;
 
 /**
- * The bridge's secret mask (`bridge/redact.ts`, `COLLIE_REDACT`, default on): a known secret shape on
+ * The bridge's secret mask (`bridge/redact.ts`, `PASTOR_REDACT`, default on): a known secret shape on
  * screen reaches the phone as one `•` per hidden character. The operator's own send is never masked,
  * so a reply that carries a key reads back from the box as that key's mask. A mask character in the
  * draft therefore stands for exactly ONE printable ASCII character of `sent` (every pattern the bridge
@@ -665,7 +665,7 @@ async function oneShot(args: GuardedReplyArgs): Promise<ReplyOutcome> {
 
 /**
  * Empty text + submit: `sendReplySteps` skips the send_text step entirely and sends ONLY the
- * bridge's configured submit keys (COLLIE_SUBMIT_KEYS). When available, the verified prompt region
+ * bridge's configured submit keys (PASTOR_SUBMIT_KEYS). When available, the verified prompt region
  * rides along as `expected_prompt`, so the bridge can refuse a stale submit before those keys land.
  */
 async function submitOnly(

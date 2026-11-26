@@ -1,6 +1,6 @@
 // ── EVERY MUTATION NAMES THE CHANNEL THAT ACKNOWLEDGES IT ────────────────────────────────────────
 //
-// Collie has FOUR acknowledgement channels and they answer four different questions. One channel per
+// Pastor has FOUR acknowledgement channels and they answer four different questions. One channel per
 // question — a control that reaches for two is saying the same thing twice, and one that reaches for
 // none has told the operator nothing (DESIGN.md §11):
 //
@@ -13,7 +13,7 @@
 //     outlives the operator's next interaction (a §11 contextual notice).
 //   • **`"silent"`** — nothing is said, ON PURPOSE, because the screen already said it.
 //
-// The Collie orbit round is the fourth channel and appears nowhere here: it announces UNATTENDED
+// The Pastor orbit round is the fourth channel and appears nowhere here: it announces UNATTENDED
 // events — something that happened while the operator was not acting — so by construction no entry
 // in this file can own it.
 //
@@ -223,6 +223,14 @@ export const ACK_MANIFEST = {
   transcribeAudio: {
     channel: "echo",
     why: "The mic strip's `transcribing` phase holds while the clip is in flight and the transcript landing in the composer is the outcome; every refusal comes back as a VALUE and is spoken by the composer's onError on the status channel (hooks/use-stt-recorder.ts).",
+  },
+  sendLiveCommand: {
+    channel: "inline",
+    why: "A live call's connection, mute state, transcripts and failures are all facts of the open call sheet; success is visible in that sheet and a standing failure stays beside Start, Mute and End.",
+  },
+  postPasskey: {
+    channel: "inline",
+    why: "The passkey card in Paired devices states the outcome itself: a created key, a paired device, or the refusal in the card's own words (components/paired-devices.tsx).",
   },
   startWhistleSetup: {
     channel: "inline",

@@ -107,14 +107,14 @@ describe("panePath", () => {
   });
 
   it("carries a named session as ?s= (encoded)", () => {
-    expect(panePath("w1:p1", { session: "collie-demo" })).toBe("/pane/w1%3Ap1?s=collie-demo");
+    expect(panePath("w1:p1", { session: "pastor-demo" })).toBe("/pane/w1%3Ap1?s=pastor-demo");
     expect(panePath("abc", { session: "a b" })).toBe("/pane/abc?s=a%20b");
   });
 
   it("carries a host as ?h=, always before ?s=", () => {
     expect(panePath("w1:p1", { host: "badger" })).toBe("/pane/w1%3Ap1?h=badger");
-    expect(panePath("w1:p1", { host: "badger", session: "collie-demo" })).toBe(
-      "/pane/w1%3Ap1?h=badger&s=collie-demo",
+    expect(panePath("w1:p1", { host: "badger", session: "pastor-demo" })).toBe(
+      "/pane/w1%3Ap1?h=badger&s=pastor-demo",
     );
   });
 });
@@ -128,12 +128,12 @@ describe("homePath", () => {
   });
 
   it("carries a named session as ?s=", () => {
-    expect(homePath({ session: "collie-demo" })).toBe("/?s=collie-demo");
+    expect(homePath({ session: "pastor-demo" })).toBe("/?s=pastor-demo");
   });
 
   it("carries a host as ?h=, before ?s=", () => {
     expect(homePath({ host: "badger" })).toBe("/?h=badger");
-    expect(homePath({ host: "badger", session: "collie-demo" })).toBe("/?h=badger&s=collie-demo");
+    expect(homePath({ host: "badger", session: "pastor-demo" })).toBe("/?h=badger&s=pastor-demo");
   });
 });
 
@@ -215,7 +215,7 @@ describe("voicePagePath", () => {
 });
 
 describe("pairLandingPath", () => {
-  // The QR `collie pair` prints names `/settings?pair=<code>`. The form is on System now, so the
+  // The QR `pastor pair` prints names `/settings?pair=<code>`. The form is on System now, so the
   // index forwards a code there with the whole query, scope included.
   it("sends a pairing code to Settings → System with the query intact", () => {
     expect(pairLandingPath("?pair=ABCD2345")).toBe("/settings/system?pair=ABCD2345");

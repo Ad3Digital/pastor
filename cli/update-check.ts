@@ -15,7 +15,7 @@ import {
   UPDATE_MIRROR_ENV,
   updateMirror,
 } from "../bridge/update.ts";
-import { collieVersionBare, manifestVersionFrom } from "../bridge/version.ts";
+import { pastorVersionBare, manifestVersionFrom } from "../bridge/version.ts";
 import { loadContext, type CliContext } from "./context.ts";
 import { cmdDoctor, doctorDeps } from "./doctor.ts";
 import { isLocal, type Finding } from "./finding.ts";
@@ -56,7 +56,7 @@ import {
   wantsToTag,
 } from "./update.ts";
 
-// `collie update --check` — the read-only preflight (M15/03).
+// `pastor update --check` — the read-only preflight (M15/03).
 //
 // ── IT ANSWERS ONE QUESTION AND CHANGES NOTHING ──────────────────────────────
 // "Can an update succeed here right now?" Nothing in this module writes a file, restarts a unit,
@@ -67,7 +67,7 @@ import {
 //
 // ── IT RE-USES, IT DOES NOT RE-DERIVE ────────────────────────────────────────
 // The target is `cli/update.ts`'s own planner (`planUpdate` over `parseRemoteTags`/`parseApiTags`),
-// the install kind is `cli/install-kind.ts`'s, the per-instance diagnosis is `collie doctor`'s
+// the install kind is `cli/install-kind.ts`'s, the per-instance diagnosis is `pastor doctor`'s
 // findings, and a member is reached with `cli/remote.ts`'s probe script over the operator's ssh
 // (ADR 0016). A second implementation of a probe is a second thing to drift.
 //
@@ -93,12 +93,12 @@ export interface PreflightCheck {
   readonly reason: string;
   readonly remedy?: string;
   /**
-   * True when {@link PreflightCheck.remedy} names Collie's OWN self-update command.
+   * True when {@link PreflightCheck.remedy} names Pastor's OWN self-update command.
    *
    * Set where the remedy is produced, and read in exactly one place: a packaged install must not be
    * told to run the command that refuses on it, so that remedy is swapped for the package manager's
    * (or dropped). A boolean rather than a substring test on the prose — the first cut matched
-   * `remedy.includes("collie update")`, which silently stops working the day the sentence is
+   * `remedy.includes("pastor update")`, which silently stops working the day the sentence is
    * reworded, and which cannot distinguish this remedy from "check this machine's network".
    */
   readonly selfUpdateRemedy?: boolean;
@@ -157,7 +157,7 @@ export interface UpdateCheckDeps {
   /** The ONE thing that spawns ssh, injected so no test ever does. */
   remote(host: string): RemoteRunner;
   /**
-   * `collie doctor`'s findings, behind a seam.
+   * `pastor doctor`'s findings, behind a seam.
    *
    * A seam rather than a call so a test can state a diagnosis in one line, and so this module never
    * has to know how doctor reaches the world (a trust store, a crew fetch, a beacon sweep).
@@ -171,7 +171,7 @@ export interface UpdateCheckDeps {
 
 /**
  * The staged build of spec 02 lays a second copy of the payload down beside the live one, so the
- * floor is "room for another Collie plus its build scratch", not "room for a file".
+ * floor is "room for another Pastor plus its build scratch", not "room for a file".
  */
 const DISK_RED_KB = 500 * 1024;
 const DISK_AMBER_KB = 1024 * 1024;
@@ -185,7 +185,7 @@ const DISK_AMBER_KB = 1024 * 1024;
 const MIN_BUN = "1.3.14";
 
 /**
- * Rewrite a remedy that names Collie's own self-update command, and ONLY such a remedy.
+ * Rewrite a remedy that names Pastor's own self-update command, and ONLY such a remedy.
  *
  * `upstreamCheck` is also where "check this machine's network", "wait an hour, then re-run this
  * check" and "reinstall from docs/install.md" come from. Those are red verdicts, so clobbering them
@@ -197,7 +197,7 @@ const MIN_BUN = "1.3.14";
  * does not. Never prose: a remedy is the one command that clears the check, and a paragraph in that
  * field is a sentence pretending to be a command.
  *
- * The REASON is never touched. "v1.6.0 resolves on github.com/AltanS/collie" is true however the
+ * The REASON is never touched. "v1.6.0 resolves on github.com/Ad3Digital/pastor" is true however the
  * update gets applied, and an operator is better served knowing a release exists.
  */
 function packagedRemedy(check: PreflightCheck, root: string): PreflightCheck {
@@ -238,7 +238,7 @@ export function worst(verdicts: readonly Verdict[]): Verdict {
  * no route to its peers (`cli/crew-update.ts` already treats an `ops-record` red the same way: it
  * skips that member with its remedy, it does not abort the run). So when a member's ONLY red is
  * `ops-record`, it counts as amber here — a peer needing a route is a fact to show, not a reason to
- * refuse the lead's own update. Any OTHER red (unreachable, no Collie at the path, a red remote
+ * refuse the lead's own update. Any OTHER red (unreachable, no Pastor at the path, a red remote
  * preflight) still makes this member count red at the top, same as `cli/crew-update.ts`'s `blocks`.
  */
 export function topLevelMemberVerdict(member: PreflightMember): Verdict {
@@ -279,7 +279,7 @@ export async function doctorCheck(deps: UpdateCheckDeps): Promise<PreflightCheck
   try {
     findings = await deps.doctor();
   } catch (err) {
-    return amber("doctor", `could not run doctor here (${String(err)})`, "collie doctor");
+    return amber("doctor", `could not run doctor here (${String(err)})`, "pastor doctor");
   }
   // ── ONLY A LOCAL ERROR IS RED (ADR 0050) ──────────────────────────────────
   // This check answers one question — can THIS machine take a new version — and a fault on another
@@ -299,8 +299,8 @@ export async function doctorCheck(deps: UpdateCheckDeps): Promise<PreflightCheck
   if (local.length > 0) {
     return red(
       "doctor",
-      `collie doctor reports ${local.length} problem${local.length === 1 ? "" : "s"}: ${local.join(", ")}`,
-      "collie doctor — clear each error it names, then re-run this check",
+      `pastor doctor reports ${local.length} problem${local.length === 1 ? "" : "s"}: ${local.join(", ")}`,
+      "pastor doctor — clear each error it names, then re-run this check",
     );
   }
   // ── A CREW ERROR IS AMBER, AND IS REPORTED BY CHECK ID ────────────────────
@@ -322,9 +322,9 @@ export async function doctorCheck(deps: UpdateCheckDeps): Promise<PreflightCheck
   }
   const warns = findings.filter((f) => f.status === "warn").map((f) => f.check);
   if (warns.length > 0) {
-    return amber("doctor", `collie doctor warns about ${warns.join(", ")} — an update still proceeds`);
+    return amber("doctor", `pastor doctor warns about ${warns.join(", ")} — an update still proceeds`);
   }
-  return green("doctor", "collie doctor is clean");
+  return green("doctor", "pastor doctor is clean");
 }
 
 /** The directory whose free space matters — the install root on a binary install, else the checkout. */
@@ -462,7 +462,7 @@ export async function upstreamCheck(
         "upstream",
         `this checkout's origin is ${named}, but updates are configured to come from github.com/${configured}`,
         origin.kind === "repo"
-          ? `set COLLIE_UPDATE_REPO=${origin.repo} if you run that fork on purpose`
+          ? `set PASTOR_UPDATE_REPO=${origin.repo} if you run that fork on purpose`
           : 'docs/upgrading.md → "You run a fork"',
       );
     }
@@ -478,7 +478,7 @@ export async function upstreamCheck(
   if (toTag !== null) {
     const pinned = planToTag({ tags: listed.tags, installed, wanted: toTag });
     return pinned.kind === "refused"
-      ? red("upstream", pinned.reason, "the release this collie was asked to take is not one it may take")
+      ? red("upstream", pinned.reason, "the release this pastor was asked to take is not one it may take")
       : green("upstream", `${pinned.target.tag} resolves on github.com/${configured} — this install may take it`);
   }
 
@@ -504,8 +504,8 @@ export async function upstreamCheck(
   if (plan.higher !== null) {
     return amber(
       "upstream",
-      `${target} is available on major ${plan.target.major}, and Collie ${plan.higher.version} is out — a NEW MAJOR a routine update never takes`,
-      `take the release with \`collie update\`; cross the major with \`collie update --major\` (${majorAction(deps.ctx.instance)})`,
+      `${target} is available on major ${plan.target.major}, and Pastor ${plan.higher.version} is out — a NEW MAJOR a routine update never takes`,
+      `take the release with \`pastor update\`; cross the major with \`pastor update --major\` (${majorAction(deps.ctx.instance)})`,
       true,
     );
   }
@@ -519,8 +519,8 @@ function currentOrMajor(at: ReleaseTag, higher: ReleaseTag | null, instance: str
   }
   return amber(
     "upstream",
-    `already current on major ${at.major} (v${at.version}), but Collie ${higher.version} is out — a NEW MAJOR`,
-    `read its release notes, then consent with \`collie update --major\` (${majorAction(instance)})`,
+    `already current on major ${at.major} (v${at.version}), but Pastor ${higher.version} is out — a NEW MAJOR`,
+    `read its release notes, then consent with \`pastor update --major\` (${majorAction(instance)})`,
     true,
   );
 }
@@ -647,7 +647,7 @@ export function serviceCheck(deps: UpdateCheckDeps): PreflightCheck {
       : red(
           "service",
           `no LaunchAgent at ${plist} — an update would have nothing to restart`,
-          "collie start",
+          "pastor start",
         );
   }
   if (tier === "taskscheduler") {
@@ -660,7 +660,7 @@ export function serviceCheck(deps: UpdateCheckDeps): PreflightCheck {
       return amber("service", `Task Scheduler could not be asked about the task ${name} (no PowerShell), and the update will still try to restart it`);
     }
     return task === null
-      ? red("service", `no Task Scheduler task ${name}, so an update would have nothing to restart`, "collie start")
+      ? red("service", `no Task Scheduler task ${name}, so an update would have nothing to restart`, "pastor start")
       : green("service", `the Task Scheduler task ${name} is ${task.state}, and the update can restart it`);
   }
   if (tier === "unsupervised") {
@@ -675,7 +675,7 @@ export function serviceCheck(deps: UpdateCheckDeps): PreflightCheck {
     return red(
       "service",
       `no systemd user unit at ${file} — an update would have nothing to restart`,
-      "collie start",
+      "pastor start",
     );
   }
   const r = deps.exec.capture("systemctl", ["--user", "is-active", unit]);
@@ -704,7 +704,7 @@ export async function instanceChecks(
     // nothing here compiles; no tree check because there is no working tree to be dirty; no disk
     // floor because the floor exists for a staged payload and this install stages nothing — free
     // space under a root we never write would be a red that no action could clear. What remains is
-    // what still means something: is this Collie healthy, is a release out, and is the service up.
+    // what still means something: is this Pastor healthy, is a release out, and is the service up.
     const cmd = packageCommand(deps.ctx.root);
     return [
       await doctorCheck(deps),
@@ -728,13 +728,13 @@ export async function instanceChecks(
 
 // ── Crew checks ──────────────────────────────────────────────────────────────
 
-/** The script that asks a member's own Collie for its preflight. Exit 66 = no binary at that path. */
+/** The script that asks a member's own Pastor for its preflight. Exit 66 = no binary at that path. */
 export function remoteCheckScript(root: string): string {
   return [
     "set -u",
     `ROOT=${shqPath(root)}`,
-    'if [ ! -x "$ROOT/bin/collie" ]; then exit 66; fi',
-    'exec "$ROOT/bin/collie" update --check --json',
+    'if [ ! -x "$ROOT/bin/pastor" ]; then exit 66; fi',
+    'exec "$ROOT/bin/pastor" update --check --json',
     "",
   ].join("\n");
 }
@@ -742,7 +742,7 @@ export function remoteCheckScript(root: string): string {
 /**
  * A schema-1 report inside whatever the remote printed, or null.
  *
- * Null is the "peer predates preflight" signal: a Collie old enough not to know `--check` answers
+ * Null is the "peer predates preflight" signal: a Pastor old enough not to know `--check` answers
  * with a usage error, and that is a version fact, not a failure of the machine.
  */
 export function parseReport(stdout: string): PreflightReport | null {
@@ -762,7 +762,7 @@ export function parseReport(stdout: string): PreflightReport | null {
   if (doc.schema !== PREFLIGHT_SCHEMA || !Array.isArray(doc.checks)) return null;
   const verdict = doc.verdict;
   if (verdict !== "green" && verdict !== "amber" && verdict !== "red") return null;
-  // The kind is taken only when it is one this build knows. A member running a newer Collie may name
+  // The kind is taken only when it is one this build knows. A member running a newer Pastor may name
   // a kind that does not exist here; that reads as unknown, which is the same as absent.
   const kind = doc.installKind !== undefined && KNOWN_KINDS.has(doc.installKind) ? doc.installKind : undefined;
   const report: PreflightReport =
@@ -786,10 +786,10 @@ const KNOWN_KINDS: ReadonlySet<string> = new Set<InstallKind["kind"]>([
 const transportFailed = (r: RemoteResult): boolean => !r.spawned || r.code === 255;
 
 /**
- * One member's turn: reach it, prove there is a Collie there, then ask it the same question.
+ * One member's turn: reach it, prove there is a Pastor there, then ask it the same question.
  *
  * The route is RESOLVED before this point ({@link memberRoute}), so this function never reads the
- * ops record itself. That is what lets `collie crew update <member> --host/--path/--port` reach a
+ * ops record itself. That is what lets `pastor crew update <member> --host/--path/--port` reach a
  * machine whose remembered route is stale: the walk asks the route this run was given, and the
  * remedy this function prints for a missing checkout is therefore one the operator can act on.
  */
@@ -810,7 +810,7 @@ async function memberChecks(
       red(
         "ops-record",
         `no ssh record for "${id}" — this machine has never been told how to reach it`,
-        `collie crew update ${id} --host <ssh-host> --path <remote-checkout>`,
+        `pastor crew update ${id} --host <ssh-host> --path <remote-checkout>`,
       ),
     ]);
   }
@@ -831,7 +831,7 @@ async function memberChecks(
         red(
           "reachable",
           `${host} did not answer the probe (${probe === null ? "unreadable answer" : `exit ${result.code}`})`,
-          `run \`collie crew update ${id}\` to see the full transcript`,
+          `run \`pastor crew update ${id}\` to see the full transcript`,
         ),
       ]);
     }
@@ -840,13 +840,13 @@ async function memberChecks(
       return done([
         reached,
         red(
-          "collie-present",
-          `no Collie checkout at ${host}${route.path === null ? "" : ` (${route.path})`}`,
-          `collie crew update ${id} --host ${host} --path <remote-checkout>`,
+          "pastor-present",
+          `no Pastor checkout at ${host}${route.path === null ? "" : ` (${route.path})`}`,
+          `pastor crew update ${id} --host ${host} --path <remote-checkout>`,
         ),
       ]);
     }
-    const present = green("collie-present", `a Collie at ${host}:${probe.checkout}`);
+    const present = green("pastor-present", `a Pastor at ${host}:${probe.checkout}`);
     const skew = skewCheck(probe.version, ourVersion);
     const remote = await remoteChecks(runner, probe.checkout);
     return done([reached, present, skew, ...remote.checks], remote.installKind);
@@ -892,7 +892,7 @@ export function skewCheck(theirs: string, ours: string): PreflightCheck {
       "version",
       `runs ${theirs} while this lead runs ${ours}, and ${PROTOCOL_FLOOR_VERSION} is the oldest build ` +
         `that speaks crew protocol ${CREW_PROTOCOL_VERSION}, which is the only version this lead speaks`,
-      `run \`collie update\` on that member's own machine to bring it to ${PROTOCOL_FLOOR_VERSION} or newer, ` +
+      `run \`pastor update\` on that member's own machine to bring it to ${PROTOCOL_FLOOR_VERSION} or newer, ` +
         `this lead can no longer reach it over the link`,
     );
   }
@@ -921,8 +921,8 @@ async function remoteChecks(
       checks: [
         amber(
           "preflight",
-          "peer predates preflight — that Collie has no `update --check`, so its own checks could not be read",
-          "collie crew update <member> to level it to this lead's build",
+          "peer predates preflight — that Pastor has no `update --check`, so its own checks could not be read",
+          "pastor crew update <member> to level it to this lead's build",
         ),
       ],
     };
@@ -955,14 +955,14 @@ function memberRoute(deps: UpdateCheckDeps, record: OpsRecord | null, over: Memb
   };
 }
 
-/** Every member's answer, or `undefined` when this collie is not a lead with peers. */
+/** Every member's answer, or `undefined` when this pastor is not a lead with peers. */
 export async function crewChecks(
   deps: UpdateCheckDeps,
   overrides: Readonly<Record<string, MemberRoute>> = {},
 ): Promise<PreflightMember[] | undefined> {
   const data = await deps.store.load();
   if (data === null || data.crew === null || data.lead !== null || data.peers.length === 0) return undefined;
-  const ours = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const ours = pastorVersionBare(deps.ctx.root, (p) => deps.files.read(p));
   const members: PreflightMember[] = [];
   for (const member of data.peers) {
     const record = await deps.ops.get(member.memberId);
@@ -994,7 +994,7 @@ export interface PreflightOptions {
   /**
    * Route corrections for the member walk, keyed by member id.
    *
-   * `collie crew update <member> --host/--path/--port` describes a machine the ops file may
+   * `pastor crew update <member> --host/--path/--port` describes a machine the ops file may
    * remember wrongly. Without this the walk would probe the stale route, go red, and print a
    * remedy the operator had ALREADY followed. Absent fields fall back to the record.
    */
@@ -1043,7 +1043,7 @@ export function checkLine(c: PreflightCheck, colour: boolean, indent = "  "): st
 
 function render(deps: UpdateCheckDeps, report: PreflightReport): void {
   const colour = deps.colour === true;
-  deps.io.out(`collie update --check — ${report.verdict}`);
+  deps.io.out(`pastor update --check — ${report.verdict}`);
   deps.io.out("");
   deps.io.out("instance:");
   for (const c of report.checks) deps.io.out(checkLine(c, colour));
@@ -1061,7 +1061,7 @@ function render(deps: UpdateCheckDeps, report: PreflightReport): void {
 }
 
 /**
- * `collie update --check [--local] [--json]` — the read-only preflight.
+ * `pastor update --check [--local] [--json]` — the read-only preflight.
  *
  * Exit 0 when nothing is red, {@link EXIT.FAIL} otherwise. Amber never moves the exit code: it is
  * "would proceed, but you should know", and a gate that blocked on it would be a gate every caller

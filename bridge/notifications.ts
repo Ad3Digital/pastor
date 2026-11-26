@@ -34,7 +34,7 @@ export interface HerdSummary {
   titleCode: PushTitleCode;
   /** The values `title` was filled with — the agent's name, or the digest's count. */
   titleDetail?: PushTitleDetail;
-  /** Sub-line: the pane's PLACE ("collie › UI work") for one outstanding alert, or the panes' names
+  /** Sub-line: the pane's PLACE ("pastor › UI work") for one outstanding alert, or the panes' names
    *  for a digest — each one `name · place` where two of them read the same. */
   body: string;
   /** Deep-link target when exactly one alert is outstanding; undefined for a multi-agent digest. */
@@ -68,7 +68,7 @@ export interface MuteGate {
 export interface NotifyIdentity {
   /** Herdr session (registry name). Absent for the primary — §11's push-payload row. */
   readonly session?: string;
-  /** Crew member owning the session. Absent for this collie, so a solo payload gains nothing (§11). */
+  /** Crew member owning the session. Absent for this pastor, so a solo payload gains nothing (§11). */
   readonly host?: string;
 }
 
@@ -283,7 +283,7 @@ export class NotificationCoordinator<H = unknown> {
         // The PLACE, and nothing else. A push says the same two things the screens say — what it is
         // called (the title, above) and where it sits — so the notification and the dashboard row it
         // deep-links to read alike. The cwd is deliberately gone: a full absolute path on a lock
-        // screen is the least readable fact Collie has, and the space and tab are what locate the
+        // screen is the least readable fact Pastor has, and the space and tab are what locate the
         // work.
         body: a.place,
         paneId,

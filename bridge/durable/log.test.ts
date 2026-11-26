@@ -11,7 +11,7 @@ import { DurableLogs, durableLogDir, GAP_NOTICE, gapItemId, HOST_MAX_BYTES, LOG_
 const dirs: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-durable-log-"));
+  const dir = await mkdtemp(join(tmpdir(), "pastor-durable-log-"));
   dirs.push(dir);
   return privateTestDir(dir);
 }

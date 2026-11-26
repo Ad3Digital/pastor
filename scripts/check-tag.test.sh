@@ -2,7 +2,7 @@
 # Tests for scripts/check-tag.sh — the guard that catches a release which was cut but never tagged.
 #
 # Every case runs against a THROWAWAY git repository under $TMP_ROOT holding a COPY of the script.
-# Copied rather than symlinked, for the same reason collie-ctl.test.sh copies the shim: the script
+# Copied rather than symlinked, for the same reason pastor-ctl.test.sh copies the shim: the script
 # derives its ROOT from BASH_SOURCE and cd's there, so a symlink would point it back at the real
 # checkout and it would answer about THIS repository's tags instead of the fixture's.
 set -euo pipefail
@@ -63,7 +63,7 @@ run_script() { (cd "$1" && bash scripts/check-tag.sh "${@:2}" 2>&1); }
 setup_case tagged
 d="$TMP_ROOT/tagged"
 release_commit "$d" 1.2.3 "chore(release): 1.2.3"
-git -C "$d" tag -a v1.2.3 -m "Collie 1.2.3"
+git -C "$d" tag -a v1.2.3 -m "Pastor 1.2.3"
 out="$(run_script "$d")" || fail "a tagged release must pass: $out"
 assert_contains "$out" "✓"
 
@@ -74,13 +74,13 @@ release_commit "$d" 1.2.4 "chore(release): 1.2.4"
 if out="$(run_script "$d")"; then fail "an untagged release must fail: $out"; fi
 assert_contains "$out" "cut but never tagged"
 assert_contains "$out" 'git tag -a v1.2.4'
-assert_contains "$out" 'Collie 1.2.4'
+assert_contains "$out" 'Pastor 1.2.4'
 
 # ── 3. Mode 2: an untagged release commit inside a pushed range ─────────────
 setup_case range
 d="$TMP_ROOT/range"
 release_commit "$d" 2.0.0 "chore(release): 2.0.0"
-git -C "$d" tag -a v2.0.0 -m "Collie 2.0.0"
+git -C "$d" tag -a v2.0.0 -m "Pastor 2.0.0"
 base="$(git -C "$d" rev-parse HEAD)"
 release_commit "$d" 2.0.1 "chore(release): 2.0.1"
 rel="$(git -C "$d" rev-parse --short HEAD)"
@@ -94,7 +94,7 @@ assert_lacks "$out" 'git tag -a v2.0.0'
 setup_case not-head
 d="$TMP_ROOT/not-head"
 release_commit "$d" 3.0.0 "chore(release): 3.0.0"
-git -C "$d" tag -a v3.0.0 -m "Collie 3.0.0"
+git -C "$d" tag -a v3.0.0 -m "Pastor 3.0.0"
 base="$(git -C "$d" rev-parse HEAD)"
 release_commit "$d" 3.0.1 "chore(release): 3.0.1"
 # A later commit that leaves the version alone — HEAD's manifest still reads 3.0.1 here, so plant a
@@ -111,7 +111,7 @@ assert_lacks "$out" '9.9.9'
 setup_case no-release
 d="$TMP_ROOT/no-release"
 release_commit "$d" 4.0.0 "chore(release): 4.0.0"
-git -C "$d" tag -a v4.0.0 -m "Collie 4.0.0"
+git -C "$d" tag -a v4.0.0 -m "Pastor 4.0.0"
 base="$(git -C "$d" rev-parse HEAD)"
 echo "docs" > "$d/README.md"
 git -C "$d" add -A

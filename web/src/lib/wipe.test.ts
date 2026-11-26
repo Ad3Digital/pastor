@@ -86,15 +86,15 @@ function seed(): void {
 
 // Preferences: how this phone likes to look, never what a session said.
 const PREFERENCE_KEYS = [
-  "collie:theme:v1",
-  "collie:design:v1",
-  "collie:key-board:v1",
-  "collie:display-prefs:v4",
-  "collie:dash-prefs:v1",
-  "collie:pins:v1",
-  "collie:tour:v1",
-  "collie:push-disabled",
-  "collie:locale:v1",
+  "pastor:theme:v1",
+  "pastor:design:v1",
+  "pastor:key-board:v1",
+  "pastor:display-prefs:v4",
+  "pastor:dash-prefs:v1",
+  "pastor:pins:v1",
+  "pastor:tour:v1",
+  "pastor:push-disabled",
+  "pastor:locale:v1",
 ];
 
 beforeEach(() => {
@@ -177,19 +177,19 @@ describe("wipeDevice — a pairing that ended", () => {
 
   it("deletes every cache except the workbox precache", async () => {
     const { deleted } = stubCaches([
-      "workbox-precache-v2-https://collie.example/",
-      "collie-fonts",
-      "collie-push-titles",
-      "collie-push-titles:/collie/",
+      "workbox-precache-v2-https://pastor.example/",
+      "pastor-fonts",
+      "pastor-push-titles",
+      "pastor-push-titles:/pastor/",
     ]);
     await wipeDevice("expired");
-    expect(deleted.toSorted()).toEqual(["collie-fonts", "collie-push-titles", "collie-push-titles:/collie/"]);
+    expect(deleted.toSorted()).toEqual(["pastor-fonts", "pastor-push-titles", "pastor-push-titles:/pastor/"]);
   });
 
   it("takes the speech cache too: the model was fetched with the token, so it leaves with it (ADR 0096)", async () => {
-    const { deleted } = stubCaches(["collie-stt", "collie-stt:/collie/", "workbox-precache-v2-https://collie.example/"]);
+    const { deleted } = stubCaches(["pastor-stt", "pastor-stt:/pastor/", "workbox-precache-v2-https://pastor.example/"]);
     await wipeDevice("unpair");
-    expect(deleted.toSorted()).toEqual(["collie-stt", "collie-stt:/collie/"]);
+    expect(deleted.toSorted()).toEqual(["pastor-stt", "pastor-stt:/pastor/"]);
   });
 
   it("leaves the preferences alone", async () => {
@@ -216,7 +216,7 @@ describe("wipeDevice — a pairing that ended", () => {
 
 describe("wipeDevice — a password prompt (ADR 0017)", () => {
   it("clears that one pane's draft and mirror, and nothing else", async () => {
-    const { deleted } = stubCaches(["collie-fonts"]);
+    const { deleted } = stubCaches(["pastor-fonts"]);
     stubServiceWorker();
     seed();
     saveLastPaneText(LEAD, "w1:p2", "other pane");
@@ -494,7 +494,7 @@ describe("the wipe names its cause once, and clears the pairing's expiry", () =>
 });
 
 describe("other tabs let go of the store", () => {
-  it("announces the wipe on the collie-wipe channel, with this page's id", async () => {
+  it("announces the wipe on the pastor-wipe channel, with this page's id", async () => {
     const listener = new BroadcastChannel(WIPE_CHANNEL);
     const got = new Promise<WipeAnnouncement>((resolve) => {
       listener.addEventListener("message", (event: MessageEvent<WipeAnnouncement>) => resolve(event.data), {

@@ -131,7 +131,7 @@ export interface AgentView {
    */
   lastActiveAt?: number;
   /**
-   * Epoch ms you last opened or drove this pane through Collie. `lastActiveAt > lastSeenAt` on a
+   * Epoch ms you last opened or drove this pane through Pastor. `lastActiveAt > lastSeenAt` on a
    * `done` agent IS the "finished while you weren't looking" state — there is no stored seen flag.
    */
   lastSeenAt?: number;
@@ -371,7 +371,7 @@ export type ControlResponse =
  * Strip a pane down to its wire shape. The one place the session ref leaves the bridge's hands.
  *
  * `hasJournal` is asked rather than assumed: a harness can name a session while having no adapter to
- * read it (Herdr detects more agents than Collie has journals for). Keying the flag on the ref alone
+ * read it (Herdr detects more agents than Pastor has journals for). Keying the flag on the ref alone
  * would advertise a History affordance that always comes back empty, so the registry gets a vote.
  */
 /**
@@ -489,7 +489,7 @@ export function muxFaultOf(message: string): MuxFault | undefined {
  * single-session deployment reports exactly one (the primary), so nothing about the UI changes.
  */
 export interface SessionSummary {
-  /** Registry name, e.g. "default" or "collie-demo". Client passes this back as `?session=`. */
+  /** Registry name, e.g. "default" or "pastor-demo". Client passes this back as `?session=`. */
   name: string;
   /** The session cfg.socketPath points at — all pre-multi-session behaviour maps to it. */
   isPrimary: boolean;
@@ -517,7 +517,7 @@ export interface SessionSummary {
  * bridge (or a response from before the feature existed) simply reads as "not enforced".
  */
 export interface DeviceAuth {
-  /** Whether per-device authorisation is enforced at all (COLLIE_DEVICE_HEADER is set). */
+  /** Whether per-device authorisation is enforced at all (PASTOR_DEVICE_HEADER is set). */
   enforced: boolean;
   /** The opaque device identifier from the trusted header, or null if absent / feature off. */
   device: string | null;
@@ -607,7 +607,7 @@ export interface ServerSummary {
 
 /**
  * GET /api/crew — what the RUNNING lead already knows about its own crew, for the phone's Crew
- * overview page. The read-only browser spelling of `collie crew status` (cli/crew.ts).
+ * overview page. The read-only browser spelling of `pastor crew status` (cli/crew.ts).
  *
  * **It is a report, never a probe.** Every field below is answered from state this process already
  * holds: the trust store it read at startup (`TrustStore.current()`, no disk touched per request)
@@ -710,7 +710,7 @@ export interface MachineSample {
   rxBps?: number;
   txBps?: number;
   /**
-   * The filesystems that hold the home folder, the root (on Windows the system drive) and Collie's
+   * The filesystems that hold the home folder, the root (on Windows the system drive) and Pastor's
    * state folder, one per device, at most four, read at most once a minute (bridge/machine-disks.ts).
    * Absent: not reported (an older member, or no filesystem qualified).
    */
@@ -746,10 +746,10 @@ export interface MachineAlerts {
 
 /** One machine on `GET /api/machines`. The lead first, then members in member-id order. */
 export interface MachineRow {
-  /** Member id, the value `?h=` takes. A solo collie that never enrolled is `local`. */
+  /** Member id, the value `?h=` takes. A solo pastor that never enrolled is `local`. */
   id: string;
   name: string;
-  /** True for the machine answering. A solo collie's one row is `isLead: true`. */
+  /** True for the machine answering. A solo pastor's one row is `isLead: true`. */
   isLead: boolean;
   /** {@link CrewMemberStatus.health}, the same four words. */
   health: "reachable" | "unreachable" | "incompatible" | "conflicted";
@@ -812,7 +812,7 @@ export interface MachineAlertsResponse {
  * The crew wire version this release moves to, and the one this install speaks (M27/06).
  *
  * `from` is this install's own `CREW_PROTOCOL_VERSION`; `to` is the number the newest release
- * published in its `collie-release.json` asset. Both are present or the whole field is null: the
+ * published in its `pastor-release.json` asset. Both are present or the whole field is null: the
  * notice is about a DIFFERENCE, and half of one says nothing.
  */
 export interface UpdateLinkChange {
@@ -824,7 +824,7 @@ export interface UpdateLinkChange {
  * A release in the delta that asked to reach operators today (ADR 0046).
  *
  * `version` is the NEWEST release in the delta that carried the marker, and `reason` is that
- * release's own sentence, written by the person who cut it and read from its `collie-release.json`.
+ * release's own sentence, written by the person who cut it and read from its `pastor-release.json`.
  * The reason is the release's English and is never translated: it is a quotation, not a label.
  */
 export interface UpdateUrgent {
@@ -855,14 +855,14 @@ export interface UpdateStatus {
   /** GitHub release page for `majorAvailable`, or null when there is none. */
   majorUrl: string | null;
   /**
-   * How this Collie is installed (`cli/install-kind.ts`'s classifier, flattened to its kind) — the
+   * How this Pastor is installed (`cli/install-kind.ts`'s classifier, flattened to its kind) — the
    * banner's command spelling is a function of it: Herdr actions reach only a Herdr-managed
-   * (detached) checkout; every other kind is told the `collie` verbs (M14/01 §5.3).
+   * (detached) checkout; every other kind is told the `pastor` verbs (M14/01 §5.3).
    */
   installKind: "linked-clone" | "detached-checkout" | "binary" | "packaged" | "unknown";
   /**
    * The package manager's own upgrade command for this machine, when the resolved root names a
-   * manager Collie recognises (`cli/package-command.ts`). Absent on every other kind, and absent on
+   * manager Pastor recognises (`cli/package-command.ts`). Absent on every other kind, and absent on
    * a packaged install under a prefix nobody recognises — there the boundary sentence stands alone.
    *
    * **Resolved on the HOST, once, at boot.** The prefix is a fact about this machine, and a second
@@ -894,14 +894,14 @@ export interface UpdateStatus {
    * that version", which is what a close made before the stamp meant.
    */
   dismissedCrewAt?: number;
-  /** The running process is behind the on-disk bridge source — needs `systemctl --user restart collie`. */
+  /** The running process is behind the on-disk bridge source — needs `systemctl --user restart pastor`. */
   bridgeStale: boolean;
   /**
-   * The collie on disk is no longer the collie this process is running.
+   * The pastor on disk is no longer the pastor this process is running.
    *
-   * Only a package manager can produce it: every other kind swaps files through Collie's own
+   * Only a package manager can produce it: every other kind swaps files through Pastor's own
    * updater, which restarts the service as its last act. `pacman -Syu` replaces the root under a
-   * live process, and `collieVersion()` re-reads from disk on every call — so without this the
+   * live process, and `pastorVersion()` re-reads from disk on every call — so without this the
    * bridge would answer with the NEW version while running the OLD code, on `/api/health`, on
    * `hello` and therefore on the crew wire, where a lead reads it as "that peer already levelled".
    *
@@ -924,7 +924,7 @@ export interface UpdateStatus {
    *
    * The update card lists them so the operator can see WHAT they are about to fold in, rather than
    * only the top of the pile. Versions and nothing else: the phone never fetches release notes from
-   * GitHub. The HOST reads each release's small `collie-release.json` sidecar — that is where
+   * GitHub. The HOST reads each release's small `pastor-release.json` sidecar — that is where
    * {@link linkChange} and {@link urgent} come from — and what is not already on this wire is not
    * shown (M15/05, ADR 0046).
    */
@@ -942,7 +942,7 @@ export interface UpdateStatus {
    *
    * Null on a solo install (there is no link to change), null when the release speaks the wire this
    * install already speaks, and null when the release says nothing about it: every release before
-   * 1.8.0 published no `collie-release.json`, and a release that cannot be read reads as no change
+   * 1.8.0 published no `pastor-release.json`, and a release that cannot be read reads as no change
    * rather than as a warning nobody can act on.
    *
    * It is a generic reading of a NUMBER, never a hard-coded release name, so the release after the
@@ -1322,8 +1322,8 @@ export type WorktreePlanResponse =
   | { ok: false; error: string; code?: ErrorCode; detail?: ApiErrorDetail };
 
 /**
- * Which role this collie plays in a crew (CREW_PROTOCOL.md §3). `solo` is a lead with zero peers —
- * today's Collie, exactly — and is the only mode that needs no configuration whatsoever.
+ * Which role this pastor plays in a crew (CREW_PROTOCOL.md §3). `solo` is a lead with zero peers —
+ * today's Pastor, exactly — and is the only mode that needs no configuration whatsoever.
  */
 export type CrewMode = "solo" | "lead" | "peer";
 
@@ -1392,7 +1392,7 @@ export interface OperatorKeyRow {
  *
  * THE UI READS `capabilities`, NEVER `name`. `name` rides so the app can SAY which multiplexer it is
  * (a support question, and the subject of a sentence like "zellij keeps no agent session log") and
- * for nothing else: a component that branches on it has re-welded Collie to one multiplexer, which
+ * for nothing else: a component that branches on it has re-welded Pastor to one multiplexer, which
  * is the whole thing this milestone exists to undo. `scripts/check-mux-names.sh` enforces that.
  *
  * `capabilities` is TOTAL — every capability answered true or false, the same shape the adapter
@@ -1413,7 +1413,7 @@ export interface MuxConfig {
    *
    * Only the absent ones: a note explaining a capability the adapter HAS is developer
    * documentation, and the phone has nothing to render it on. This is where an explanation's words
-   * come from — the adapter wrote them, they name the multiplexer, and they never blame Collie.
+   * come from — the adapter wrote them, they name the multiplexer, and they never blame Pastor.
    */
   notes: Partial<Record<MuxCapability, string>>;
   /**
@@ -1452,7 +1452,7 @@ export interface MuxConfig {
  *
  * A CONSTANT rather than a literal at each end, because the bridge both routes it and publishes it
  * in {@link MuxConfig.logoUrl}; two spellings of one path is one release away from a broken image.
- * It is deliberately not per-multiplexer — a collie drives exactly one, so the path names the
+ * It is deliberately not per-multiplexer — a pastor drives exactly one, so the path names the
  * question ("this bridge's mux") and the answer changes with the bridge, never with the URL.
  */
 export const MUX_LOGO_PATH = "/api/mux/logo.svg";
@@ -1661,7 +1661,7 @@ export interface LaunchCheckResponse {
 /**
  * One thing the New page may start on THIS machine, with whether it can start here now and why not
  * (ADR 0094). The page draws every item; an unavailable one is a disabled option with its reason.
- * Machine-wide reasons (the machine is not taking writes, an older Collie) are the phone's own, from
+ * Machine-wide reasons (the machine is not taking writes, an older Pastor) are the phone's own, from
  * the crew health and from this list's absence; these are the reasons only this machine knows.
  */
 export interface LauncherItem {
@@ -1669,7 +1669,7 @@ export interface LauncherItem {
   key: string;
   /** What `POST /api/launch` (and `POST /api/worktree`) names to start it. A starter is run by `POST /api/launch` alone (ADR 0102). */
   start: { harness: string } | { command: string } | { shell: true } | { starter: string };
-  /** Agents: Collie reads the pane as that harness. Commands: a plain line, no agent status. */
+  /** Agents: Pastor reads the pane as that harness. Commands: a plain line, no agent status. */
   group: "agents" | "commands";
   label: string;
   /** The harness that reads it: a built-in agent, or an agent row. */
@@ -1784,7 +1784,7 @@ export interface CacheWatchResponse {
   global: boolean;
   /** False when the pane names no harness session, carries no `cache` key, or reads `unknown`. */
   watchable: boolean;
-  /** The resolved `COLLIE_CACHE_WARN_SECONDS`, so the copy quotes the bridge's number. */
+  /** The resolved `PASTOR_CACHE_WARN_SECONDS`, so the copy quotes the bridge's number. */
   warnSeconds: number;
 }
 
@@ -1811,7 +1811,7 @@ export interface BridgeConfig {
   /** Build id of the bundle the bridge is currently serving (for stale-cache detection). */
   build?: string;
   /**
-   * This collie's crew mode, so `crew status` and the UI can render it without probing behaviour.
+   * This pastor's crew mode, so `crew status` and the UI can render it without probing behaviour.
    * **Omitted when the mode is `solo`** — absent means "no crew", which is precisely true, and keeps
    * a solo `/api/config` body byte-identical to today's (the `servers` reasoning, CREW_PROTOCOL.md
    * §11). Read it as `mode ?? "solo"`.
@@ -1830,14 +1830,14 @@ export interface BridgeConfig {
    */
   operatorFonts?: OperatorFontRow[];
   /**
-   * The multiplexer this collie drives, and what it can do. Absent only on a bridge older than
+   * The multiplexer this pastor drives, and what it can do. Absent only on a bridge older than
    * M10/06 — which a client reads as "every capability present", i.e. exactly today's Herdr app.
    */
   mux?: MuxConfig;
   /**
    * Speech-to-text, when a provider is configured. **Absent is the feature being off**, which is
    * also exactly what an older bridge sends — so a client reads "no key" as "no microphone" and a
-   * collie whose operator configured nothing ships the byte-identical body it always did.
+   * pastor whose operator configured nothing ships the byte-identical body it always did.
    *
    * It carries a label and a yes/no, and never the endpoint, the model or the credential: the phone
    * decides whether to draw a button, not where the audio goes.
@@ -1845,24 +1845,24 @@ export interface BridgeConfig {
   stt?: SttCapability;
   /**
    * The Whistle model on this host (ADR 0096), so Settings can offer the setup tap. Present on every
-   * lead and solo collie that knows the feature; absent on an older bridge, and on a crew member's
+   * lead and solo pastor that knows the feature; absent on an older bridge, and on a crew member's
    * own answer, because speech is lead-only (ADR 0029). A `?host=<member>` read carries the lead's,
    * like `stt`.
    */
   whistle?: WhistleStatus;
   /**
-   * What this collie accepts as an attachment. **Absent is a bridge older than this field**, which
+   * What this pastor accepts as an attachment. **Absent is a bridge older than this field**, which
    * a client reads as the contract that shipped before it: 10 MB, images only. Present, it is the
    * whole answer — the phone builds its file picker's `accept` list from it and refuses an oversize
    * file before spending an uplink on a refusal it can already predict.
    *
    * Per HOST, not per crew: `?h=peer` reads the LEAD's config body, so a member with a different
-   * `COLLIE_MAX_UPLOAD_MB` still answers for itself when the bytes arrive. See docs/configure.md.
+   * `PASTOR_MAX_UPLOAD_MB` still answers for itself when the bytes arrive. See docs/configure.md.
    */
   upload?: UploadCapability;
   /**
    * Whether this bridge masks secret shapes before text leaves the machine (`cfg.redact`,
-   * `COLLIE_REDACT`). Read-only on the phone: Settings shows it and never sets it. **Absent is an
+   * `PASTOR_REDACT`). Read-only on the phone: Settings shows it and never sets it. **Absent is an
    * older bridge, or a `?host=<member>` answer**, which the phone shows as unknown. Mirrors
    * `BridgeConfig` in web/src/lib/types.ts.
    */
@@ -1871,8 +1871,8 @@ export interface BridgeConfig {
 
 /**
  * What `/api/config` says about attachments — the two facts a client needs to ask a sensible
- * question before it uploads. Both are the host's own settings (`COLLIE_MAX_UPLOAD_MB`,
- * `COLLIE_UPLOAD_EXTRA_TYPES` + the shipped list in bridge/uploads.ts).
+ * question before it uploads. Both are the host's own settings (`PASTOR_MAX_UPLOAD_MB`,
+ * `PASTOR_UPLOAD_EXTRA_TYPES` + the shipped list in bridge/uploads.ts).
  */
 export interface UploadCapability {
   /** Largest attachment accepted, decoded, in bytes. */

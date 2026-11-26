@@ -119,7 +119,7 @@ export const WRITE_TIMEOUT_MS = 3000;
 
 /** How hard the adapter asks one transport: its poll cadence, its read and write budgets, its down-gap. */
 export interface DurableBudget {
-  /** The watch's census while a phone is plainly reading this collie. */
+  /** The watch's census while a phone is plainly reading this pastor. */
   readonly watchedPollMs: number;
   /** The census otherwise: the slowest the watch polls, and the adapter's `topologyLatency` ceiling. */
   readonly idlePollMs: number;
@@ -897,8 +897,8 @@ export function describeDurableTarget(env: DurableEnv): string {
 /**
  * The durable adapter's entry in the mux registry.
  *
- * The transport comes from `COLLIE_DURABLE_SOCKET`, or from `COLLIE_DURABLE_URL` and
- * `COLLIE_DURABLE_TOKEN`, read from the process environment when the adapter is built. A missing,
+ * The transport comes from `PASTOR_DURABLE_SOCKET`, or from `PASTOR_DURABLE_URL` and
+ * `PASTOR_DURABLE_TOKEN`, read from the process environment when the adapter is built. A missing,
  * conflicting or broken setting does not stop the bridge: the boot line names it once, and the
  * adapter reports `unreachable` with the same line on every read.
  */

@@ -106,7 +106,7 @@ const sameTag = (header: string | null, etag: string) => header !== null && head
 
 export function hello(state: CoreState): Hello {
   return {
-    service: "collie-durable",
+    service: "pastor-durable",
     protocol: { ...PROTOCOL_RANGE },
     host: { name: cut(state.hostName, CAPS.hostName) },
     epoch: state.store.epoch,
@@ -134,7 +134,7 @@ async function route(request: Request, state: CoreState, call: CallInfo): Promis
   const route = parts.slice(2);
 
   // 1. Version. `hello` may come without a header (that is how a caller finds the range). Nothing else may.
-  const header = request.headers.get("x-collie-session");
+  const header = request.headers.get("x-pastor-session");
   const version = header === null ? undefined : /^\d+$/.test(header) ? Number(header) : Number.NaN;
   const inRange = version !== undefined && version >= PROTOCOL_RANGE.min && version <= PROTOCOL_RANGE.max;
   const isHello = route[0] === "hello" && route.length === 1;

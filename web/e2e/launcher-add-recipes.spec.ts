@@ -31,7 +31,7 @@ async function badgeShown(page: Page): Promise<boolean> {
 test.beforeEach(async ({ page }) => {
   await installApiStub(page);
   const harnesses = recipes.map((r) => ({ id: r.harness, label: r.label, found: true }));
-  const adding = { adds: true, freeText: true, file: "/home/op/.config/collie/launchers.toml", count: 0, max: 20, recipes, off: [], run: true };
+  const adding = { adds: true, freeText: true, file: "/home/op/.config/pastor/launchers.toml", count: 0, max: 20, recipes, off: [], run: true };
   await page.route((url) => url.pathname === "/api/launchers", (route) =>
     route.fulfill({ json: { launchers: [], home: "/home/op", harnesses, items: [], adding } }),
   );

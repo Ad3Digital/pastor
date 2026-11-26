@@ -10,19 +10,19 @@ import { packageCommand } from "./package-command.ts";
 
 describe("packageCommand", () => {
   test("each prefix we publish to names its own manager", () => {
-    expect(packageCommand("/opt/collie")).toBe("sudo pacman -Syu collie-bin");
-    expect(packageCommand("/opt/collie/bin")).toBe("sudo pacman -Syu collie-bin");
-    // The root every `collie-bin` before the /opt move installed to, still answered.
-    expect(packageCommand("/usr/lib/collie")).toBe("sudo pacman -Syu collie-bin");
-    expect(packageCommand("/nix/store/abc123-collie-1.5.3")).toBe("nix profile upgrade collie");
-    expect(packageCommand("/opt/homebrew/Cellar/collie/1.5.3")).toBe("brew upgrade collie");
-    expect(packageCommand("/usr/local/Cellar/collie/1.5.3")).toBe("brew upgrade collie");
+    expect(packageCommand("/opt/pastor")).toBe("sudo pacman -Syu pastor-bin");
+    expect(packageCommand("/opt/pastor/bin")).toBe("sudo pacman -Syu pastor-bin");
+    // The root every `pastor-bin` before the /opt move installed to, still answered.
+    expect(packageCommand("/usr/lib/pastor")).toBe("sudo pacman -Syu pastor-bin");
+    expect(packageCommand("/nix/store/abc123-pastor-1.5.3")).toBe("nix profile upgrade pastor");
+    expect(packageCommand("/opt/homebrew/Cellar/pastor/1.5.3")).toBe("brew upgrade pastor");
+    expect(packageCommand("/usr/local/Cellar/pastor/1.5.3")).toBe("brew upgrade pastor");
   });
 
   test("an unrecognised prefix answers null, and the sentence stands on its own", () => {
-    expect(packageCommand("/opt/vendor/collie")).toBeNull();
-    expect(packageCommand("/usr/lib/collie-something-else")).toBeNull();
-    expect(packageCommand("/opt/collie-something-else")).toBeNull();
+    expect(packageCommand("/opt/vendor/pastor")).toBeNull();
+    expect(packageCommand("/usr/lib/pastor-something-else")).toBeNull();
+    expect(packageCommand("/opt/pastor-something-else")).toBeNull();
     expect(PACKAGED_SENTENCE).toBe("updates come from your package manager");
   });
 });

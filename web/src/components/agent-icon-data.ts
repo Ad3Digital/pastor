@@ -20,7 +20,7 @@ export interface AgentBrand {
    *  referencing it goes invisible on every surface at once. Absent is how a brand says "flat". */
   grad?: readonly [string, string, ...string[]];
   /**
-   * The brand's colour when it has to be painted ON COLLIE'S OWN GROUND rather than on its tile —
+   * The brand's colour when it has to be painted ON PASTOR'S OWN GROUND rather than on its tile —
    * the actions row's harness segment, which tints itself with this and draws its icons in it.
    *
    * It is a separate field and not `bg`, because a tile colour is chosen to sit under a white mark

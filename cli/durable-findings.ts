@@ -45,7 +45,7 @@ import { bad, ok, skipped, warn, type Finding } from "./finding.ts";
 //
 // Six rows, one question each, asked in the order the adapter asks them (`bridge/mux/durable/`):
 // which transport the variables configure (`durable-env`), then that transport's own checks, then
-// whether the program answers `hello` in a range this Collie speaks, and whether it says `ready`.
+// whether the program answers `hello` in a range this Pastor speaks, and whether it says `ready`.
 //
 //   socket (WIRE.md 1A): `durable-socket`, the path walk. `durable-url` and `durable-token` are
 //     skipped with the reason.
@@ -124,8 +124,8 @@ async function programFindings(deps: DurableDeps): Promise<Finding[]> {
         ENV_ROW,
         choice.detail,
         windows
-          ? `in ${dotenv}, remove ${DURABLE_SOCKET_ENV} and set ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}, then \`collie restart\``
-          : `in ${dotenv}, keep either ${DURABLE_SOCKET_ENV} or the pair ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}, then \`collie restart\``,
+          ? `in ${dotenv}, remove ${DURABLE_SOCKET_ENV} and set ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}, then \`pastor restart\``
+          : `in ${dotenv}, keep either ${DURABLE_SOCKET_ENV} or the pair ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}, then \`pastor restart\``,
       ),
       skipped(SOCKET_ROW, windows ? "Windows has no socket transport" : "no single transport to check", windows ? "nothing to do" : FIRST),
       skipped(URL_ROW, "no single transport to check", FIRST),
@@ -148,8 +148,8 @@ async function socketFindings(configured: string | undefined, dotenv: string, pr
         ENV_ROW,
         resolved.detail,
         platform === "win32"
-          ? `set ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV} in ${dotenv}, then \`collie restart\`; Windows has no socket transport`
-          : `set ${DURABLE_SOCKET_ENV} to the absolute path of your program's socket in ${dotenv}, or ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV} for a program behind TLS, then \`collie restart\``,
+          ? `set ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV} in ${dotenv}, then \`pastor restart\`; Windows has no socket transport`
+          : `set ${DURABLE_SOCKET_ENV} to the absolute path of your program's socket in ${dotenv}, or ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV} for a program behind TLS, then \`pastor restart\``,
       ),
       skipped(SOCKET_ROW, "no socket path to check", FIRST),
       ...noUrl,
@@ -180,11 +180,11 @@ async function httpsFindings(rawUrl: string, rawToken: string, dotenv: string): 
   const url = resolveDurableUrl(rawUrl);
   const urlRow = url.ok
     ? ok(URL_ROW, `${url.base} · ${url.loopback ? "loopback http, for wrangler dev on this machine" : "https"} · ${String(url.bytes)} bytes`)
-    : bad(URL_ROW, url.detail, `set ${DURABLE_URL_ENV} to your program's https:// address in ${dotenv}, then \`collie restart\``);
+    : bad(URL_ROW, url.detail, `set ${DURABLE_URL_ENV} to your program's https:// address in ${dotenv}, then \`pastor restart\``);
   const token = resolveDurableToken(rawToken);
   const tokenRow = token.ok
     ? ok(TOKEN_ROW, `set, ${String(token.bytes)} bytes`)
-    : bad(TOKEN_ROW, token.detail, `set ${DURABLE_TOKEN_ENV} in ${dotenv} to the same random token the program holds, at least ${String(TOKEN_MIN_BYTES)} bytes, then \`collie restart\``);
+    : bad(TOKEN_ROW, token.detail, `set ${DURABLE_TOKEN_ENV} in ${dotenv} to the same random token the program holds, at least ${String(TOKEN_MIN_BYTES)} bytes, then \`pastor restart\``);
   if (!url.ok || !token.ok) {
     return [env, noSocket, urlRow, tokenRow, skipped(HELLO_ROW, "the program was not dialled", FIRST), skipped(READY_ROW, "no answer to read", FIRST)];
   }
@@ -206,19 +206,19 @@ function helloRows(asked: Asked): Finding[] {
       bad(
         HELLO_ROW,
         `the program answered, and ${incompatibleDetail(hello.protocol)}`,
-        "run a program and a Collie whose protocol ranges overlap: update whichever is older",
+        "run a program and a Pastor whose protocol ranges overlap: update whichever is older",
       ),
       skipped(READY_ROW, "no agreed version", FIRST),
     ];
   }
   const answered = ok(
     HELLO_ROW,
-    `the program answered hello · speaks ${String(hello.protocol.min)}..${String(hello.protocol.max)}, this Collie speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)} · version ${String(version)}`,
+    `the program answered hello · speaks ${String(hello.protocol.min)}..${String(hello.protocol.max)}, this Pastor speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)} · version ${String(version)}`,
   );
   if (!hello.ready) {
     return [
       answered,
-      warn(READY_ROW, "the program says it is not ready yet, so the bridge shows it as starting", "wait a moment and run `collie doctor` again; if it stays, read the program's own log"),
+      warn(READY_ROW, "the program says it is not ready yet, so the bridge shows it as starting", "wait a moment and run `pastor doctor` again; if it stays, read the program's own log"),
     ];
   }
   return [answered, ok(READY_ROW, `ready${hello.hostName === "" ? "" : ` · host ${hello.hostName}`} · epoch ${hello.epoch}`)];
@@ -259,12 +259,12 @@ function socketRow(path: string, fault: SocketFault): Finding {
         "move the socket under folders that group and others cannot write to, for example $XDG_RUNTIME_DIR",
       );
     case "no-uid":
-      return bad(SOCKET_ROW, "this platform cannot show who owns the socket, so it is never dialled", "run Collie on a platform with Unix user ids");
+      return bad(SOCKET_ROW, "this platform cannot show who owns the socket, so it is never dialled", "run Pastor on a platform with Unix user ids");
     case "wrong-owner":
       return bad(
         SOCKET_ROW,
         `${path} is owned by user ${String(fault.owner)}, not by you (${String(fault.uid)}); other users are not supported`,
-        "run the program as the same user as Collie",
+        "run the program as the same user as Pastor",
       );
     case "open-mode":
       return bad(
@@ -298,7 +298,7 @@ async function askHello(client: DurableTransport, timeoutMs: number, words: Hell
     if (err.detail.startsWith(TOKEN_REFUSED)) {
       return refuse(
         `the program refused the token: ${err.detail}`,
-        `set ${DURABLE_TOKEN_ENV} to the token the program was deployed with; to rotate it, change both sides, then \`collie restart\``,
+        `set ${DURABLE_TOKEN_ENV} to the token the program was deployed with; to rotate it, change both sides, then \`pastor restart\``,
       );
     }
     return refuse(`the program did not answer hello: ${err.detail}`, words.notAnswering);
@@ -307,7 +307,7 @@ async function askHello(client: DurableTransport, timeoutMs: number, words: Hell
     // Only the socket reaches here with a 401: the HTTPS client turns one into `token-refused` above.
     return refuse(
       "the program asks for a token, which the socket does not carry",
-      `this Collie and the program speak different protocols: update whichever is older, or reach a program behind TLS with ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}`,
+      `this Pastor and the program speak different protocols: update whichever is older, or reach a program behind TLS with ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV}`,
     );
   }
   if (reply.status !== 200) {

@@ -239,9 +239,9 @@
      stand on the page. */
   --chrome: light-dark(oklch(0.94 0 0), oklch(0.205 0 0));
   /* Pinned to --card, not a value of its own. `bg-popover` / `text-popover-foreground` appear ZERO
-     times in src/ — Collie's floating layer is the BottomSheet (ui/sheet.tsx), which is
+     times in src/ — Pastor's floating layer is the BottomSheet (ui/sheet.tsx), which is
      `bg-background` over a `bg-black/50` scrim. The pair is kept rather than deleted only so a
-     future `npx shadcn add` of a Popover/Tooltip primitive lands on a Collie surface instead of
+     future `npx shadcn add` of a Popover/Tooltip primitive lands on a Pastor surface instead of
      stock white; it is an alias, and there is no third paper behind it. */
   --popover: var(--card);
   --popover-foreground: var(--card-foreground);
@@ -424,7 +424,7 @@
      Ten hues, `--host-0` … `--host-9`, handed to machines by lib/hosts.ts `hostSlot`. They are an
      IDENTITY, never a state: nothing about a host's health, version or reachability is encoded
      here, and the machine's NAME is always rendered beside the tint (WCAG 1.4.1 — colour is the
-     second encoding, never the only one). On a solo collie no host wears one at all.
+     second encoding, never the only one). On a solo pastor no host wears one at all.
 
      WHY THESE TEN HUES, AND NOT TAILWIND'S SHADE RAMP. Four bands of the wheel are already spoken
      for by the status palette above and a host tint must never be read as a status: blocked 24-27,
@@ -588,11 +588,11 @@
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
-/* Nerd Font symbols, bundled — the only webfont Collie ships.
+/* Nerd Font symbols, bundled — the only webfont Pastor ships.
  *
  * WHY. Agent prompts and status lines are full of Nerd Font glyphs (Powerline separators, devicons,
  * Material icons: OMP's `symbolPreset: nerd`, herdr's own output). Desktop browsers can resolve them
- * from a locally installed Nerd Font; mobile browsers cannot, so on the device Collie is actually
+ * from a locally installed Nerd Font; mobile browsers cannot, so on the device Pastor is actually
  * FOR, every one of them rendered as a tofu box (#70). Nothing but shipping the glyphs fixes that.
  *
  * WHY IT'S FREE FOR PEOPLE WHO DON'T NEED IT. `unicode-range` restricts each face to private-use
@@ -610,7 +610,7 @@
  *
  * EXPECTED, NOT A BUG. A symbol takes this font's advance width, not the surrounding monospace's, so
  * in the pane mirror an icon nudges the columns to its right by a fraction of a cell. Fixing that
- * needs a terminal emulator, which Collie does not run (ADR 0008) — a glyph you can read beats a
+ * needs a terminal emulator, which Pastor does not run (ADR 0008) — a glyph you can read beats a
  * column you can't.
  *
  * The files are subsets of Symbols Nerd Font Mono v3.5.0 (MIT — public/fonts/LICENSE.txt), built by
@@ -634,7 +634,7 @@
  *
  * WHAT IT DRESSES. Chrome: headers, section labels, buttons, settings rows, banners, counts, the
  * wordmark. WHICH face does that is the reader's choice, per device: the Typeface card in Settings
- * writes `collie:design:v1` and public/theme-init.js turns it into a root class before first paint
+ * writes `pastor:design:v1` and public/theme-init.js turns it into a root class before first paint
  * (ADR 0033). This used to say "the maker's choice and there is no setting for it"; that decision
  * fell, and the ADR records why. The Terminal font card below it is a DIFFERENT setting — it
  * configures --font-mono, which nothing in this block touches.
@@ -652,8 +652,8 @@
  *      this second mechanism for family. A new surface that prints an agent's words takes one of
  *      the two. If you cannot tell whether a surface is chrome or content, it is content.
  *
- * WHY THIS FACE. The mark is a line-art collie head in an ellipse with monotone beads: one stroke,
- * constant curvature, mitred corners (collie-brand/src/bead.ts). Space Grotesk is the candidate
+ * WHY THIS FACE. The mark is a line-art pastor head in an ellipse with monotone beads: one stroke,
+ * constant curvature, mitred corners (pastor-brand/src/bead.ts). Space Grotesk is the candidate
  * drawn from the same idea — geometric skeleton, monotone stroke, cut terminals — so the wordmark
  * at 18px reads as one drawing with the mark beside it. Its cost is the small end: x-height is
  * 486/1000, the lowest of the three faces measured, so 11px uppercase labels and the 13px tier are
@@ -799,7 +799,7 @@
 
 /* ── The typeface setting: CSS owns every stack, JavaScript only swaps a class ───────────────────
  *
- * THE WHOLE MECHANISM IS THESE THREE BLOCKS. `public/theme-init.js` reads `collie:design:v1` before
+ * THE WHOLE MECHANISM IS THESE THREE BLOCKS. `public/theme-init.js` reads `pastor:design:v1` before
  * first paint and adds ONE class to <html>; `lib/design.ts` swaps it at runtime. Neither ever holds
  * a font list, sets a family, or writes a custom property — because a font stack in JavaScript is a
  * second source of truth for something this file already states, and the two would drift.

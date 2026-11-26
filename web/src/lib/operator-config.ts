@@ -35,7 +35,7 @@ import type {
 // snapshot: this is startup config on the bridge side (loadConfig() runs once, bridge/index.ts), so
 // re-reading it every tick would spend bytes on a value that cannot change without a bridge
 // restart. Which is also why changing it takes a bridge restart AND a page load, not just the
-// restart — the same contract every other COLLIE_* var has, and what `.env.example` promises.
+// restart — the same contract every other PASTOR_* var has, and what `.env.example` promises.
 //
 // A FAILED FETCH IS NOT AN ERROR STATE. With no rows, every pane falls back to its shipped catalog,
 // which is exactly what a user without this var already sees. So a refusal (read-only
@@ -63,7 +63,7 @@ let currentStt: SttCapability | null = null;
 // contract that shipped before attachments existed — 10 MB, images only.
 let currentUpload: UploadCapability | null = null;
 // `null` until a read succeeds, on a bridge older than the field, and on a crew member's own answer.
-// All three mean "this collie offers no Whistle setup", which Settings answers by drawing nothing.
+// All three mean "this pastor offers no Whistle setup", which Settings answers by drawing nothing.
 // Unlike the rest of this store it moves at runtime: the setup tap starts a download and the poll
 // reports it, so `noteWhistleStatus` (below) writes the newest answer back.
 let currentWhistle: WhistleStatus | null = null;
@@ -141,7 +141,7 @@ export function getOperatorQuickReplies(): readonly OperatorQuickReplyRow[] {
 
 /**
  * The operator's typefaces, validated. Empty until a read succeeds, on a bridge with no `theme.toml`,
- * and on one older than the field — all three mean "this collie offers no extra faces", which is the
+ * and on one older than the field — all three mean "this pastor offers no extra faces", which is the
  * same thing the picker should show for each.
  */
 export function getOperatorFonts(): readonly OperatorFontFace[] {
@@ -221,7 +221,7 @@ export function getSttCapability(): SttCapability | null {
 }
 
 /**
- * What this collie accepts as an attachment, or `null` when nothing has said otherwise (no read yet,
+ * What this pastor accepts as an attachment, or `null` when nothing has said otherwise (no read yet,
  * a failed read, or a bridge older than the field). Consumers go through lib/attachments.ts, which
  * is where `null` becomes an answer.
  */
@@ -330,7 +330,7 @@ export function operatorConfigRead(): boolean {
   return everLoaded;
 }
 
-/** The host's Whistle model status, or `null` when this collie offers none. Read through lib/stt.ts. */
+/** The host's Whistle model status, or `null` when this pastor offers none. Read through lib/stt.ts. */
 export function getWhistleStatus(): WhistleStatus | null {
   return currentWhistle;
 }

@@ -143,7 +143,7 @@ export function AskCard({ ask, paneId, scope, disabled = false, offline = false,
         <div className="flex flex-col gap-1">
           {options.map((option) => {
             const inFlight = busy && card.optionId === option.id;
-            // Collie's words lead; the program's own label is the quiet second line (lib/ask.ts).
+            // Pastor's words lead; the program's own label is the quiet second line (lib/ask.ts).
             const main = card.armed === option.id ? t("ask.alwaysArmed", { tool: shown.tool?.name ?? "" }) : t(effectKey(option.effect));
             return (
               <OptionButton

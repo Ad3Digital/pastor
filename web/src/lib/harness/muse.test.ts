@@ -408,8 +408,8 @@ describe("muse: a lift shows its subject and needs a live dialog", () => {
     expect(blocks.map((b) => b.kind)).toEqual(["raw", "prompt-select"]);
     const above = rawText(blocks[0]!);
     expect(above).toContain("Would you like to run the following command?");
-    expect(above).toContain("$ ls -la /private/tmp/collie-muse-sandbox");
-    expect(above).toContain('Current argv: ["ls","-la","/private/tmp/collie-muse-sandbox"]');
+    expect(above).toContain("$ ls -la /private/tmp/pastor-muse-sandbox");
+    expect(above).toContain('Current argv: ["ls","-la","/private/tmp/pastor-muse-sandbox"]');
     expect(above).not.toContain("Voice input");
   });
 
@@ -426,7 +426,7 @@ describe("muse: a lift shows its subject and needs a live dialog", () => {
   it("a trust prompt keeps the folder it asks about on screen", () => {
     const blocks = museAdapter.buildBlocks(load("muse--trust-prompt.txt"));
     expect(blocks.map((b) => b.kind)).toEqual(["raw", "prompt-select"]);
-    expect(rawText(blocks[0]!)).toContain("Workspace: /private/tmp/collie-muse-sandbox");
+    expect(rawText(blocks[0]!)).toContain("Workspace: /private/tmp/pastor-muse-sandbox");
   });
 
   it("a question keeps its header and question text above the buttons", () => {

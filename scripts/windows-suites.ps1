@@ -28,8 +28,8 @@
 #                - "loading the provider sweeps its temp root once, in the background" (without a
 #                  uid the sweep removes nothing on Windows, so there is nothing to see)
 #                The fifth is bridge/stt/whistle.test.ts, "the whistle provider - the real engine, end
-#                to end > a 13 s WAV becomes text through a real child of this Collie". It runs only
-#                where COLLIE_TEST_WHISTLE_DIR holds the measured model, which is never committed, so
+#                to end > a 13 s WAV becomes text through a real child of this Pastor". It runs only
+#                where PASTOR_TEST_WHISTLE_DIR holds the measured model, which is never committed, so
 #                no CI job or VM has it (Linux CI skips it too).
 #              Durable, bridge (21 + 36). Windows has no socket transport (WIRE.md section 1A), so a test
 #                that is about the Unix socket itself cannot run there. The tests about the wire (controls,
@@ -40,7 +40,7 @@
 #                bridge/mux/durable/client.test.ts: "the privacy check", "the path walk" and "the request"
 #                (26; the socket client's owner, mode, link and path rules, and its deadline and size cap on
 #                a socket); bridge/mux/durable/adapter.test.ts (6: the factory reading
-#                COLLIE_DURABLE_SOCKET, the startup line, socket path rules, a program that asks for a token,
+#                PASTOR_DURABLE_SOCKET, the startup line, socket path rules, a program that asks for a token,
 #                a socket that loses its mode, a socket that is not there); events.test.ts (the factory
 #                handed a socket path), asks.test.ts (a socket with nothing listening) and
 #                http-client.test.ts (the socket client sends no Authorization header), one each; and
@@ -50,7 +50,7 @@
 #                platform. The other 2:
 #                "a per-call override wins over the Exec's own environment (#283) > a child
 #                killed by a signal says which one" (Windows has no POSIX signals), and
-#                "collie _whistle-transcribe - the real engine, end to end > a child of this checkout's CLI turns 10.4 s of speech into text"
+#                "pastor _whistle-transcribe - the real engine, end to end > a child of this checkout's CLI turns 10.4 s of speech into text"
 #                (the same missing model as the bridge case).
 #              scripts 23: every test of scripts/install.test.ts ("scripts/install.sh > ..."):
 #                install.sh is POSIX sh, and Windows installs with install.ps1, tested beside it.
@@ -76,7 +76,7 @@ if (Test-Path (Join-Path $gitBin "bash.exe")) { $env:Path = "$gitBin;" + $env:Pa
 Write-Output ("bash     {0}" -f $(if (Get-Command bash -ErrorAction SilentlyContinue) { (Get-Command bash).Source } else { "NOT FOUND" }))
 
 # Hermetic: the suites must not read a config or state dir that a live bridge on this machine uses.
-foreach ($v in "HERDR_PLUGIN_CONFIG_DIR", "HERDR_PLUGIN_STATE_DIR", "COLLIE_STATE_DIR", "COLLIE_PORT", "HERDR_SOCKET_PATH") {
+foreach ($v in "HERDR_PLUGIN_CONFIG_DIR", "HERDR_PLUGIN_STATE_DIR", "PASTOR_STATE_DIR", "PASTOR_PORT", "HERDR_SOCKET_PATH") {
   Remove-Item "Env:$v" -ErrorAction SilentlyContinue
 }
 New-Item -ItemType Directory -Force -Path $Out, "$Out\cfg", "$Out\state" | Out-Null

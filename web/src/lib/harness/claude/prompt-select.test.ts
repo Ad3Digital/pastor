@@ -105,7 +105,7 @@ describe("detectPromptSelect — the plan-approval feedback row is an INPUT, in 
   //
   // It is never a button. What the model carries instead is the row's two variables — is it FOCUSED
   // (the terminal then swallows every digit as a character, so no button on the dialog can fire) and
-  // what TEXT is in it (non-empty means Collie must not type: the caret resets to position 0 on
+  // what TEXT is in it (non-empty means Pastor must not type: the caret resets to position 0 on
   // re-entry, so our words would be prepended to someone else's sentence).
   //
   // The four states were walked a keystroke at a time on Claude Code 2.1.228 and again on 2.1.233;
@@ -195,7 +195,7 @@ describe("detectPromptSelect — the plan-approval feedback row is an INPUT, in 
     expect(model!.feedback).toBeUndefined();
   });
 
-  it("AskUserQuestion's free-text row is modelled as a field Collie never types into", () => {
+  it("AskUserQuestion's free-text row is modelled as a field Pastor never types into", () => {
     // "Type something." is never a button. Measured on Claude Code 2.1.283: with the pointer on it a
     // digit is typed into the field, so it is modelled with the `free-text` purpose, which locks the
     // other buttons while focused and never offers the plan flow's editor or keystroke plan.
@@ -424,7 +424,7 @@ describe("detectPromptSelectRegion — the dialog's subject", () => {
       "Bash command",
       "",
       '  echo "a" >',
-      "  /tmp/collie-dialog-debug/amend.txt",
+      "  /tmp/pastor-dialog-debug/amend.txt",
       '  Write "a" to amend.txt',
     ]);
   });

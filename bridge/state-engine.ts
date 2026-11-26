@@ -255,12 +255,12 @@ function rankOf(order: ReadonlyMap<string, number>, key: string): number {
 }
 
 /**
- * One pane the multiplexer reported, as the view Collie's clients read.
+ * One pane the multiplexer reported, as the view Pastor's clients read.
  *
  * Almost a rename, and that is the point: the port already carries everything a pane IS, so this
  * only re-labels the fields the wire has always used (`workspaceId`, not `spaceId` — nothing
  * phone-visible renames) and adds the two things the multiplexer cannot know. `kind` is one
- * (Collie's split of the herd into agents and bare shells); `sessionName` is the other, filled in
+ * (Pastor's split of the herd into agents and bare shells); `sessionName` is the other, filled in
  * afterwards from the pane's own text (see {@link StateEngine.enrichSessionNames}).
  */
 function toView(pane: MuxPane, kind: "agent" | "shell"): AgentView {
@@ -309,7 +309,7 @@ export interface EngineSnapshot {
 }
 
 /**
- * How long one read keeps this collie "watched".
+ * How long one read keeps this pastor "watched".
  *
  * Comfortably longer than the frontend's own cold cadence (4 s) so an operator sitting on the
  * dashboard with a quiet herd never flickers between watched and idle, and short enough that a phone
@@ -350,7 +350,7 @@ export class StateEngine {
   // One follow-up poll queued when pokeNow lands mid-poll: an event may describe state the
   // in-flight poll already read past, so we must re-poll once it settles.
   private queuedPoll = false;
-  // When a phone last read this collie — see noteAttention. Epoch ms; 0 means "never", which reads
+  // When a phone last read this pastor — see noteAttention. Epoch ms; 0 means "never", which reads
   // as idle for any clock.
   private lastReadAt = 0;
   // One warn per disconnected episode, INCLUDING the episode that starts at boot. The old
@@ -418,7 +418,7 @@ export class StateEngine {
   }
 
   /**
-   * A phone just read this collie. Stamped by the two routes that mean somebody is LOOKING —
+   * A phone just read this pastor. Stamped by the two routes that mean somebody is LOOKING —
    * `/api/snapshot` and `/api/pane/:id` — and by nothing else.
    *
    * Deliberately not every request: a push subscription, a config read or a preference write are

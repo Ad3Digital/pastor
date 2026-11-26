@@ -1,11 +1,11 @@
 {
   "source": "local",
   "upstream": {
-    "github": "AltanS/collie",
+    "github": "Ad3Digital/pastor",
     "digests": true,
     "assets": {
-      "x86_64": "collie-{pkgver}-linux-x64.tar.gz",
-      "aarch64": "collie-{pkgver}-linux-arm64.tar.gz"
+      "x86_64": "pastor-{pkgver}-linux-x64.tar.gz",
+      "aarch64": "pastor-{pkgver}-linux-arm64.tar.gz"
     }
   }
 }

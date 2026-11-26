@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Version consistency gate for Collie.
+# Version consistency gate for Pastor.
 #
 # The plugin's version lives in three files that MUST agree, plus a matching CHANGELOG entry:
 #   - herdr-plugin.toml   (canonical — this is what Herdr reads)
@@ -10,7 +10,7 @@
 # "## [Unreleased]" is not a numbered heading and is ignored here: unreleased work collects under
 # it and only the release commit renames it to "## [x.y.z] - YYYY-MM-DD".
 #
-# Exits non-zero with a clear message on any mismatch. Run by `collie-ctl.sh build` and the
+# Exits non-zero with a clear message on any mismatch. Run by `pastor-ctl.sh build` and the
 # pre-commit hook. See CLAUDE.md → "Versioning" for the policy.
 set -euo pipefail
 

@@ -29,14 +29,14 @@ function response(init: { status?: number; type?: string; redirected?: boolean }
 
 describe("the speech cache's names", () => {
   it("is named per mount, the way the font cache is", () => {
-    expect(sttCacheName("/")).toBe("collie-stt");
-    expect(sttCacheName("/collie/")).toBe("collie-stt:/collie/");
+    expect(sttCacheName("/")).toBe("pastor-stt");
+    expect(sttCacheName("/pastor/")).toBe("pastor-stt:/pastor/");
   });
 
   it("recognises its own caches, whatever the mount, and nobody else's", () => {
-    expect(isSttCacheName("collie-stt")).toBe(true);
-    expect(isSttCacheName("collie-stt:/collie/")).toBe(true);
-    expect(isSttCacheName("collie-fonts")).toBe(false);
+    expect(isSttCacheName("pastor-stt")).toBe(true);
+    expect(isSttCacheName("pastor-stt:/pastor/")).toBe(true);
+    expect(isSttCacheName("pastor-fonts")).toBe(false);
     expect(isSttCacheName("workbox-precache-v2-https://x/")).toBe(false);
   });
 
@@ -50,8 +50,8 @@ describe("the speech cache's names", () => {
 
   it("takes the mount off a pathname", () => {
     expect(stripMount("/stt/a.js", "/")).toBe("/stt/a.js");
-    expect(stripMount("/collie/stt/a.js", "/collie/")).toBe("/stt/a.js");
-    expect(stripMount("/other/stt/a.js", "/collie/")).toBe("/other/stt/a.js");
+    expect(stripMount("/pastor/stt/a.js", "/pastor/")).toBe("/stt/a.js");
+    expect(stripMount("/other/stt/a.js", "/pastor/")).toBe("/other/stt/a.js");
   });
 });
 

@@ -1,6 +1,6 @@
-// Tests for scripts/release-reading.ts, the `collie-release.json` a release publishes about itself.
+// Tests for scripts/release-reading.ts, the `pastor-release.json` a release publishes about itself.
 //
-// The document is the ONE release-level record an installed Collie reads before it updates, so each
+// The document is the ONE release-level record an installed Pastor reads before it updates, so each
 // case here pins one half of its contract: the fields it always carries, and the urgent marker it
 // carries only when the CHANGELOG section asked for it (ADR 0046).
 //
@@ -22,7 +22,7 @@ const ORDINARY = `# Changelog
 
 ### Added
 
-- **The crew levels itself.** Every member follows the lead's tag. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The crew levels itself.** Every member follows the lead's tag. ([abc1234](https://github.com/Ad3Digital/pastor/commit/abc1234))
 `;
 
 const URGENT = `# Changelog
@@ -33,7 +33,7 @@ const URGENT = `# Changelog
 
 ### Fixed
 
-- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/Ad3Digital/pastor/commit/abc1234))
 `;
 
 describe("buildReleaseReading", () => {
@@ -92,7 +92,7 @@ describe("the repository's own newest release", () => {
 		expect(Number.isInteger(doc.crewProtocol)).toBe(true);
 	});
 
-	test("its notes survive the trip to an installed Collie (1.21.1)", () => {
+	test("its notes survive the trip to an installed Pastor (1.21.1)", () => {
 		// The writer and the reader, end to end over JSON: what the release job publishes is what the
 		// update check keeps, so the Updates page lists the lines the release page lists.
 		const newest = /^## \[(\d[^\]]*)\] - (\d{4}-\d{2}-\d{2})/m.exec(changelog)?.[1] ?? "";

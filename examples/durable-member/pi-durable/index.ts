@@ -100,7 +100,7 @@ export class PaneRegistry {
       .then((how) => {
         if (how === "all") return;
         log(
-          `collie: ${missing.size} of ${ids.length} waiting asks were not raised again within ${ms} ms of the start; ` +
+          `pastor: ${missing.size} of ${ids.length} waiting asks were not raised again within ${ms} ms of the start; ` +
             `the layout is ready without them, and each is listed under its old id once its hook runs (${[...missing].join(", ")})`,
         );
       })
@@ -272,7 +272,7 @@ export interface Risky {
 /** An extension whose `beforeTool` hook turns a risky call into an ask and waits for the answer. */
 export function riskGuard(o: Risky): Extension {
   return defineExtension({
-    name: "collie-guard",
+    name: "pastor-guard",
     hooks: [
       hook(ToolTask, {
         beforeTool: async (call, api, ctx) => {

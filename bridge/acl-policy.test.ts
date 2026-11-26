@@ -3,8 +3,8 @@ import { describe, expect, test } from "bun:test";
 import {
   defaultLocations,
   type EntryKind,
-  isCollieEntry,
-  isCollieName,
+  isPastorEntry,
+  isPastorName,
   isNetworkPath,
   isStateSecretName,
   neverTouch,
@@ -53,20 +53,20 @@ describe("never touch", () => {
   });
 
   test("a drive root, a network share, the profile itself and anything holding a system place", () => {
-    for (const path of ["C:\\", "D:\\", "C:\\Users", "C:\\Users\\Rehearse Ünal", "\\\\nas\\share\\collie", "\\\\?\\UNC\\nas\\s"]) {
+    for (const path of ["C:\\", "D:\\", "C:\\Users", "C:\\Users\\Rehearse Ünal", "\\\\nas\\share\\pastor", "\\\\?\\UNC\\nas\\s"]) {
       expect(neverTouch(path, WIN, places)).not.toBeNull();
     }
   });
 
   test("inside Windows or Program Files, under any spelling, once the real path is known", () => {
-    for (const path of ["C:\\PROGRA~1\\Collie", "\\\\?\\C:\\Program Files\\Collie", "c:\\program files\\collie", "C:\\WINDOWS\\Temp\\x"]) {
+    for (const path of ["C:\\PROGRA~1\\Pastor", "\\\\?\\C:\\Program Files\\Pastor", "c:\\program files\\pastor", "C:\\WINDOWS\\Temp\\x"]) {
       expect(neverTouch(realpath(path), WIN, places)).toContain("inside");
     }
   });
 
   test("inside the profile or ProgramData is not off limits by itself", () => {
-    expect(neverTouch("C:\\Users\\Rehearse Ünal\\.local\\state\\collie", WIN, places)).toBeNull();
-    expect(neverTouch("C:\\ProgramData\\collie", WIN, places)).toBeNull();
+    expect(neverTouch("C:\\Users\\Rehearse Ünal\\.local\\state\\pastor", WIN, places)).toBeNull();
+    expect(neverTouch("C:\\ProgramData\\pastor", WIN, places)).toBeNull();
     expect(isNetworkPath("\\\\?\\C:\\x")).toBe(false);
   });
 });
@@ -74,47 +74,47 @@ describe("never touch", () => {
 describe("the repair scope", () => {
   test("(b) the default locations under the profile, whatever they hold", () => {
     for (const path of [
-      "C:\\Users\\Rehearse Ünal\\.local\\state\\collie",
-      "C:\\Users\\Rehearse Ünal\\.local\\state\\collie-next",
-      "C:\\Users\\Rehearse Ünal\\AppData\\Roaming\\herdr\\plugins\\config\\herdr.collie",
-      "C:\\Users\\Rehearse Ünal\\AppData\\Local\\herdr\\plugins\\herdr.collie-next",
-      "c:\\users\\rehearse ünal\\.config\\collie",
-      "C:\\Users\\Rehearse Ünal\\.collie",
+      "C:\\Users\\Rehearse Ünal\\.local\\state\\pastor",
+      "C:\\Users\\Rehearse Ünal\\.local\\state\\pastor-next",
+      "C:\\Users\\Rehearse Ünal\\AppData\\Roaming\\herdr\\plugins\\config\\ad3.pastor",
+      "C:\\Users\\Rehearse Ünal\\AppData\\Local\\herdr\\plugins\\ad3.pastor-next",
+      "c:\\users\\rehearse ünal\\.config\\pastor",
+      "C:\\Users\\Rehearse Ünal\\.pastor",
     ]) {
       expect(scope(path, ["Documents", "photo.jpg"])).toEqual({ allowed: true });
     }
   });
 
   test("(a) created in this run, even somewhere custom", () => {
-    expect(scope("D:\\Projects\\collie-state", ["photo.jpg"], true)).toEqual({ allowed: true });
+    expect(scope("D:\\Projects\\pastor-state", ["photo.jpg"], true)).toEqual({ allowed: true });
   });
 
-  test("(c) an existing custom folder that is empty or holds only Collie's names", () => {
-    expect(scope("D:\\data\\collie", [])).toEqual({ allowed: true });
+  test("(c) an existing custom folder that is empty or holds only Pastor's names", () => {
+    expect(scope("D:\\data\\pastor", [])).toEqual({ allowed: true });
     const uploads: EntryKind = { kind: "folder", names: [] };
-    expect(scope("D:\\data\\collie", ["crew-trust.json", "audit.log.1", "uploads", "acl-backup-2026-1.sddl", ".env"], false, { uploads })).toEqual({
+    expect(scope("D:\\data\\pastor", ["crew-trust.json", "audit.log.1", "uploads", "acl-backup-2026-1.sddl", ".env"], false, { uploads })).toEqual({
       allowed: true,
     });
   });
 
-  test("any other existing folder is checked only, and the reason names what is not Collie's", () => {
+  test("any other existing folder is checked only, and the reason names what is not Pastor's", () => {
     const s = scope("D:\\Projects", ["crew-trust.json", "src", "README.md", "package.json", "x"]);
-    expect(s).toEqual({ allowed: false, why: "it also holds files that are not Collie's (src, README.md, package.json and more)" });
+    expect(s).toEqual({ allowed: false, why: "it also holds files that are not Pastor's (src, README.md, package.json and more)" });
     expect(scope("D:\\Projects", null).allowed).toBe(false);
   });
 
   test("never-touch wins over every rule, even 'created now' or a default name", () => {
     expect(scope("C:\\Users\\Rehearse Ünal", [], true).allowed).toBe(false);
-    expect(scope("\\\\nas\\share\\collie", [], true).allowed).toBe(false);
-    expect(scope("C:\\PROGRA~1\\collie", [], true)).toEqual({
+    expect(scope("\\\\nas\\share\\pastor", [], true).allowed).toBe(false);
+    expect(scope("C:\\PROGRA~1\\pastor", [], true)).toEqual({
       allowed: false,
-      why: "it is inside C:\\Program Files, and Collie never changes such a folder",
+      why: "it is inside C:\\Program Files, and Pastor never changes such a folder",
     });
   });
 });
 
 describe("names", () => {
-  test("a state secret name, in any case and with Collie's own suffix, is a state secret; config names are not", () => {
+  test("a state secret name, in any case and with Pastor's own suffix, is a state secret; config names are not", () => {
     for (const name of PRIVATE_ROOTS.find((r) => r.id === "state")!.secrets) {
       expect(isStateSecretName(name)).toBe(true);
       expect(isStateSecretName(name.toUpperCase())).toBe(true);
@@ -129,80 +129,80 @@ describe("names", () => {
     }
   });
 
-  test("every secret file a root names is a Collie name", () => {
-    for (const root of PRIVATE_ROOTS) for (const name of root.secrets) expect(isCollieName(name)).toBe(true);
+  test("every secret file a root names is a Pastor name", () => {
+    for (const root of PRIVATE_ROOTS) for (const name of root.secrets) expect(isPastorName(name)).toBe(true);
   });
 
   test("shapes and suffixes count; a stranger does not", () => {
-    for (const name of ["collie.log", "collie-next.pid", "collie-next-processes", "collie-restart", "herdr.collie.task.xml", "tailscale-managed-handler-next", "update-staging-ab12", "crew-trust.json.tmp"]) {
-      expect(isCollieName(name)).toBe(true);
+    for (const name of ["pastor.log", "pastor-next.pid", "pastor-next-processes", "pastor-restart", "ad3.pastor.task.xml", "tailscale-managed-handler-next", "update-staging-ab12", "crew-trust.json.tmp"]) {
+      expect(isPastorName(name)).toBe(true);
     }
-    for (const name of ["notes.txt", "src", ".git", "envelope"]) expect(isCollieName(name)).toBe(false);
+    for (const name of ["notes.txt", "src", ".git", "envelope"]) expect(isPastorName(name)).toBe(false);
   });
 
-  test("the history, alerts, worktree receipt and worktree base files, and their temporary files, are Collie names", () => {
+  test("the history, alerts, worktree receipt and worktree base files, and their temporary files, are Pastor names", () => {
     for (const stem of ["machine-history.json", "machine-alerts.json", "worktree-receipts.json", "worktree-bases.json"]) {
-      expect(isCollieName(stem)).toBe(true);
-      expect(isCollieName(`${stem}.tmp`)).toBe(true);
-      expect(isCollieName(`${stem}.old`)).toBe(false);
+      expect(isPastorName(stem)).toBe(true);
+      expect(isPastorName(`${stem}.tmp`)).toBe(true);
+      expect(isPastorName(`${stem}.old`)).toBe(false);
     }
   });
 
-  test("only Collie's own suffixes follow a Collie name: a rotation and its temporary files", () => {
-    for (const name of ["audit.log.1", "crew-trust.json.tmp", "collie-processes.4242.tmp", "paired-devices.json.4242.7.tmp", "stt.json.4242.7.tmp", ".env.collie-tmp", ".env.push-keys.tmp"]) {
-      expect(isCollieName(name)).toBe(true);
+  test("only Pastor's own suffixes follow a Pastor name: a rotation and its temporary files", () => {
+    for (const name of ["audit.log.1", "crew-trust.json.tmp", "pastor-processes.4242.tmp", "paired-devices.json.4242.7.tmp", "stt.json.4242.7.tmp", ".env.pastor-tmp", ".env.push-keys.tmp"]) {
+      expect(isPastorName(name)).toBe(true);
     }
     for (const name of [".env.production", ".env.local", "audit.log.x", "config.toml.bak", "stt.json.old", "paired-devices.json.1.2.3.tmp"]) {
-      expect(isCollieName(name)).toBe(false);
+      expect(isPastorName(name)).toBe(false);
     }
   });
 
-  test("a folder is Collie's only by its name AND its contents, one level deep; a link never is", () => {
+  test("a folder is Pastor's only by its name AND its contents, one level deep; a link never is", () => {
     const at = (kinds: Record<string, EntryKind>) => (rel: readonly string[]) => kinds[rel.join("/")] ?? null;
     const folder = (names: string[]): EntryKind => ({ kind: "folder", names });
     const file: EntryKind = { kind: "file" };
     // Empty, or holding only its own kind of file.
-    expect(isCollieEntry("fonts", at({ fonts: folder([]) }))).toBe(true);
-    expect(isCollieEntry("fonts", at({ fonts: folder(["departure.woff2"]), "fonts/departure.woff2": file }))).toBe(true);
-    expect(isCollieEntry("uploads", at({ uploads: folder(["p1_2-mf3x9q-0a1b2c3d.png"]), "uploads/p1_2-mf3x9q-0a1b2c3d.png": file }))).toBe(true);
-    expect(isCollieEntry("beacons", at({ beacons: folder(["w1.json"]), "beacons/w1.json": file }))).toBe(true);
-    expect(isCollieEntry("acl-backups", at({ "acl-backups": folder(["acl-backup-2026-1.sddl"]), "acl-backups/acl-backup-2026-1.sddl": file }))).toBe(true);
+    expect(isPastorEntry("fonts", at({ fonts: folder([]) }))).toBe(true);
+    expect(isPastorEntry("fonts", at({ fonts: folder(["departure.woff2"]), "fonts/departure.woff2": file }))).toBe(true);
+    expect(isPastorEntry("uploads", at({ uploads: folder(["p1_2-mf3x9q-0a1b2c3d.png"]), "uploads/p1_2-mf3x9q-0a1b2c3d.png": file }))).toBe(true);
+    expect(isPastorEntry("beacons", at({ beacons: folder(["w1.json"]), "beacons/w1.json": file }))).toBe(true);
+    expect(isPastorEntry("acl-backups", at({ "acl-backups": folder(["acl-backup-2026-1.sddl"]), "acl-backups/acl-backup-2026-1.sddl": file }))).toBe(true);
     // The Whistle model's folder: exactly the names bridge/stt/whistle-model.ts writes, and their temporaries.
     for (const name of [...WHISTLE_FOLDER_NAMES, whistlePartName(4242, 7), "whistle.json.4242.7.tmp"]) {
-      expect(isCollieEntry("whistle", at({ whistle: folder([name]), [`whistle/${name}`]: file }))).toBe(true);
+      expect(isPastorEntry("whistle", at({ whistle: folder([name]), [`whistle/${name}`]: file }))).toBe(true);
     }
     // Not the old shared names, and not a part or temporary without both pid and sequence.
     for (const name of ["whistle.cact.part", "whistle.json.tmp", "whistle.cact.4242.part", "whistle.lock.tmp", "whistle.cact.1.2.3.part"]) {
-      expect(isCollieEntry("whistle", at({ whistle: folder([name]), [`whistle/${name}`]: file }))).toBe(false);
+      expect(isPastorEntry("whistle", at({ whistle: folder([name]), [`whistle/${name}`]: file }))).toBe(false);
     }
-    expect(isCollieEntry("whistle", at({ whistle: folder([]) }))).toBe(true);
-    expect(isCollieEntry("whistle", at({ whistle: folder(["whistle.cact", "notes.txt"]), "whistle/whistle.cact": file, "whistle/notes.txt": file }))).toBe(false);
-    expect(isCollieEntry("whistle", at({ whistle: folder(["whistle.cact.bak"]), "whistle/whistle.cact.bak": file }))).toBe(false);
-    expect(isCollieEntry("whistle", at({ whistle: folder(["whistle.cact"]), "whistle/whistle.cact": folder([]) }))).toBe(false);
-    // The old home, `stt/` holding the `whistle` subfolder, is not Collie's: one level too deep.
-    expect(isCollieEntry("stt", at({ stt: folder(["whistle"]), "stt/whistle": folder(["whistle.cact"]) }))).toBe(false);
+    expect(isPastorEntry("whistle", at({ whistle: folder([]) }))).toBe(true);
+    expect(isPastorEntry("whistle", at({ whistle: folder(["whistle.cact", "notes.txt"]), "whistle/whistle.cact": file, "whistle/notes.txt": file }))).toBe(false);
+    expect(isPastorEntry("whistle", at({ whistle: folder(["whistle.cact.bak"]), "whistle/whistle.cact.bak": file }))).toBe(false);
+    expect(isPastorEntry("whistle", at({ whistle: folder(["whistle.cact"]), "whistle/whistle.cact": folder([]) }))).toBe(false);
+    // The old home, `stt/` holding the `whistle` subfolder, is not Pastor's: one level too deep.
+    expect(isPastorEntry("stt", at({ stt: folder(["whistle"]), "stt/whistle": folder(["whistle.cact"]) }))).toBe(false);
     // The operator's own things under one of those names.
-    expect(isCollieEntry("fonts", at({ fonts: folder(["Arial.ttf"]), "fonts/Arial.ttf": file }))).toBe(false);
-    expect(isCollieEntry("uploads", at({ uploads: folder(["holiday.jpg"]), "uploads/holiday.jpg": file }))).toBe(false);
-    // A subfolder, even one with a Collie-looking name, is one level too deep.
-    expect(isCollieEntry("fonts", at({ fonts: folder(["x.woff2"]), "fonts/x.woff2": folder([]) }))).toBe(false);
+    expect(isPastorEntry("fonts", at({ fonts: folder(["Arial.ttf"]), "fonts/Arial.ttf": file }))).toBe(false);
+    expect(isPastorEntry("uploads", at({ uploads: folder(["holiday.jpg"]), "uploads/holiday.jpg": file }))).toBe(false);
+    // A subfolder, even one with a Pastor-looking name, is one level too deep.
+    expect(isPastorEntry("fonts", at({ fonts: folder(["x.woff2"]), "fonts/x.woff2": folder([]) }))).toBe(false);
     // A folder that cannot be listed, a folder with a file's name, a file with a folder's name.
-    expect(isCollieEntry("uploads", at({ uploads: { kind: "folder", names: null } }))).toBe(false);
-    expect(isCollieEntry("audit.log", at({ "audit.log": folder([]) }))).toBe(false);
-    expect(isCollieEntry("uploads", at({ uploads: file }))).toBe(false);
-    // A junction named like Collie's folder, and a link named like Collie's file.
-    expect(isCollieEntry("uploads", at({ uploads: { kind: "link" } }))).toBe(false);
-    expect(isCollieEntry(".env", at({ ".env": { kind: "link" } }))).toBe(false);
+    expect(isPastorEntry("uploads", at({ uploads: { kind: "folder", names: null } }))).toBe(false);
+    expect(isPastorEntry("audit.log", at({ "audit.log": folder([]) }))).toBe(false);
+    expect(isPastorEntry("uploads", at({ uploads: file }))).toBe(false);
+    // A junction named like Pastor's folder, and a link named like Pastor's file.
+    expect(isPastorEntry("uploads", at({ uploads: { kind: "link" } }))).toBe(false);
+    expect(isPastorEntry(".env", at({ ".env": { kind: "link" } }))).toBe(false);
     // Unreadable.
-    expect(isCollieEntry("stt.json", at({}))).toBe(false);
+    expect(isPastorEntry("stt.json", at({}))).toBe(false);
   });
 
   test("rule (c) names the stranger: a `.env.production`, a `fonts` of photos, a junction", () => {
-    const shared = "D:\\work\\collie-cfg";
-    expect(scope(shared, [".env", ".env.production"])).toEqual({ allowed: false, why: "it also holds files that are not Collie's (.env.production)" });
+    const shared = "D:\\work\\pastor-cfg";
+    expect(scope(shared, [".env", ".env.production"])).toEqual({ allowed: false, why: "it also holds files that are not Pastor's (.env.production)" });
     expect(scope(shared, [".env", "fonts"], false, { fonts: { kind: "folder", names: ["me.jpg"] } })).toEqual({
       allowed: false,
-      why: "it also holds files that are not Collie's (fonts)",
+      why: "it also holds files that are not Pastor's (fonts)",
     });
     expect(scope(shared, [".env", "uploads"], false, { uploads: { kind: "link" } }).allowed).toBe(false);
     expect(scope(shared, [".env", "audit.log.1", "fonts"], false, { fonts: { kind: "folder", names: [] } })).toEqual({ allowed: true });

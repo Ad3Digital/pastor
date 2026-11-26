@@ -35,7 +35,7 @@ import type { MuxAdapter } from "../bridge/mux/types.ts";
 const MUXES = ["tmux", "zellij", "tuios"] as const;
 export type Mux = (typeof MUXES)[number];
 
-const SESSION = "collie-e2e";
+const SESSION = "pastor-e2e";
 // NixOS has no /bin/bash, so resolve it once from PATH.
 const SHELL = Bun.which("bash") ?? "/bin/sh";
 const READBACK_TIMEOUT_MS = 15_000;
@@ -192,8 +192,8 @@ async function firstPane(adapter: MuxAdapter): Promise<string> {
  */
 async function sendAndReadBack(adapter: MuxAdapter, paneId: string): Promise<string[]> {
   const token = `t${Math.random().toString(36).slice(2, 10)}`;
-  const expected = `COLLIE${token}E2E`;
-  const typed = await adapter.typeText(paneId, `printf 'COLLIE%sE2E\\n' ${token}`);
+  const expected = `PASTOR${token}E2E`;
+  const typed = await adapter.typeText(paneId, `printf 'PASTOR%sE2E\\n' ${token}`);
   if (!typed.ok) return [`typeText refused: ${typed.reason}: ${typed.detail}`];
   const entered = await adapter.sendKeys(paneId, ["Enter"]);
   if (!entered.ok) return [`sendKeys(Enter) refused: ${entered.reason}: ${entered.detail}`];

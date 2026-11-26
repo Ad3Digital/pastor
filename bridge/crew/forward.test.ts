@@ -364,8 +364,8 @@ describe("a proxied read is the peer's response, unmodified (§9.1)", () => {
           status: 200,
           headers: {
             "content-type": "image/png",
-            "x-collie-file-size": "4",
-            "x-collie-file-mtime": "1760000000000.5",
+            "x-pastor-file-size": "4",
+            "x-pastor-file-mtime": "1760000000000.5",
             "x-crew-member": "laptop",
           },
         }),
@@ -373,8 +373,8 @@ describe("a proxied read is the peer's response, unmodified (§9.1)", () => {
     );
     const [req, url] = get("/api/pane/w1:p1/files/image?host=laptop&path=a.png");
     const res = await forward(req, url, { transport });
-    expect(res.headers.get("x-collie-file-size")).toBe("4");
-    expect(res.headers.get("x-collie-file-mtime")).toBe("1760000000000.5");
+    expect(res.headers.get("x-pastor-file-size")).toBe("4");
+    expect(res.headers.get("x-pastor-file-mtime")).toBe("1760000000000.5");
     expect(res.headers.get("x-crew-member")).toBeNull();
   });
 
@@ -382,8 +382,8 @@ describe("a proxied read is the peer's response, unmodified (§9.1)", () => {
     const { transport } = transportOf(() => ok(new Response("x", { status: 200, headers: { "content-type": "image/png" } })));
     const [req, url] = get("/api/pane/w1:p1/files/image?host=laptop&path=a.png");
     const res = await forward(req, url, { transport });
-    expect(res.headers.get("x-collie-file-size")).toBeNull();
-    expect(res.headers.get("x-collie-file-mtime")).toBeNull();
+    expect(res.headers.get("x-pastor-file-size")).toBeNull();
+    expect(res.headers.get("x-pastor-file-mtime")).toBeNull();
   });
 
   test("the lead never recomputes an ETag — the peer's is the peer's assertion about its own body", async () => {
@@ -451,7 +451,7 @@ describe("the lead compresses the phone hop itself (.adr/0023)", () => {
   // rather than assumed: without it the compressed branch would throw inside a request path whose
   // stated contract is "never throws".
   test("the runtime has CompressionStream, and it really deflates", async () => {
-    const plain = "collie ".repeat(500);
+    const plain = "pastor ".repeat(500);
     const out = new Response(plain).body!.pipeThrough(new CompressionStream("gzip"));
     const bytes = new Uint8Array(await new Response(out).arrayBuffer());
     expect(bytes.byteLength).toBeLessThan(plain.length / 10);
@@ -512,8 +512,8 @@ describe("the lead compresses the phone hop itself (.adr/0023)", () => {
   });
 
   test("`vary` is MERGED with the peer's, never clobbered — and set when the peer sent none", async () => {
-    const [, withVary] = peerJson({ vary: "x-collie-seen" });
-    expect((await forwardWithAccept(withVary, "gzip")).headers.get("vary")).toBe("x-collie-seen, accept-encoding");
+    const [, withVary] = peerJson({ vary: "x-pastor-seen" });
+    expect((await forwardWithAccept(withVary, "gzip")).headers.get("vary")).toBe("x-pastor-seen, accept-encoding");
 
     // Already varying on it (what a peer's own gzip branch declares): kept, not doubled.
     const [, already] = peerJson({ vary: "accept-encoding" });
@@ -570,7 +570,7 @@ describe("request shaping", () => {
     const req = new Request("https://lead.example/api/pane/w1:p1", {
       headers: {
         "if-none-match": '"e"',
-        "x-collie-seen": "1",
+        "x-pastor-seen": "1",
         "content-type": "multipart/form-data; boundary=xyz",
         "accept-encoding": "gzip",
         cookie: "session=hunter2",
@@ -581,7 +581,7 @@ describe("request shaping", () => {
     });
     const headers = forwardHeaders(req, "phone-7");
     expect(headers.get("if-none-match")).toBe('"e"');
-    expect(headers.get("x-collie-seen")).toBe("1");
+    expect(headers.get("x-pastor-seen")).toBe("1");
     expect(headers.get("content-type")).toBe("multipart/form-data; boundary=xyz");
     // §12: the device is forwarded as the crew header, resolved by the LEAD's own deviceAuth.
     expect(headers.get("x-crew-device")).toBe("phone-7");
@@ -912,7 +912,7 @@ describe("uploads land on the owning host (§13)", () => {
   test("a legal multipart body is forwarded with its boundary, and the peer's own path comes back", async () => {
     // The path is peer-local and absolute on the PEER's filesystem — that is the requirement, not a
     // leak: Herdr on that machine is what has to open it. The lead never rewrites it.
-    const peerPath = "/home/you/.local/state/collie/uploads/w1_p1-abc.png";
+    const peerPath = "/home/you/.local/state/pastor/uploads/w1_p1-abc.png";
     const { transport, calls } = transportOf(() =>
       ok(new Response(JSON.stringify({ ok: true, path: peerPath }), { status: 200 })),
     );

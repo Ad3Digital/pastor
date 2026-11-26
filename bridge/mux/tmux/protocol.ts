@@ -16,7 +16,7 @@
 // free-text fields are LAST in every record and the parser folds any excess back into the final
 // field rather than mis-binding the fixed ones.
 //
-// Probed first-hand against tmux 3.6b on a throwaway server (`tmux -L collieprobe`, M10/04).
+// Probed first-hand against tmux 3.6b on a throwaway server (`tmux -L pastorprobe`, M10/04).
 
 /** Field separator inside one `-F` record. See the header for why it is this byte. */
 export const SEP = "\u001f";
@@ -65,7 +65,7 @@ const PANE_TAG = "P";
 const CLIENT_TAG = "C";
 
 /**
- * One tmux session — what Collie calls a SPACE (adapter.ts documents the mapping).
+ * One tmux session — what Pastor calls a SPACE (adapter.ts documents the mapping).
  *
  * `id` is `$N`, tmux's own session id: it survives a rename, where `name` does not. That is identity
  * rule 2, and it is the whole reason the name is carried separately rather than used as the id.
@@ -80,7 +80,7 @@ export interface TmuxSession {
   readonly path: string;
 }
 
-/** One tmux window — what Collie calls a TAB. `id` is `@N`. */
+/** One tmux window — what Pastor calls a TAB. `id` is `@N`. */
 export interface TmuxWindow {
   readonly id: string;
   readonly sessionId: string;
@@ -92,7 +92,7 @@ export interface TmuxWindow {
   readonly name: string;
 }
 
-/** One tmux pane. `id` is `%N`, carried into Collie unchanged (identity rule 1). */
+/** One tmux pane. `id` is `%N`, carried into Pastor unchanged (identity rule 1). */
 export interface TmuxPaneRecord {
   readonly id: string;
   readonly windowId: string;
@@ -121,12 +121,12 @@ export interface TmuxPaneRecord {
  * Listed for exactly one question: WHICH SESSION IS THE OPERATOR'S SCREEN SHOWING. tmux's own
  * `session_attached` cannot answer it, because this adapter's watch attaches control clients of its
  * own and they would count as an operator. `client_control_mode` is what tells the two apart —
- * probed 2026-08-25 against the live test server, where Collie's own watcher reported `1` and the
+ * probed 2026-08-25 against the live test server, where Pastor's own watcher reported `1` and the
  * two real terminals reported `0`.
  */
 export interface TmuxClient {
   readonly sessionId: string;
-  /** A `tmux -C` client — Collie's own watch is one of these, and it is nobody's screen. */
+  /** A `tmux -C` client — Pastor's own watch is one of these, and it is nobody's screen. */
   readonly control: boolean;
   /** tmux's last-activity stamp for this client. Orders two real terminals; nothing more. */
   readonly activity: number;
@@ -286,7 +286,7 @@ export function parseListing(stdout: string): TmuxListing {
     }
     if (line.startsWith(CLIENT_TAG + SEP)) {
       // `client_session` is the session's NAME on tmux 3.6b, not its `$N` id — probed 2026-08-25,
-      // where it read `collie-tmux`. The caller resolves it against the sessions of this same
+      // where it read `pastor-tmux`. The caller resolves it against the sessions of this same
       // listing rather than assuming either shape.
       const [, session, control, activity, tty] = fields(line, 5);
       if (session === undefined || session.length === 0) continue;
@@ -424,7 +424,7 @@ export function classifyControlLine(line: string): TmuxControlLine {
 /**
  * The argv for one control-mode client, attached to one session.
  *
- * Both client flags are load-bearing and neither is a convenience. `ignore-size` stops Collie's
+ * Both client flags are load-bearing and neither is a convenience. `ignore-size` stops Pastor's
  * watcher from resizing the operator's own windows — a control client is a real client, and without
  * it every window in the session would be squeezed to the watcher's default 80×24. `read-only`
  * means this connection can never type: writes go through `send-keys`, where they are audited and
