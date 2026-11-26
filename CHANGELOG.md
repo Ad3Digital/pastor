@@ -29,6 +29,10 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 - **ColliePWA becomes Pastor, with its own name and crook mark.** The command is `pastor`, the Herdr plugin id is `ad3.pastor`, settings read `PASTOR_*` instead of `COLLIE_*`, and the state folder is `pastor`. A ColliePWA install is not migrated: install Pastor beside it and pair the phone again. ([8117f41](https://github.com/Ad3Digital/pastor/commit/8117f41))
 - **Updates come from Ad3Digital/pastor.** `pastor update`, the Windows installer and the in-app update band read this repository's releases. ([8117f41](https://github.com/Ad3Digital/pastor/commit/8117f41))
 
+### Packaging
+
+- **Releases ship Linux and Windows binaries, not macOS.** GitHub gives this repository no macOS runner, so a Mac installs Pastor as a Herdr plugin or from source.
+
 ## [1.21.1] - 2026-10-14
 
 **Urgent.** A crew member installed from a git checkout can end up half updated, still on the old version.

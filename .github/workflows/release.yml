@@ -119,7 +119,9 @@ jobs:
   #     with SIGILL on older hardware, which is exactly the hardware a self-hosted tool lives on.
   #     Pastor is I/O-bound (a Unix socket and static files), so the baseline penalty is not
   #     observable here.
-  # The matrix ships all four targets; macos-x64 is cross-compiled on the macos-15 row (arm64, like macos-14 before it; #385). A
+  # Pastor ships Linux here and Windows in payload-windows. The macOS rows were dropped: GitHub hands this
+  # account no macOS runner ("not acquired by Runner of type hosted"), and a Mac installs from source or as a
+  # Herdr plugin. The upstream comment follows. macos-x64 was cross-compiled on the macos-15 row (#385). A
   # platform with no row gets `pastor update`'s honest "no artifact for your platform, build from
   # source" rather than a wrong binary.
   payload:
@@ -131,15 +133,9 @@ jobs:
           - platform: linux-x64
             runs-on: ubuntu-latest
             bun-target: bun-linux-x64-baseline
-          - platform: macos-arm64
-            runs-on: macos-15
-            bun-target: bun-darwin-arm64
           - platform: linux-arm64
             runs-on: ubuntu-24.04-arm
             bun-target: bun-linux-arm64
-          - platform: macos-x64
-            runs-on: macos-15
-            bun-target: bun-darwin-x64-baseline
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4

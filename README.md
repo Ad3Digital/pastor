@@ -73,7 +73,7 @@ Você precisa do Windows 11, do [Herdr para Windows](https://herdr.dev) e do
 O Windows pode avisar que o `pastor.exe` não é assinado. Clique em **Mais informações** e depois em
 **Executar assim mesmo**. Detalhes e problemas comuns: [docs/windows.md](docs/windows.md).
 
-## Instalar no Linux ou no macOS
+## Instalar no Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.sh | sh
@@ -89,7 +89,8 @@ herdr plugin install Ad3Digital/pastor
 herdr plugin action invoke start --plugin ad3.pastor
 ```
 
-Mais opções em [docs/install.md](docs/install.md).
+No macOS não há binário pronto neste fork: instale como plugin do Herdr (acima). Mais opções em
+[docs/install.md](docs/install.md).
 
 ## Ligação ao vivo: fale com o Codex pelo celular
 
