@@ -33,7 +33,7 @@ describe("LanguageControl", () => {
       "Русский",
       "Italiano",
       "Français",
-      "Português",
+      "Português (Brasil)",
       "Türkçe",
     ]);
     expect(select).toHaveValue("en");

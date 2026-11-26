@@ -173,10 +173,10 @@ describe("persistence", () => {
     expect(getLocaleSnapshot().locale).toBe("ko");
   });
 
-  it("removes the key for English rather than storing a sentinel", () => {
+  it("stores English too, so a choice outlives the device's own language", () => {
     setLocale("ko");
     setLocale("en");
-    expect(localStorage.getItem("pastor:locale:v1")).toBeNull();
+    expect(localStorage.getItem("pastor:locale:v1")).toBe("en");
     expect(getLocaleSnapshot().locale).toBe("en");
   });
 

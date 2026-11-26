@@ -65,11 +65,26 @@ function storage(): Storage | null {
   return globalThis.localStorage ?? null;
 }
 
-/** Read the pin. BARE string, not JSON — same as the theme's, and for the same reason. */
+/**
+ * The device's own language, when Pastor speaks it: `pt-BR` → `pt`, `zh-TW` exactly, else null.
+ * A phone set to Portuguese opens Pastor in Portuguese with nothing to choose first.
+ */
+function deviceLocale(): Locale | null {
+  const wanted = globalThis.navigator?.languages ?? [];
+  for (const tag of wanted) {
+    if (isLocale(tag)) return tag;
+    const base = tag.split("-", 1)[0]?.toLowerCase() ?? "";
+    if (isLocale(base)) return base;
+  }
+  return null;
+}
+
+/** Read the pin, or follow the device. BARE string, not JSON — same as the theme's. */
 function loadLocale(): Locale {
   try {
     const raw = storage()?.getItem(STORAGE_KEY) ?? null;
-    return raw !== null && isLocale(raw) ? raw : DEFAULT_LOCALE;
+    if (raw !== null && isLocale(raw)) return raw;
+    return deviceLocale() ?? DEFAULT_LOCALE;
   } catch {
     return DEFAULT_LOCALE;
   }
@@ -77,9 +92,9 @@ function loadLocale(): Locale {
 
 function saveLocale(locale: Locale): void {
   try {
-    // Absent means English, so choosing the default removes the key rather than storing a sentinel.
-    if (locale === DEFAULT_LOCALE) storage()?.removeItem(STORAGE_KEY);
-    else storage()?.setItem(STORAGE_KEY, locale);
+    // Absent means "follow the device", so every choice is stored, English included: a phone in
+    // Portuguese whose owner picked English must not drift back to Portuguese on the next load.
+    storage()?.setItem(STORAGE_KEY, locale);
   } catch {
     // Ignore quota / private-mode write errors: the choice still applies for this session.
   }

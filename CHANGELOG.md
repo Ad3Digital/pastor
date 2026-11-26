@@ -17,6 +17,11 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+### Changed
+
+- **Pastor opens in the phone's own language.** With no language chosen yet, the app follows the device: a phone set to Portuguese opens in Portuguese, one set to German in German, and anything Pastor does not speak falls back to English. A choice made in Settings, English included, is kept from then on.
+- **The Portuguese dictionary speaks Brazilian Portuguese.** "Celular" instead of "telefone", "parear" instead of "emparelhar", "salvar" instead of "guardar", and the language is listed as Português (Brasil).
+
 ## [1.22.0] - 2026-11-26
 
 ### Added

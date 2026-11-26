@@ -28,7 +28,7 @@ export const LOCALES: readonly LocaleOption[] = [
   { code: "ru", nativeName: "Русский" },
   { code: "it", nativeName: "Italiano" },
   { code: "fr", nativeName: "Français" },
-  { code: "pt", nativeName: "Português" },
+  { code: "pt", nativeName: "Português (Brasil)" },
   { code: "tr", nativeName: "Türkçe" },
 ];
 
