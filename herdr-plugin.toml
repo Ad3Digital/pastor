@@ -1,6 +1,6 @@
 id = "ad3.pastor"
 name = "Pastor"
-version = "1.21.1"
+version = "1.22.0"
 min_herdr_version = "0.7.0"
 description = "Mobile web UI to monitor and reply to your agent herd, served over Tailscale"
 platforms = ["linux", "macos"]

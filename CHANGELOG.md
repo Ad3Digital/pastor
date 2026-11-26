@@ -17,15 +17,17 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-11-26
+
 ### Added
 
-- **A passkey can pair a new device instead of a code.** A paired device creates one in Settings, under Paired devices; any browser that holds it, synced by Google or Apple, then pairs itself with a name and a fingerprint. The key is checked by the bridge, the device lands in the registry like any other, and `pastor devices revoke` still removes it.
-- **A live voice call works on Codex and OMP panes, on every host.** Tap Live call on a Codex or OMP pane and talk: the voice runs over WebRTC from the phone straight to OpenAI with the computer's own Codex login, a request is typed into the pane, and the agent's final message comes back spoken. On a Codex pane the bridge hosts the call and reads the answer from the Codex session log; on an OMP pane the `omp/extension.ts` extension does, after `bash omp/enable.sh`. Ported from the OMP Live work in the Collie fork.
+- **A passkey can pair a new device instead of a code.** A paired device creates one in Settings, under Paired devices; any browser that holds it, synced by Google or Apple, then pairs itself with a name and a fingerprint. The key is checked by the bridge, the device lands in the registry like any other, and `pastor devices revoke` still removes it. ([dc8a329](https://github.com/Ad3Digital/pastor/commit/dc8a329))
+- **A live voice call works on Codex and OMP panes, on every host.** Tap Live call on a Codex or OMP pane and talk: the voice runs over WebRTC from the phone straight to OpenAI with the computer's own Codex login, a request is typed into the pane, and the agent's final message comes back spoken. On a Codex pane the bridge hosts the call and reads the answer from the Codex session log; on an OMP pane the `omp/extension.ts` extension does, after `bash omp/enable.sh`. Ported from the OMP Live work in the Collie fork. ([8117f41](https://github.com/Ad3Digital/pastor/commit/8117f41))
 
 ### Changed
 
-- **ColliePWA becomes Pastor, with its own name and crook mark.** The command is `pastor`, the Herdr plugin id is `ad3.pastor`, settings read `PASTOR_*` instead of `COLLIE_*`, and the state folder is `pastor`. A ColliePWA install is not migrated: install Pastor beside it and pair the phone again.
-- **Updates come from Ad3Digital/pastor.** `pastor update`, the Windows installer and the in-app update band read this repository's releases.
+- **ColliePWA becomes Pastor, with its own name and crook mark.** The command is `pastor`, the Herdr plugin id is `ad3.pastor`, settings read `PASTOR_*` instead of `COLLIE_*`, and the state folder is `pastor`. A ColliePWA install is not migrated: install Pastor beside it and pair the phone again. ([8117f41](https://github.com/Ad3Digital/pastor/commit/8117f41))
+- **Updates come from Ad3Digital/pastor.** `pastor update`, the Windows installer and the in-app update band read this repository's releases. ([8117f41](https://github.com/Ad3Digital/pastor/commit/8117f41))
 
 ## [1.21.1] - 2026-10-14
 
