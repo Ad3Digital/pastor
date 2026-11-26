@@ -204,7 +204,7 @@ for spelling in --version -V; do
   run_stripped PASTOR_PLUGIN_ROOT="$FAKE_ROOT" "$BIN" "$spelling" \
     || fail "\`pastor $spelling\` failed (rc=$?)"
   assert_eq "$STDOUT" "9.9.9+deadbee"
-  case "$STDERR" in *"unknown command"*) fail "\`pastor $spelling\` still reads as a typo" ;; esac
+  case "$STDERR" in *"comando desconhecido"*) fail "\`pastor $spelling\` still reads as a typo" ;; esac
 done
 
 # `pastor crew --help` prints the subcommand block, and the verb's own usage exit code (2) is
@@ -233,7 +233,7 @@ set -e
 assert_eq "$rc" "2"
 assert_eq "$(cat "${TMP_ROOT}/out")" ""
 assert_contains "$(cat "${TMP_ROOT}/err")" "usage: pastor {"
-assert_contains "$(cat "${TMP_ROOT}/err")" "unknown command \`nonsense\`"
+assert_contains "$(cat "${TMP_ROOT}/err")" "comando desconhecido \`nonsense\`"
 
 set +e
 env -i "$BIN" >/dev/null 2>"${TMP_ROOT}/err"
@@ -498,34 +498,34 @@ assert_contains "$UNIT" "StartLimitIntervalSec=0"
 assert_contains "$UNIT" "Environment=PASTOR_TAILSCALE_HOSTS=host.example"
 case "$UNIT" in *bun*) fail "the generated unit still names an interpreter" ;; esac
 # The banner: `start` and `status` render it from one function, so they can never disagree.
-assert_contains "$STDOUT" "bridge started (systemd --user: pastor)"
-assert_contains "$STDOUT" "✓ Pastor is running"
-assert_contains "$STDOUT" "service   systemd --user (pastor) · active"
-assert_contains "$STDOUT" "local     http://127.0.0.1:${PORT}"
-assert_contains "$STDOUT" "tailnet   https://host.example"
+assert_contains "$STDOUT" "Pastor ligado (systemd --user: pastor)"
+assert_contains "$STDOUT" "✓ O Pastor está rodando"
+assert_contains "$STDOUT" "serviço     systemd --user (pastor) · active"
+assert_contains "$STDOUT" "local       http://127.0.0.1:${PORT}"
+assert_contains "$STDOUT" "tailnet     https://host.example"
 # A front door that won't come up must not abort `start` (the pre-shim pastor-ctl.sh). This
 # lifecycle fake answers `serve status --json` with prose, so the publish gate refuses rather than
 # overwriting a root it can't reason about — and `start` still reached the banner and exited 0.
-assert_contains "$STDERR" "the tailnet front door did not come up"
+assert_contains "$STDERR" "o acesso pelo tailnet não subiu"
 
 cli "$BIN" status || fail "\`pastor status\` failed"
-assert_contains "$STDOUT" "✓ Pastor is running"
-assert_contains "$STDOUT" "serve config:"
+assert_contains "$STDOUT" "✓ O Pastor está rodando"
+assert_contains "$STDOUT" "tailscale serve:"
 assert_contains "$STDOUT" "    https://host.example (tailnet only)"
 
 cli "$BIN" restart || fail "\`pastor restart\` failed"
 assert_contains "$(cat "$L_CALLS")" "systemctl --user disable --now pastor"
 assert_contains "$(cat "$L_CALLS")" "systemctl --user enable --now pastor"
-assert_contains "$STDOUT" "bridge stopped"
+assert_contains "$STDOUT" "Pastor parado"
 
 cli "$BIN" stop || fail "\`pastor stop\` failed"
 assert_contains "$(cat "$L_CALLS")" "systemctl --user disable --now pastor"
-assert_eq "$STDOUT" "bridge stopped"
+assert_eq "$STDOUT" "Pastor parado"
 
 # Not answering: the banner names the port and points at the logs rather than claiming success.
 run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
   PASTOR_PORT="$DEAD_PORT" "$BIN" status || fail "status failed against a dead port"
-assert_contains "$STDOUT" "⚠ Pastor isn't answering on :${DEAD_PORT} yet"
+assert_contains "$STDOUT" "⚠ O Pastor ainda não responde em :${DEAD_PORT}"
 
 # ── The first-run multiplexer question (M14/03) ─────────────────────────────
 # `start` used to assume Herdr when nobody had said. It now probes, decides out loud, and WRITES the
@@ -612,7 +612,7 @@ assert_contains "$STDOUT" "█"
 
 # Variant C/E without one: Pastor doesn't know the ingress, so there is nothing true to encode.
 cli PASTOR_SKIP_SERVE=1 "$BIN" qr && fail "qr invented a URL under PASTOR_SKIP_SERVE=1"
-assert_contains "$STDERR" "PASTOR_PUBLIC_URL is unset"
+assert_contains "$STDERR" "PASTOR_PUBLIC_URL não está definido"
 
 # A front door nothing can reach still gets its QR — the code is fine, the tailnet policy isn't —
 # but the warning has to reach stderr, or the operator scans a dead end and blames the code.
@@ -620,7 +620,7 @@ stage_tailscale 'if [ "$1" = debug ]; then echo "{\"PacketFilter\":[]}"; exit 0;
 if [ "$1" = status ]; then echo "{\"Self\":{\"DNSName\":\"host.example.\"}}"; fi
 exit 0'
 cli "$BIN" qr || fail "qr refused to draw for a blocked tailnet"
-assert_contains "$STDERR" "admits no peer"
+assert_contains "$STDERR" "não aceita nenhum aparelho"
 assert_contains "$STDOUT" "█"
 assert_contains "$STDOUT" "https://host.example"
 
@@ -628,7 +628,7 @@ assert_contains "$STDOUT" "https://host.example"
 # encode the loopback placeholder, which would send a phone to its OWN localhost.
 stage_tailscale 'echo "{}"; exit 0'
 cli "$BIN" qr && fail "qr encoded a URL with no tailnet name available"
-assert_contains "$STDERR" "tailnet front door isn't up"
+assert_contains "$STDERR" "o acesso pelo tailnet não está publicado"
 
 printf '%s\n' "$TAILSCALE_FAKE" > "${L_BIN}/tailscale"
 chmod +x "${L_BIN}/tailscale"
@@ -656,7 +656,7 @@ assert_contains "$CALLS" "launchctl bootout gui/$(id -u)/ad3.pastor"
 assert_contains "$CALLS" "launchctl enable gui/$(id -u)/ad3.pastor"
 assert_contains "$CALLS" "launchctl bootstrap gui/$(id -u) ${PLIST}"
 assert_contains "$CALLS" "launchctl kickstart gui/$(id -u)/ad3.pastor"
-assert_contains "$STDOUT" "bridge started (launchd: ad3.pastor)"
+assert_contains "$STDOUT" "Pastor ligado (launchd: ad3.pastor)"
 if command -v plutil >/dev/null 2>&1; then
   plutil -lint "$PLIST" >/dev/null || fail "the generated plist is not a valid property list"
 fi
@@ -691,7 +691,7 @@ EOF
 
 install_flaky_launchctl 1
 cli PASTOR_SUPERVISOR=launchd "$BIN" start || fail "start gave up on a transient bootstrap failure"
-assert_contains "$STDOUT" "bridge started (launchd: ad3.pastor)"
+assert_contains "$STDOUT" "Pastor ligado (launchd: ad3.pastor)"
 assert_eq "$(grep -c '^launchctl bootstrap ' "$L_CALLS")" "2"
 
 # Permanent: EIO is also how launchd reports "gui/<uid> doesn't exist" — every Mac administered
@@ -704,9 +704,9 @@ assert_contains "$STDERR" "warn: launchctl bootstrap failed after 3 attempts"
 assert_contains "$STDERR" "no console login"
 assert_contains "$STDERR" "unsupervised"
 case "$STDOUT" in
-  *"bridge started (launchd:"*) fail "reported a launchd start after bootstrap failed" ;;
+  *"Pastor ligado (launchd:"*) fail "reported a launchd start after bootstrap failed" ;;
 esac
-assert_contains "$STDOUT" "unsupervised)"
+assert_contains "$STDOUT" "sem supervisor)"
 [ -f "${L_CONFIG}/pastor.pid" ] || fail "the unsupervised fallback left no pidfile to stop later"
 # The fallback spawns the real binary, which loses the race for $PORT and exits — but the pidfile
 # must not outlive it as a live record, and `stop` is what clears it.
@@ -827,7 +827,7 @@ rm -f "$RECORD"
 fd PASTOR_SERVE_MODE=http "$BIN" serve || fail "\`pastor serve\` failed on a free root: ${STDERR}"
 assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
 assert_contains "$(cat "$FD_CALLS")" "tailscale serve --bg --http=8787 --set-path=/ 8787"
-assert_contains "$STDOUT" "open: http://host.example:8787"
+assert_contains "$STDOUT" "abra: http://host.example:8787"
 
 # Publish onto a FOREIGN root: refuse, change nothing, record nothing. `tailscale serve --bg … /`
 # silently replaces an existing root handler, so this check is all that stands between a Pastor
@@ -839,14 +839,14 @@ if fd PASTOR_SERVE_MODE=http "$BIN" serve; then
 fi
 assert_eq "$(read_status)" "$FOREIGN_ROOT"
 [ ! -e "$RECORD" ] || fail "a refused publish created ownership state"
-assert_contains "$STDERR" "unowned root mount on :8787"
+assert_contains "$STDERR" "root mount em :8787 que não é do Pastor"
 
 # Publish onto a PRE-EXISTING Pastor root: adopt it and record it. Every install predating ownership
 # tracking is in exactly this state, so refusing here would brick start/restart/update on upgrade.
 status_is "$PASTOR_HTTP_ROOT"
 rm -f "$RECORD"
 fd PASTOR_SERVE_MODE=http "$BIN" serve || fail "serve refused to adopt Pastor's own root mount"
-assert_contains "$STDOUT" "adopting the existing Pastor root mount on :8787"
+assert_contains "$STDOUT" "aproveitando o root mount do Pastor que já existe em :8787"
 assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
 
 # Teardown of a matching root: scoped to the listener and to `/`, never a blanket reset.
@@ -893,8 +893,8 @@ rm -f "$FD_OFF_FAILS"
 # otherwise stay reachable by a path the operator thinks is closed.
 status_is "$PASTOR_HTTP_ROOT"
 fd PASTOR_SKIP_SERVE=1 "$BIN" serve || fail "serve failed under PASTOR_SKIP_SERVE=1"
-assert_contains "$STDOUT" "tailscale serve skipped (PASTOR_SKIP_SERVE=1)"
-assert_contains "$STDOUT" "bridge is on 127.0.0.1:8787 only"
+assert_contains "$STDOUT" "tailscale serve pulado (PASTOR_SKIP_SERVE=1)"
+assert_contains "$STDOUT" "o Pastor está só em 127.0.0.1:8787"
 [ ! -e "$RECORD" ] || fail "the skipped front door left ownership state behind"
 assert_eq "$(read_status)" "{}"
 case "$(cat "$FD_CALLS")" in
@@ -925,8 +925,8 @@ assert_eq "$(read_status)" "{}"
 # The two things uninstall deliberately keeps.
 [ -f "${FD_CONFIG}/.env" ] || fail "uninstall deleted the operator's .env"
 [ -f "${ROOT}/herdr-plugin.toml" ] || fail "uninstall touched the checkout"
-assert_contains "$STDOUT" "✓ uninstalled:"
-assert_contains "$STDOUT" "kept: ${FD_CONFIG}/.env and the checkout"
+assert_contains "$STDOUT" "✓ desinstalado:"
+assert_contains "$STDOUT" "mantidos: ${FD_CONFIG}/.env e os arquivos do Pastor"
 
 # A teardown it cannot justify ABORTS the uninstall: reporting a clean uninstall over a front door
 # that is still published would be a lie.
@@ -939,7 +939,7 @@ fi
 assert_contains "${STDOUT}${STDERR}" "refusing to remove"
 [ -f "$FD_UNIT" ] || fail "an aborted uninstall still removed the unit"
 case "$STDOUT" in
-  *"✓ uninstalled"*) fail "an aborted uninstall reported success" ;;
+  *"✓ desinstalado"*) fail "an aborted uninstall reported success" ;;
 esac
 
 # ── Two instances on one host ────────────────────────────────────────────────
@@ -1006,13 +1006,13 @@ case "$(cat "$UNIT_FILE")" in *--instance*) fail "the stable unit grew an instan
 
 # Each instance's status describes ITSELF: its own unit, its own port, and never the other's.
 cli_v1 "$BIN" status || fail "\`pastor status\` failed for v1"
-assert_contains "$STDOUT" "instance  v1"
-assert_contains "$STDOUT" "service   systemd --user (pastor-v1) · active"
-assert_contains "$STDOUT" "local     http://127.0.0.1:${V1_PORT}"
+assert_contains "$STDOUT" "instância   v1"
+assert_contains "$STDOUT" "serviço     systemd --user (pastor-v1) · active"
+assert_contains "$STDOUT" "local       http://127.0.0.1:${V1_PORT}"
 assert_contains "$(cat "$L_CALLS")" "systemctl --user is-active pastor-v1"
 cli "$BIN" status || fail "\`pastor status\` failed for the stable instance"
-assert_contains "$STDOUT" "service   systemd --user (pastor) · active"
-assert_contains "$STDOUT" "local     http://127.0.0.1:${PORT}"
+assert_contains "$STDOUT" "serviço     systemd --user (pastor) · active"
+assert_contains "$STDOUT" "local       http://127.0.0.1:${PORT}"
 case "$STDOUT" in *"instance "*) fail "the stable instance's banner named an instance" ;; esac
 
 # `logs` reads the instance's own journal unit, and its own log file off systemd.
@@ -1580,7 +1580,7 @@ assert_contains "$STDOUT" "staged checkout"
 # The verb STAGES and hands off (M15/04): the swap, the restart and the health gate all run in a
 # process with its own lifetime, because the restart would otherwise kill the bridge that asked.
 assert_contains "$STDOUT" "handed off to systemd-run --user --collect"
-assert_contains "$STDOUT" "Watch it with: pastor update --status"
+assert_contains "$STDOUT" "Acompanhe com: pastor update --status"
 wait_for_run done
 # The fake current binary only runs when the detached real updater restarts through the flipped
 # `current`; its record therefore proves this boundary's Git isolation reached that child.
@@ -1618,7 +1618,7 @@ assert_contains "$STDOUT" "nothing to roll back to yet"
 # `--status` reads the record the runner left behind — the same file the bridge and the standby door
 # report, so the terminal and the phone can never tell two different stories about one run.
 upd "$CLONE" "$BIN" update --status || fail "\`pastor update --status\` failed: ${STDERR}"
-assert_contains "$STDOUT" "✓ updated to v9.10.0"
+assert_contains "$STDOUT" "✓ atualizado para v9.10.0"
 if upd "$CLONE" "$BIN" update --rollback; then fail "--rollback found a target on a first staged update"; fi
 assert_contains "$STDERR" "nothing to roll back to"
 
@@ -1700,7 +1700,7 @@ assert_eq "$(git -C "$CLONE" rev-parse HEAD)" "$CLONE_AT"
 assert_eq "$(git -C "$CLONE" symbolic-ref --short HEAD)" "main"   # still a branch, never detached
 # …and NOW there is a previous version, so `--rollback` flips back to it and restarts.
 upd "$CLONE" "$BIN" update --rollback || fail "\`pastor update --rollback\` failed on a clone: ${STDERR}"
-assert_contains "$STDOUT" "✓ rolled back to 9.10.0"
+assert_contains "$STDOUT" "✓ voltou para 9.10.0"
 assert_eq "$(readlink "${CLONE}/current")" "versions/v9.10.0"
 # A rollback collects nothing: the version rolled away from is the one most likely to be wanted back.
 [ -d "${CLONE}/versions/v10.0.0" ] || fail "a rollback removed the version it rolled away from"
@@ -1783,7 +1783,7 @@ git_q -C "$VICTIM" status --porcelain > /dev/null 2>&1 ||
 # The second half, run from the freshly fetched code: build → restart → refresh the registry.
 : > "$U_HERDR"
 upd "$MANAGED" "$BIN" _apply-update || fail "\`pastor _apply-update\` failed: ${STDERR}"
-assert_contains "$STDOUT" "✓ update complete"
+assert_contains "$STDOUT" "✓ atualização concluída"
 assert_contains "$(cat "$U_CALLS")" "systemctl --user enable --now pastor"
 # The rebuilt artifacts are in place: the binary the restarted unit will execute, and the bundle the
 # bridge serves from disk.
@@ -1953,8 +1953,8 @@ pair_env() {
 # Nothing paired yet: `devices list` says so in the words that matter — pairing is always on, so
 # nothing is answered until `pastor pair` runs (ADR 0086) — and materialises no file by asking.
 pair_env devices list || fail "\`pastor devices list\` failed on an unpaired machine: ${STDERR}"
-assert_contains "$STDOUT" "no devices paired"
-assert_contains "$STDOUT" "always on"
+assert_contains "$STDOUT" "nenhum aparelho pareado"
+assert_contains "$STDOUT" "sempre exigido"
 [ -z "$(ls -A "$PAIR_STATE")" ] || fail "\`devices list\` wrote into the state dir with nothing paired"
 
 # `pair` mints the code and writes the pending file the bridge reads at request time.
@@ -1963,8 +1963,8 @@ PENDING="${PAIR_STATE}/pairing-pending.json"
 [ -f "$PENDING" ] || fail "\`pastor pair\` wrote no ${PENDING}"
 CODE="$(printf '%s\n' "$STDOUT" | head -n1)"
 assert_eq "${#CODE}" "8"
-assert_contains "$STDOUT" "single-use"
-assert_contains "$STDOUT" "Settings"
+assert_contains "$STDOUT" "uso único"
+assert_contains "$STDOUT" "Configurações"
 # The code itself is never persisted — only its hash — so the file must not contain it.
 case "$(cat "$PENDING")" in
   *"$CODE"*) fail "the pending file contains the code in the clear" ;;
@@ -1976,14 +1976,14 @@ assert_eq "$(stat -c '%a' "$PENDING" 2>/dev/null || stat -f '%Lp' "$PENDING")" "
 # A second `pair` invalidates the first code, and says so.
 FIRST_CODE="$CODE"
 pair_env pair || fail "a second \`pastor pair\` failed: ${STDERR}"
-assert_contains "$STDOUT" "earlier \`pastor pair\`"
+assert_contains "$STDOUT" "\`pastor pair\` anterior"
 [ "$(printf '%s\n' "$STDOUT" | head -n1)" != "$FIRST_CODE" ] || fail "\`pastor pair\` minted the same code twice"
 
 # Each `pair` asked the tailnet ONCE for this host's name — the probe behind its QR (cli/qr.ts) — and
 # nothing else: the fake answers with no name, so `urlToEncode` refuses before the packet-filter
 # probe, and the code stands on its own. Pinned as the whole log rather than tolerated, so a new
 # probe on this path shows up here and not on a phone with no login shell.
-assert_contains "$STDOUT" "No QR"
+assert_contains "$STDOUT" "Sem QR"
 assert_eq "$(cat "$PAIR_CALLS")" "$(printf 'tailscale status --json\ntailscale status --json')"
 # From here on the log belongs to `devices`, which must stay silent.
 : > "$PAIR_CALLS"
@@ -2000,7 +2000,7 @@ EOF
 pair_env devices list || fail "\`pastor devices list\` failed with a registry: ${STDERR}"
 assert_contains "$STDOUT" "pixel"
 assert_contains "$STDOUT" "ipad"
-assert_contains "$STDOUT" "never"
+assert_contains "$STDOUT" "nunca"
 # No token hash is ever printed.
 case "$STDOUT" in
   *1111111111111111111111111111111111111111111111111111111111111111*)
@@ -2008,7 +2008,7 @@ case "$STDOUT" in
 esac
 
 pair_env devices revoke pixel || fail "\`pastor devices revoke\` failed: ${STDERR}"
-assert_contains "$STDOUT" "no restart"
+assert_contains "$STDOUT" "não precisa reiniciar"
 case "$(cat "${PAIR_STATE}/paired-devices.json")" in
   *pixel*) fail "the revoked device is still in the registry" ;;
 esac
@@ -2021,7 +2021,7 @@ env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" PASTOR_STATE_DIR="
 rc=$?
 set -e
 assert_eq "$rc" "1"
-assert_contains "$(cat "${TMP_ROOT}/err")" "no paired device labelled \`pixel\`"
+assert_contains "$(cat "${TMP_ROOT}/err")" "nenhum aparelho pareado com o nome \`pixel\`"
 assert_contains "$(cat "${TMP_ROOT}/err")" "ipad"
 
 # Bare `devices`, a misspelt sub-verb, and a revoke with no label are usage errors (2).
@@ -2034,7 +2034,7 @@ for args in "devices" "devices nonsense" "devices revoke"; do
   set -e
   assert_eq "$rc" "2"
 done
-assert_contains "$(cat "${TMP_ROOT}/err")" "usage: pastor devices revoke <label>"
+assert_contains "$(cat "${TMP_ROOT}/err")" "uso: pastor devices revoke <nome>"
 
 # Not one of the `devices` verbs shelled out to anything: no systemctl, no tailscale, no herdr.
 assert_eq "$(cat "$PAIR_CALLS")" ""

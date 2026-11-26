@@ -275,7 +275,7 @@ export function stopPidfileProcess(deps: LifecycleDeps): void {
 function requireBinary(deps: LifecycleDeps): boolean {
   const binary = pastorBinary(deps.ctx.root, deps.host);
   if (deps.files.exists(binary)) return true;
-  deps.io.err(`error: no pastor binary at ${binary} — build one with \`bun run build:cli\``);
+  deps.io.err(`erro: não há binário do pastor em ${binary} — gere um com \`bun run build:cli\``);
   return false;
 }
 
@@ -306,15 +306,15 @@ export function resolveTailscaleHosts(deps: LifecycleDeps): string {
       deps.files.read(agentFilePath(deps.ctx.home, deps.ctx.instance)),
   );
   deps.io.err(
-    "error: 'tailscale status' named no host for this node — the allowlist was not discovered.",
+    "erro: o 'tailscale status' não deu nome para este computador — a lista de endereços aceitos não foi descoberta.",
   );
   if (kept !== "") {
-    deps.io.err(`       keeping the one already in the unit: ${kept}`);
+    deps.io.err(`       mantendo a que já estava no serviço: ${kept}`);
     return kept;
   }
-  deps.io.err("       no allowlist is set, so the Host gate will refuse every request. Set");
+  deps.io.err("       nenhuma lista de endereços está definida, então o Pastor vai recusar todo pedido. Defina");
   deps.io.err(
-    "       PASTOR_TAILSCALE_HOSTS (or PASTOR_PUBLIC_HOSTS) in .env, or fix Tailscale and retry.",
+    "       PASTOR_TAILSCALE_HOSTS (ou PASTOR_PUBLIC_HOSTS) no .env, ou arrume o Tailscale e tente de novo.",
   );
   return "";
 }
@@ -358,11 +358,11 @@ export function startUnsupervised(deps: LifecycleDeps): number {
     logPath: logFilePath(deps.ctx.configDir, deps.ctx.instance),
   });
   if (pid === null) {
-    deps.io.err("error: could not start the bridge");
+    deps.io.err("erro: não deu para ligar o Pastor");
     return EXIT.FAIL;
   }
   deps.files.write(pidFilePath(deps.ctx.configDir, deps.ctx.instance), `${pid}\n`);
-  deps.io.out(`bridge started (pid ${pid}, unsupervised)`);
+  deps.io.out(`Pastor ligado (pid ${pid}, sem supervisor)`);
   return EXIT.OK;
 }
 
@@ -372,10 +372,10 @@ function startSystemd(deps: LifecycleDeps): number {
   const r = deps.exec.capture("systemctl", ["--user", "enable", "--now", unit]);
   if (!r.found || r.code !== 0) {
     if (r.stderr.trim() !== "") deps.io.err(r.stderr.trimEnd());
-    deps.io.err(`error: systemctl --user enable --now ${unit} failed`);
+    deps.io.err(`erro: systemctl --user enable --now ${unit} falhou`);
     return EXIT.FAIL;
   }
-  deps.io.out(`bridge started (systemd --user: ${unit})`);
+  deps.io.out(`Pastor ligado (systemd --user: ${unit})`);
   return EXIT.OK;
 }
 
@@ -415,12 +415,12 @@ async function confirmLaunchdJob(deps: LifecycleDeps, target: string): Promise<n
   }
   const label = agentLabel(deps.ctx.instance);
   if (pid !== undefined) {
-    deps.io.out(`bridge started (launchd: ${label})`);
+    deps.io.out(`Pastor ligado (launchd: ${label})`);
     return EXIT.OK;
   }
-  deps.io.err(`warn: launchd loaded ${label} but no process is running`);
-  deps.io.err(`      Start it by hand: launchctl kickstart ${target}`);
-  deps.io.err(`      The log is ${logFilePath(deps.ctx.configDir, deps.ctx.instance)} (pastor logs prints it).`);
+  deps.io.err(`aviso: o launchd carregou ${label} mas nenhum processo está rodando`);
+  deps.io.err(`      Ligue à mão: launchctl kickstart ${target}`);
+  deps.io.err(`      O log é ${logFilePath(deps.ctx.configDir, deps.ctx.instance)} (o pastor logs mostra).`);
   return EXIT.OK;
 }
 
@@ -524,12 +524,12 @@ export function taskRunLevel(deps: LifecycleDeps): TaskOptions["runLevel"] | nul
   const asked = raw.toLowerCase();
   if (asked === "" || asked === "limited") return "LeastPrivilege";
   if (asked !== "highest") {
-    deps.io.err(`error: PASTOR_TASK_RUN_LEVEL must be 'limited' or 'highest', not '${raw}'`);
+    deps.io.err(`erro: PASTOR_TASK_RUN_LEVEL tem que ser 'limited' ou 'highest', não '${raw}'`);
     return null;
   }
   if (!isElevated(deps.exec)) {
-    deps.io.err("error: PASTOR_TASK_RUN_LEVEL=highest needs an elevated (Administrator) shell");
-    deps.io.err("       run this from one, or unset it to keep the task at limited privilege");
+    deps.io.err("erro: PASTOR_TASK_RUN_LEVEL=highest precisa de um terminal como Administrador");
+    deps.io.err("       rode de um terminal assim, ou tire a variável para manter a tarefa com permissão limitada");
     return null;
   }
   return "HighestAvailable";
@@ -563,14 +563,14 @@ function registerTask(deps: LifecycleDeps): boolean {
   // and registering over it would silently take its bridge away: refuse, and name it.
   const existing = queryTask(deps.exec, taskName(deps), deps.host);
   if (existing !== null && existing !== undefined && taskOwner(existing, deps.ctx.root, deps.host) === "foreign") {
-    deps.io.err(`error: the task ${taskName(deps)} runs ${existing.program}, not this Pastor (${deps.ctx.root})`);
-    deps.io.err("       one Pastor per Windows machine: run `pastor uninstall` from that install first");
+    deps.io.err(`erro: a tarefa ${taskName(deps)} roda ${existing.program}, e não este Pastor (${deps.ctx.root})`);
+    deps.io.err("       um Pastor por Windows: rode `pastor uninstall` naquela instalação antes");
     return false;
   }
   const who = deps.exec.capture("whoami", []);
   const user = who.found && who.code === 0 ? who.stdout.trim() : "";
   if (user === "") {
-    deps.io.err("error: `whoami` named no user, and the task starts at that user's logon");
+    deps.io.err("erro: o `whoami` não deu nenhum usuário, e a tarefa liga quando esse usuário entra no Windows");
     return false;
   }
   const spec = taskServiceSpec(deps, resolveTailscaleHosts(deps));
@@ -578,9 +578,9 @@ function registerTask(deps: LifecycleDeps): boolean {
   const percent = taskPercentPath(spec, conhost);
   if (percent !== null) {
     deps.io.err(
-      `error: Pastor cannot start from ${percent}, because that path has a % sign. Windows replaces %NAME% in a scheduled task's settings with the value of a variable, so the task would use the wrong path.`,
+      `erro: o Pastor não pode ligar de ${percent}, porque esse caminho tem um sinal de %. O Windows troca %NOME% nas configurações de uma tarefa agendada pelo valor de uma variável, então a tarefa usaria o caminho errado.`,
     );
-    deps.io.err("       Move Pastor, and its config folder, to a folder whose path has no % sign, for example C:\\pastor. Then run: pastor start");
+    deps.io.err("       Mova o Pastor, e a pasta de configuração dele, para uma pasta sem % no caminho, por exemplo C:\\pastor. Depois rode: pastor start");
     return false;
   }
   const file = taskFilePath(deps.ctx.configDir, deps.ctx.instance, deps.host);
@@ -591,11 +591,11 @@ function registerTask(deps: LifecycleDeps): boolean {
   if (r.found && r.code === 0) return true;
   const said = `${r.stdout}${r.stderr}`.trim();
   if (said !== "") deps.io.err(said);
-  deps.io.err(`error: schtasks /Create /TN ${name} failed`);
+  deps.io.err(`erro: schtasks /Create /TN ${name} falhou`);
   if (BATCH_LOGON_REFUSED.test(said)) {
-    deps.io.err(`       Windows did not let ${user} log on to run a task: that account lacks the right "Log on as a batch job".`);
-    deps.io.err("       An administrator grants it in Local Security Policy > Local Policies > User Rights Assignment >");
-    deps.io.err(`       "Log on as a batch job", by adding ${user}. Then run: pastor start`);
+    deps.io.err(`       O Windows não deixou ${user} entrar para rodar uma tarefa: essa conta não tem o direito "Fazer logon como um trabalho em lotes".`);
+    deps.io.err("       Um administrador concede em Diretiva de Segurança Local > Diretivas Locais > Atribuição de Direitos de Usuário >");
+    deps.io.err(`       "Fazer logon como um trabalho em lotes", adicionando ${user}. Depois rode: pastor start`);
   }
   return false;
 }
@@ -614,7 +614,7 @@ function renewTaskPriority(deps: LifecycleDeps): void {
   const query = queryTask(deps.exec, taskName(deps), deps.host);
   if (query === undefined || (query !== null && query.priority === TASK_PRIORITY)) return;
   if (!registerTask(deps)) return;
-  deps.io.out("the task now runs Pastor at normal priority; the running launcher keeps its old one until you run `pastor stop` and `pastor start`");
+  deps.io.out("a tarefa agora roda o Pastor com prioridade normal; o processo atual mantém a antiga até você rodar `pastor stop` e `pastor start`");
 }
 
 /** What Windows says when an account may not log on as a batch job: 0x80070569, in any language's text. */
@@ -709,13 +709,13 @@ function processName(command: string): string {
  */
 function stopFailed(deps: LifecycleDeps, verb: StopVerb, stopped: Exclude<TaskStop, { kind: "done" }>): number {
   if (stopped.kind === "unreadable") {
-    deps.io.err(`error: Pastor could not read the list of running programs on this PC (${stopped.why}).`);
+    deps.io.err(`erro: o Pastor não conseguiu ler a lista de programas rodando neste PC (${stopped.why}).`);
   } else {
     const named = stopped.rows.map((row) => `${processName(row.command)} (pid ${row.pid})`).join(", ");
-    deps.io.err(`error: Windows did not let Pastor stop ${named}. It may run as another account or as administrator.`);
+    deps.io.err(`erro: o Windows não deixou o Pastor parar ${named}. Ele pode estar rodando com outra conta ou como administrador.`);
   }
   deps.io.err(
-    `       The bridge may still be running. Pastor did not change its record. Close it in Task Manager, then run \`pastor ${verb}\` again.`,
+    `       O Pastor pode ainda estar rodando, e o registro dele não foi alterado. Feche no Gerenciador de Tarefas e rode \`pastor ${verb}\` de novo.`,
   );
   return EXIT.FAIL;
 }
@@ -723,10 +723,10 @@ function stopFailed(deps: LifecycleDeps, verb: StopVerb, stopped: Exclude<TaskSt
 async function startTaskScheduler(deps: LifecycleDeps): Promise<number> {
   const name = taskName(deps);
   if (deps.ctx.instance !== null) {
-    deps.io.err(`warn: one Pastor per Windows machine is supported; instance ${deps.ctx.instance} gets its own task ${name}, untested`);
+    deps.io.err(`aviso: só um Pastor por Windows é suportado; a instância ${deps.ctx.instance} ganha a tarefa ${name}, sem testes`);
   }
   if (!registerTask(deps)) return EXIT.FAIL;
-  deps.io.out(`Registered Task Scheduler job ${name} (starts at logon)`);
+  deps.io.out(`Tarefa ${name} registrada no Agendador de Tarefas (liga quando você entra no Windows)`);
   // Release the port if this host ran the unsupervised fallback before, as launchd's start does.
   stopPidfileProcess(deps);
   // A launcher of ours that is already running stays: `/Run` on a running task does nothing, so
@@ -738,21 +738,21 @@ async function startTaskScheduler(deps: LifecycleDeps): Promise<number> {
     const stopped = await stopTaskProcesses(deps, record);
     if (stopped.kind !== "done") return stopFailed(deps, "start", stopped);
     // Said only when there was a launcher to replace: a record left by a reboot names dead pids.
-    if (stopped.launcherAlive) deps.io.out("replaced the contrib\\windows\\pastor-ctl.ps1 launcher with Pastor's own");
+    if (stopped.launcherAlive) deps.io.out("o iniciador contrib\\windows\\pastor-ctl.ps1 foi trocado pelo do próprio Pastor");
     deps.files.remove(path);
   }
   const r = deps.exec.capture("schtasks", ["/Run", "/TN", name]);
   if (!r.found || r.code !== 0) {
     const said = `${r.stdout}${r.stderr}`.trim();
     if (said !== "") deps.io.err(said);
-    deps.io.err(`error: schtasks /Run /TN ${name} failed`);
+    deps.io.err(`erro: schtasks /Run /TN ${name} falhou`);
     return EXIT.FAIL;
   }
   // `/Run` returns once the task is asked to run, not once a bridge answers: a launcher that cannot
   // start one (a broken build, a port in use) would otherwise read as a started Pastor.
   const waited = await awaitTaskBridge(deps, false);
   if (!waited.answered) return taskBridgeSilent(deps, waited.waitS);
-  deps.io.out(`bridge started (Task Scheduler: ${name})`);
+  deps.io.out(`Pastor ligado (Agendador de Tarefas: ${name})`);
   return EXIT.OK;
 }
 
@@ -763,7 +763,7 @@ async function stopTaskScheduler(deps: LifecycleDeps, verb: StopVerb = "stop"): 
   deps.exec.capture("schtasks", ["/Change", "/TN", name, "/DISABLE"]);
   deps.exec.capture("schtasks", ["/End", "/TN", name]);
   const { path, raw, record } = readTaskRecord(deps);
-  if (record === null && raw !== null) deps.io.err(`warn: ${path} names no process (${raw.trim()}); nothing in it was stopped`);
+  if (record === null && raw !== null) deps.io.err(`aviso: ${path} não indica nenhum processo (${raw.trim()}); nada foi parado`);
   const stopped = await stopTaskProcesses(deps, record);
   if (stopped.kind !== "done") return stopFailed(deps, verb, stopped);
   // The record goes now: it describes processes that are gone or were never ours.
@@ -799,8 +799,8 @@ export const KILL_SETTLE_MS = 1_000;
  * sentence: neither "not this checkout's bridge" nor "did not answer on the port" is true here.
  */
 function tableUnreadable(deps: LifecycleDeps, why: string): number {
-  deps.io.err(`error: could not read the Windows process table (${why}); nothing was stopped`);
-  deps.io.err("       run `pastor restart` again in a minute");
+  deps.io.err(`erro: não deu para ler a lista de processos do Windows (${why}); nada foi parado`);
+  deps.io.err("       rode `pastor restart` de novo daqui a um minuto");
   return EXIT.FAIL;
 }
 
@@ -820,7 +820,7 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
   if (raw === null) return null;
   if (record === null) {
     // A torn or foreign record is no record: `stop` + `start` find the processes by the table.
-    deps.io.err(`warn: ${path} names no process (${raw.trim()}); restarting through stop and start`);
+    deps.io.err(`aviso: ${path} não indica nenhum processo (${raw.trim()}); reiniciando com stop e start`);
     return null;
   }
   const { root, instance } = deps.ctx;
@@ -831,7 +831,7 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
   if (launcher.kind === "unknown") return tableUnreadable(deps, launcher.why);
   if (launcher.kind === "gone" || !isTaskLauncher(launcher.command, record.format, root, instance, deps.host)) return null;
   if (record.format === 1 && registerTask(deps)) {
-    deps.io.out("the task now runs Pastor's own launcher from the next logon; until then the old one keeps the bridge up");
+    deps.io.out("a tarefa roda o iniciador do próprio Pastor a partir do próximo login; até lá o antigo mantém o Pastor no ar");
   } else if (record.format !== 1) {
     renewTaskPriority(deps);
   }
@@ -845,8 +845,8 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
     const bridge = deps.exec.processLookup(record.bridge, PROCESS_QUERY_SLOW_START_MS);
     if (bridge.kind === "unknown") return tableUnreadable(deps, bridge.why);
     if (bridge.kind === "running" && !isTaskBridge(bridge.command, root, instance, deps.host)) {
-      deps.io.err(`error: the recorded bridge (pid ${record.bridge}) is not this checkout's bridge — not stopping it`);
-      deps.io.err("       run `pastor stop`, then `pastor start`");
+      deps.io.err(`erro: o processo registrado (pid ${record.bridge}) não é deste Pastor — ele não foi parado`);
+      deps.io.err("       rode `pastor stop` e depois `pastor start`");
       return EXIT.FAIL;
     }
     tellLauncher();
@@ -862,18 +862,18 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
       const after = deps.exec.processLookup(record.bridge, PROCESS_QUERY_SLOW_START_MS);
       if (after.kind === "running" && isTaskBridge(after.command, root, instance, deps.host)) {
         deps.files.remove(taskRestartPath(deps.ctx.configDir, deps.ctx.instance, deps.host));
-        deps.io.err(`error: Windows did not let Pastor stop the old bridge, pastor.exe (pid ${record.bridge}). It may run as another account or as administrator.`);
-        deps.io.err(`       Close pastor.exe (pid ${record.bridge}) in Task Manager, then run \`pastor restart\` again.`);
+        deps.io.err(`erro: o Windows não deixou o Pastor parar o processo antigo, pastor.exe (pid ${record.bridge}). Ele pode estar rodando com outra conta ou como administrador.`);
+        deps.io.err(`       Feche o pastor.exe (pid ${record.bridge}) no Gerenciador de Tarefas e rode \`pastor restart\` de novo.`);
         return EXIT.FAIL;
       }
-      deps.io.out(`bridge stopped (pid ${record.bridge}); the Task Scheduler supervisor relaunches it`);
+      deps.io.out(`Pastor parado (pid ${record.bridge}); o Agendador de Tarefas liga de novo`);
     } else {
-      deps.io.out(`the recorded bridge (pid ${record.bridge}) has exited already; the Task Scheduler supervisor relaunches it`);
+      deps.io.out(`o processo registrado (pid ${record.bridge}) já tinha saído; o Agendador de Tarefas liga de novo`);
     }
   } else {
     // `0` is the loop between two launches: the next one already reads this install.
     tellLauncher();
-    deps.io.out("the Task Scheduler supervisor is already relaunching the bridge");
+    deps.io.out("o Agendador de Tarefas já está ligando o Pastor de novo");
   }
 
   // The loop waits a few seconds before it relaunches, and the bridge then has to come up. Say
@@ -917,9 +917,9 @@ async function awaitTaskBridge(deps: LifecycleDeps, settled: boolean): Promise<{
 /** No bridge answered within the budget: say so loudly, with the two next steps, and fail. */
 function taskBridgeSilent(deps: LifecycleDeps, waitS: number): number {
   deps.io.err(
-    `error: Pastor did not answer on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} within ${waitS}s; it may still be starting`,
+    `erro: o Pastor não respondeu em ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} em ${waitS}s; pode ainda estar ligando`,
   );
-  deps.io.err("       wait a minute, then run `pastor status`. If it stays down, read why with:");
+  deps.io.err("       espere um minuto e rode `pastor status`. Se continuar fora do ar, veja o motivo com:");
   deps.io.err("       pastor logs");
   return EXIT.FAIL;
 }
@@ -931,23 +931,23 @@ function taskBridgeSilent(deps: LifecycleDeps, waitS: number): number {
  */
 function describeTaskScheduler(deps: LifecycleDeps): string {
   const name = taskName(deps);
-  const head = `Task Scheduler (${name})`;
+  const head = `Agendador de Tarefas (${name})`;
   const query = queryTask(deps.exec, name, deps.host);
-  if (query === undefined) return `${head} · unknown`;
+  if (query === undefined) return `${head} · desconhecido`;
   if (query === null) {
     const pid = deps.files.read(pidFilePath(deps.ctx.configDir, deps.ctx.instance))?.trim();
-    return pid !== undefined ? `pid ${pid} (unsupervised)` : `${head} · not registered`;
+    return pid !== undefined ? `pid ${pid} (sem supervisor)` : `${head} · não registrada`;
   }
   const status = `${head} · ${query.state}`;
   switch (taskOwner(query, deps.ctx.root, deps.host)) {
     case "legacy":
-      return `${status} · Task ${name} still runs the old script. Run: pastor restart`;
+      return `${status} · a tarefa ${name} ainda roda o script antigo. Rode: pastor restart`;
     case "foreign":
-      return `${status} · runs another install: ${query.program}`;
+      return `${status} · roda outra instalação: ${query.program}`;
     case "pastor":
       return readTaskRecord(deps).record?.format === 1
-        ? `${status} · launcher: the legacy pastor-ctl.ps1 loop, until \`pastor start\``
-        : `${status} · launcher: Pastor's`;
+        ? `${status} · iniciador: o antigo pastor-ctl.ps1, até o \`pastor start\``
+        : `${status} · iniciador: o do Pastor`;
   }
 }
 
@@ -1041,7 +1041,7 @@ const BACKENDS = {
       if (descriptions.length > 0) return descriptions.join("; ");
       // Neither domain has the agent, but the unsupervised fallback may still be serving.
       if (pid !== undefined) return `pid ${pid} (unsupervised — launchd bootstrap refused)`;
-      return `launchd (${agentLabel(deps.ctx.instance)}) · not loaded`;
+      return `launchd (${agentLabel(deps.ctx.instance)}) · não carregado`;
     },
     publishesFrontDoor: true,
   },
@@ -1061,7 +1061,7 @@ const BACKENDS = {
     },
     describe(deps) {
       const pid = pidfileDescription(deps);
-      return pid !== undefined ? `pid ${pid} (unsupervised)` : "not supervised";
+      return pid !== undefined ? `pid ${pid} (sem supervisor)` : "sem supervisor";
     },
     publishesFrontDoor: true,
   },
@@ -1094,11 +1094,11 @@ export async function cmdStart(deps: LifecycleDeps): Promise<number> {
   // `serve` reports its own reason.
   if (!backend.publishesFrontDoor) {
     deps.io.out(
-      `note: Pastor publishes no front door here; the bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
+      `nota: aqui o Pastor não publica acesso externo; ele está em ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
     );
   } else if ((await deps.serve(deps.io)) !== EXIT.OK) {
     deps.io.err(
-      `note: the tailnet front door did not come up; the bridge is still on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
+      `nota: o acesso pelo tailnet não subiu; o Pastor continua em ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
     );
   }
   await printStatusBanner(deps);
@@ -1108,7 +1108,7 @@ export async function cmdStart(deps: LifecycleDeps): Promise<number> {
 export async function cmdStop(deps: LifecycleDeps, verb: StopVerb = "stop"): Promise<number> {
   const stopped = await serviceBackend(deps).stop(deps, verb);
   if (stopped !== undefined && stopped !== EXIT.OK) return stopped;
-  deps.io.out("bridge stopped");
+  deps.io.out("Pastor parado");
   return EXIT.OK;
 }
 
@@ -1132,10 +1132,10 @@ export async function cmdUninstall(deps: LifecycleDeps): Promise<number> {
   serviceBackend(deps).remove(deps);
   deps.files.remove(pidFilePath(deps.ctx.configDir, deps.ctx.instance));
   deps.io.out(
-    "✓ uninstalled: service stopped & disabled, service definition removed, Pastor's tailscale serve mapping removed",
+    "✓ desinstalado: serviço parado e desativado, definição do serviço removida, publicação do Pastor no tailscale serve removida",
   );
   deps.io.out(
-    `  kept: ${join(deps.ctx.configDir, ".env")} and the checkout — delete those to remove every trace`,
+    `  mantidos: ${join(deps.ctx.configDir, ".env")} e os arquivos do Pastor — apague para não sobrar nada`,
   );
   for (const line of windowsBinaryRemoval(deps)) deps.io.out(line);
   return EXIT.OK;
@@ -1158,7 +1158,7 @@ export function windowsBinaryRemoval(deps: Pick<LifecycleDeps, "ctx" | "host" | 
   const bin = deps.host.path.join(installRoot, "current", "bin");
   const quoted = bin.replaceAll("'", "''");
   return [
-    "  To remove Pastor itself too, run these two lines in PowerShell:",
+    "  Para remover o próprio Pastor também, rode estas duas linhas no PowerShell:",
     `    cmd /c rmdir /s /q "${installRoot}"`,
     `    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true); $k.SetValue('Path', (($k.GetValue('Path', '', 'DoNotExpandEnvironmentNames') -split ';' | Where-Object { $_.TrimEnd('\\') -ne '${quoted}' }) -join ';'), $k.GetValueKind('Path')); $k.Close()`,
   ];
@@ -1186,10 +1186,10 @@ export async function cmdRestart(deps: LifecycleDeps): Promise<number> {
 export async function cmdStatus(deps: LifecycleDeps): Promise<number> {
   await printStatusBanner(deps);
   if (deps.ctx.env.PASTOR_SKIP_SERVE === "1") {
-    deps.io.out("  serve config: skipped (PASTOR_SKIP_SERVE=1)");
+    deps.io.out("  tailscale serve: pulado (PASTOR_SKIP_SERVE=1)");
     return EXIT.OK;
   }
-  deps.io.out("  serve config:");
+  deps.io.out("  tailscale serve:");
   const r = deps.exec.capture("tailscale", ["serve", "status"]);
   if (r.found && r.code === 0) {
     for (const line of r.stdout.replace(/\n$/, "").split("\n")) {
@@ -1214,7 +1214,7 @@ export function cmdLogs(deps: LifecycleDeps, args: readonly string[]): number {
   // the runtime path.
   const text = deps.files.read(logFilePath(deps.ctx.configDir, deps.ctx.instance));
   if (text === null) {
-    deps.io.out("(no log)");
+    deps.io.out("(sem log)");
     return EXIT.OK;
   }
   const all = text.replace(/\n$/, "").split("\n");
@@ -1255,7 +1255,7 @@ function launchdServiceDescriptions(deps: LifecycleDeps): string[] {
     // A loaded-but-stopped agent has no pid line. Report both registrations if both exist,
     // rather than hiding a background service behind a stopped GUI agent after a migration.
     const pid = /^[ \t]*pid = (\d+)/m.exec(result.stdout)?.[1];
-    const state = pid === undefined ? "loaded, not running" : `active (pid ${pid})`;
+    const state = pid === undefined ? "carregado, parado" : `ativo (pid ${pid})`;
     descriptions.push(`launchd (${target}) · ${state}`);
   }
   return descriptions;
@@ -1299,8 +1299,8 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   const rows: { label: string; value: string }[] = [];
   // Only a suffixed instance says so — a solo host's banner is unchanged, and on a host running two
   // this is the line that says WHICH Pastor answered (the unit name on the next line agrees).
-  if (deps.ctx.instance !== null) rows.push({ label: "instance", value: deps.ctx.instance });
-  rows.push({ label: "service", value: serviceDescription(deps) });
+  if (deps.ctx.instance !== null) rows.push({ label: "instância", value: deps.ctx.instance });
+  rows.push({ label: "serviço", value: serviceDescription(deps) });
   // F13: the address the bridge BOUND, not a hardcoded loopback string — see `localBridgeUrl`.
   // A peer's main listener is mutual TLS only (ADR 0013), so an `http://` address there never
   // answers. Name it as the crew link it is.
@@ -1308,7 +1308,7 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   const localUrl = localBridgeUrl(deps.ctx.env, deps.ctx.port);
   rows.push({
     label: "local",
-    value: isPeer ? `${localUrl.replace(/^http:/, "https:")} (crew link, mutual TLS only)` : localUrl,
+    value: isPeer ? `${localUrl.replace(/^http:/, "https:")} (ligação da crew, só TLS mútuo)` : localUrl,
   });
   // The front-door row, and the one machine that has no front door to describe. A PEER publishes
   // none (ADR 0013) — `cmdServe` refuses the publish and says so — so a `tailnet` row here was a row
@@ -1317,12 +1317,12 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   // the banner and the refusal can never disagree. The crew's door is named instead, because "where
   // do I point my phone?" still has an answer on a peer: the lead's (F24).
   if (isPeer) {
-    rows.push({ label: "crew", value: "peer — no front door here; the lead's door serves the crew (ADR 0013)" });
+    rows.push({ label: "crew", value: "membro — sem acesso próprio aqui; o acesso do líder atende a crew (ADR 0013)" });
   } else if (deps.ctx.env.PASTOR_SKIP_SERVE === "1") {
     const url = configuredPublicUrl(deps.ctx.env);
     rows.push({
       label: "proxy",
-      value: url ?? "(PASTOR_SKIP_SERVE=1 — set PASTOR_PUBLIC_URL to your reverse-proxy URL)",
+      value: url ?? "(PASTOR_SKIP_SERVE=1 — defina PASTOR_PUBLIC_URL com o endereço do seu proxy reverso)",
     });
   } else {
     rows.push({ label: "tailnet", value: bridgeUrl(deps.exec, deps.ctx) });
@@ -1331,13 +1331,13 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   // nothing else, so the first start says what to run. Only then: a paired install's banner is
   // unchanged, and a peer has no door of its own to pair against.
   if (crewModeOnDisk(deps) !== "peer" && pairedRegistryOf(deps.files, deps.ctx.stateDir).devices.length === 0) {
-    rows.push({ label: "pairing", value: "no device paired yet — run `pastor pair` to pair your phone" });
+    rows.push({ label: "pareamento", value: "nenhum aparelho pareado ainda — rode `pastor pair` para parear o celular" });
   }
   return {
     running,
     headline: running
-      ? `✓ Pastor is running  ·  v${version}`
-      : `⚠ Pastor isn't answering on ${probedAddress} yet (v${version}) — check 'pastor logs'`,
+      ? `✓ O Pastor está rodando  ·  v${version}`
+      : `⚠ O Pastor ainda não responde em ${probedAddress} (v${version}) — veja 'pastor logs'`,
     rows,
   };
 }
@@ -1351,7 +1351,7 @@ export function bannerLines(view: StatusView): string[] {
   return [
     "",
     `  ${view.headline}`,
-    ...view.rows.map((r) => `    ${r.label.padEnd(10)}${r.value}`),
+    ...view.rows.map((r) => `    ${r.label.padEnd(12)}${r.value}`),
     "",
   ];
 }

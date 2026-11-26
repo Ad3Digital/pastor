@@ -22,8 +22,9 @@ a toda hora, com três acréscimos:
   sem digitar código de novo.
 - **Ligação ao vivo com o Codex e o OMP.** Você fala no celular, o agente trabalha no PC e a
   resposta volta falada. Veja [Ligação ao vivo](#ligação-ao-vivo-fale-com-o-codex-pelo-celular).
-  ouve a resposta nele. Veja [Voz](#voz-o-call-do-codex-no-celular).
 - **Nome, ícone e textos do Pastor.** O atualizador busca as versões deste repositório.
+- **Em português do Brasil.** O app segue o idioma do celular, e o instalador e os comandos do
+  dia a dia (`start`, `status`, `pair`, `update`) falam português no terminal.
 
 ## Instalar no Windows
 

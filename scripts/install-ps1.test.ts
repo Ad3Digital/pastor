@@ -172,12 +172,12 @@ describe("scripts/install.ps1, read as text", () => {
 
   test("never says 'verified': the checksum comes from the same place as the zip", () => {
     expect(CODE.filter((l) => /\bverified\b/i.test(l))).toEqual([]);
-    expect(TEXT).toContain("matches the checksum published with the release");
+    expect(TEXT).toContain("O download confere com o checksum publicado na vers&#xE3;o");
   });
 
   test("stops on a missing sidecar and on a digest that does not match", () => {
-    expect(TEXT).toContain("so a download could not be checked");
-    expect(TEXT).toContain("CHECKSUM MISMATCH");
+    expect(TEXT).toContain("ent&#xE3;o o download n&#xE3;o pode ser conferido");
+    expect(TEXT).toContain("CHECKSUM DIFERENTE");
     expect(TEXT).toContain("[StringComparison]::OrdinalIgnoreCase");
   });
 });
@@ -407,8 +407,8 @@ const lastLine = (out: string): string => out.trimEnd().split(/\r?\n/).at(-1) ??
 /** A failed run: the code the script set, and "Install failed." with one fix as the LAST line. */
 function expectFailed(r: { code: number; out: string }, code = 1): void {
   expect(r.code).toBe(code);
-  expect(lastLine(r.out)).toMatch(/^Install failed\. \S/);
-  expect(r.out).not.toMatch(/Next steps|steps are left/);
+  expect(lastLine(r.out)).toMatch(/^A instalação falhou\. \S/);
+  expect(r.out).not.toMatch(/Próximos passos|steps are left/);
 }
 
 /** Run a PowerShell command line and wait. Output goes to a log file through file handles. */
@@ -506,7 +506,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
   test("installs the newest strict release into versions\\<X.Y.Z> under a `current` junction", async () => {
     const b = box();
     const r = await install(b, mirror);
-    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`O Pastor ${v1} está instalado em ${b.dir}`);
     expect(r.code).toBe(0);
     expect(existsSync(join(b.dir, "versions", v1, "bin", "pastor.exe"))).toBe(true);
     expect(lstatSync(join(b.dir, "current")).isSymbolicLink()).toBe(true);
@@ -527,19 +527,19 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(r.code).toBe(0);
     const exe = `${b.dir}\\current\\bin\\pastor.exe`;
     const tail = r.out.trimEnd().split(/\r?\n/).slice(-24).join("\n");
-    expect(tail).toContain("Next steps. This script does not take them for you:");
-    expect(tail).toContain("1. Open a NEW terminal window.");
-    expect(tail).toContain("2. Start Herdr in another terminal window, and leave it running.");
-    expect(tail).toContain("Get Herdr at https://herdr.dev");
+    expect(tail).toContain("Próximos passos. Este script não faz por você:");
+    expect(tail).toContain("1. Abra uma janela NOVA do terminal.");
+    expect(tail).toContain("2. Abra o Herdr em outra janela do terminal e deixe rodando.");
+    expect(tail).toContain("Baixe o Herdr em https://herdr.dev");
     expect(tail).toContain(`${exe} start`);
     expect(tail).toContain(`${exe} url`);
     // Pairing is always on (ADR 0086), so pairing is a step of its own.
     expect(tail).toContain(`${exe} pair`);
-    expect(tail).toContain("Linking several machines (crew) does not work on Windows yet. Pastor on one machine works fine.");
-    expect(tail).toContain("pastor.exe is unsigned: Windows does not know the publisher of this file.");
-    expect(r.out).toContain("PASTOR_NO_PATH_EDIT=1 is set, so your PATH was not changed.");
+    expect(tail).toContain("Ligar vários computadores (crew) ainda não funciona no Windows. O Pastor num computador só funciona normalmente.");
+    expect(tail).toContain("O pastor.exe não é assinado: o Windows não conhece quem publicou o arquivo.");
+    expect(r.out).toContain("PASTOR_NO_PATH_EDIT=1 está definido, então o seu PATH não foi alterado.");
     // No herdr on this PATH: the PATH check says so, and the install goes on.
-    expect(r.out).toContain("Herdr not found on your PATH.");
+    expect(r.out).toContain("O Herdr não foi encontrado no PATH.");
     // The `pastor` on PATH leaves a mark when run. There is none.
     expect(existsSync(join(b.root, "pastor-ran.txt"))).toBe(false);
   }, 60_000);
@@ -548,8 +548,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { herdr: true });
     expect(r.code).toBe(0);
-    expect(r.out).toContain(`Herdr found: ${join(b.fakeBin, "herdr.cmd")}`);
-    expect(r.out).not.toContain("Herdr not found");
+    expect(r.out).toContain(`Herdr encontrado: ${join(b.fakeBin, "herdr.cmd")}`);
+    expect(r.out).not.toContain("Herdr não foi encontrado");
   }, 60_000);
 
   test("writes nothing outside PASTOR_DIR, and leaves no scratch folder in it", async () => {
@@ -575,14 +575,14 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const before = snapshot(b);
     const again = await install(b, mirror);
     expect(again.code).toBe(0);
-    expect(again.out).toContain(`Pastor ${v1} is already installed in ${b.dir}. To update, run: pastor update`);
+    expect(again.out).toContain(`Pastor ${v1} já está instalado em ${b.dir}. Para atualizar, rode: pastor update`);
     expect(again.asked).toEqual([]);
     expect(snapshot(b)).toBe(before);
     // The same pinned tag again: still nothing changed, nothing downloaded.
     const pinned = await install(b, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expect(pinned.code).toBe(0);
-    expect(pinned.out).toContain("Nothing was changed, and nothing was downloaded.");
-    expect(pinned.out).not.toContain("Laying");
+    expect(pinned.out).toContain("Nada foi alterado nem baixado.");
+    expect(pinned.out).not.toContain("Instalando v");
     expect(pinned.asked).toEqual([]);
     expect(snapshot(b)).toBe(before);
   }, 90_000);
@@ -591,21 +591,21 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     expect((await install(b, mirror)).code).toBe(0);
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
-    expect(r.out).toContain(`Laying v${v2} down beside it`);
+    expect(r.out).toContain(`Instalando v${v2} ao lado`);
     expect(r.code).toBe(0);
     expect(readdirSync(join(b.dir, "versions")).toSorted()).toEqual([v1, v2]);
     expect(currentTarget(b)).toBe(versionDir(b, v2));
     expect(r.asked.some((p) => p.includes("/tags"))).toBe(false);
     expect(existsSync(join(b.dir, ".current.new"))).toBe(false);
     // Pastor may be running already: the next step is a restart, never "start" and "nothing is running".
-    expect(r.out).toContain(`OK  Pastor ${v2} is installed in ${b.dir}, and current names it.`);
-    expect(r.out).toMatch(/If Pastor is running, run {2}\S*pastor(\.exe)? restart {2}to start this version\./);
-    expect(r.out).not.toContain("Nothing is running yet");
+    expect(r.out).toContain(`OK  O Pastor ${v2} está instalado em ${b.dir}, e current aponta para ele.`);
+    expect(r.out).toMatch(/Se o Pastor estiver rodando, rode {2}\S*pastor(\.exe)? restart {2}para usar esta versão\./);
+    expect(r.out).not.toContain("Nada está rodando ainda");
     expect(r.out).not.toContain(" start\n");
     // Back to v1, which is on disk: a junction flip, and nothing is downloaded.
     const back = await install(b, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expect(back.code).toBe(0);
-    expect(back.out).toContain("nothing was downloaded");
+    expect(back.out).toContain("nada foi baixado");
     expect(back.asked).toEqual([]);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
   }, 90_000);
@@ -623,8 +623,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     mirror.put(`v${bad}`, `pastor-${bad}-${PLATFORM}.zip`, corrupt);
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${bad}` } });
     expectFailed(r);
-    expect(r.out).toContain(`CHECKSUM MISMATCH for pastor-${bad}-${PLATFORM}.zip`);
-    expect(r.out).toContain("nothing was installed");
+    expect(r.out).toContain(`CHECKSUM DIFERENTE em pastor-${bad}-${PLATFORM}.zip`);
+    expect(r.out).toContain("nada foi instalado");
     expect(readdirSync(join(b.dir, "versions"))).toEqual([v1]);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(existsSync(join(b.dir, ".staging"))).toBe(false);
@@ -637,7 +637,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     mirror.drop(`v${v}`, `pastor-${v}-${PLATFORM}.zip.sha256`);
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
-    expect(r.out).toContain("so a download could not be checked");
+    expect(r.out).toContain("então o download não pode ser conferido");
     expect(existsSync(b.dir)).toBe(false);
   }, 60_000);
 
@@ -648,7 +648,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     mirror.put(`v${v}`, `pastor-${v}.manifest.json`, manifest(v, "a".repeat(64)));
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
-    expect(r.out).toContain("is not the one release");
+    expect(r.out).toContain("não é o que o manifesto da versão");
     expect(existsSync(b.dir)).toBe(false);
   }, 60_000);
 
@@ -656,8 +656,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { env: { PASTOR_TAG: "v0.35.0" } });
     expectFailed(r);
-    expect(r.out).toContain(`release v0.35.0 has no pastor-0.35.0-${PLATFORM}.zip.sha256 (HTTP 404)`);
-    expect(r.out).toContain("Either that release has no Windows build");
+    expect(r.out).toContain(`a versão v0.35.0 não tem pastor-0.35.0-${PLATFORM}.zip.sha256 (HTTP 404)`);
+    expect(r.out).toContain("Ou essa versão não tem build para Windows");
     expect(existsSync(b.dir)).toBe(false);
   }, 60_000);
 
@@ -668,7 +668,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expect(r.code).toBe(0);
-      expect(r.out).toContain(`Pastor ${v1} is installed`);
+      expect(r.out).toContain(`O Pastor ${v1} está instalado`);
       expect(r.asked.filter((p) => p.includes("v9."))).toEqual([]);
       expect(readdirSync(join(b.dir, "versions"))).toEqual([v1]);
     } finally {
@@ -709,7 +709,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const dir = join(b.root, "inst a&b \u00fc");
     const r = await install(b, mirror, { env: { PASTOR_DIR: dir } });
-    expect(r.out).toContain(`Pastor ${v1} is installed in ${dir}`);
+    expect(r.out).toContain(`O Pastor ${v1} está instalado em ${dir}`);
     expect(r.code).toBe(0);
     expect(norm(realpathSync(join(dir, "current")))).toBe(norm(realpathSync(join(dir, "versions", v1))));
   }, 60_000);
@@ -718,7 +718,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { env: { PASTOR_UPDATE_REPO: "someone/pastor-fork" } });
     expect(r.code).toBe(0);
-    expect(r.out).toContain("WARNING: PASTOR_UPDATE_REPO is set. This installs Pastor from github.com/someone/pastor-fork");
+    expect(r.out).toContain("AVISO: PASTOR_UPDATE_REPO está definido. Isto instala o Pastor de github.com/someone/pastor-fork");
     expect(r.asked[0]).toBe("/repos/someone/pastor-fork/tags");
   }, 60_000);
 
@@ -727,11 +727,11 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       const b = box();
       const r = await install(b, mirror, { env: { PASTOR_INSTALL_MIRROR: url } });
       expectFailed(r);
-      expect(r.out).toContain("It is a test seam");
+      expect(r.out).toContain("Serve só para testes");
       expect(r.asked).toEqual([]);
     }
     const ok = await install(box(), mirror);
-    expect(ok.out).toContain(`WARNING: PASTOR_INSTALL_MIRROR is set. This is a test seam: everything comes from ${mirror.url}`);
+    expect(ok.out).toContain(`AVISO: PASTOR_INSTALL_MIRROR está definido. Isto é só para testes: tudo vem de ${mirror.url}`);
   }, 120_000);
 
   test("a file:/// mirror folder works the same way", async () => {
@@ -746,7 +746,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     }
     const url = `file:///${root.replace(/\\/g, "/")}`;
     const r = await install(b, mirror, { env: { PASTOR_INSTALL_MIRROR: url } });
-    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`O Pastor ${v1} está instalado em ${b.dir}`);
     expect(r.code).toBe(0);
     expect(r.asked).toEqual([]);
   }, 60_000);
@@ -758,9 +758,9 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expect(r.code).toBe(0);
-      expect(r.out).toContain("v0.38.5 has no Windows build. Trying the next older release.");
-      expect(r.out).toContain("v0.38.4 has no Windows build. Trying the next older release.");
-      expect(r.out).toContain(`Pastor ${v1} is installed`);
+      expect(r.out).toContain("v0.38.5 não tem build para Windows. Tentando a versão anterior.");
+      expect(r.out).toContain("v0.38.4 não tem build para Windows. Tentando a versão anterior.");
+      expect(r.out).toContain(`O Pastor ${v1} está instalado`);
       expect(r.asked.filter((p) => p.endsWith(".sha256"))).toEqual([
         `/${REPO}/releases/download/v0.38.5/pastor-0.38.5-${PLATFORM}.zip.sha256`,
         `/${REPO}/releases/download/v0.38.4/pastor-0.38.4-${PLATFORM}.zip.sha256`,
@@ -784,7 +784,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expect(r.code).toBe(0);
-      expect(r.out).toContain(`Pastor ${v1} is installed`);
+      expect(r.out).toContain(`O Pastor ${v1} está instalado`);
       expect(mirror.tagQueries.slice(before)).toEqual(["?per_page=100", "?per_page=100&page=2"]);
     } finally {
       mirror.tags = saved;
@@ -798,7 +798,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expectFailed(r);
-      expect(r.out).toContain("none of the newest 5 releases of Ad3Digital/pastor carries a Windows build yet");
+      expect(r.out).toContain("nenhuma das 5 versões mais novas de Ad3Digital/pastor tem build para Windows ainda");
       expect(lastLine(r.out)).toContain("PASTOR_TAG");
       expect(r.out).not.toContain("HTTP 404");
       expect(existsSync(b.dir)).toBe(false);
@@ -813,7 +813,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     try {
       const r = await install(b, mirror);
       expectFailed(r);
-      expect(r.out).toContain("rate limit says no (HTTP 403)");
+      expect(r.out).toContain("limite de consultas da API do GitHub foi atingido (HTTP 403)");
       expect(lastLine(r.out)).toContain("$env:PASTOR_TAG = 'vX.Y.Z'");
     } finally {
       mirror.tagsStatus = 200;
@@ -837,7 +837,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       const b = box();
       const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
       expectFailed(r);
-      expect(r.out).toContain("the zip is not safe to unpack");
+      expect(r.out).toContain("o zip não é seguro para descompactar");
       expect(existsSync(b.dir)).toBe(false);
       expect(filesUnder(b.root).filter((f) => f.endsWith("evil.txt"))).toEqual([]);
     }
@@ -871,7 +871,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     writeFileSync(join(b.dir, "current", "mine.txt"), "mine\n");
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(r);
-    expect(r.out).toContain("is a real folder or file, not a junction");
+    expect(r.out).toContain("é uma pasta ou arquivo de verdade, não uma junção");
     expect(r.asked).toEqual([]);
     expect(readdirSync(join(b.dir, "current"))).toEqual(["mine.txt"]);
     expect(readdirSync(join(b.dir, "versions"))).toEqual([v1]);
@@ -883,7 +883,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     mkdirSync(join(b.dir, "versions", v2, "web"), { recursive: true });
     const half = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(half);
-    expect(half.out).toContain("holds no bin\\pastor.exe");
+    expect(half.out).toContain("não tem bin\\pastor.exe");
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(half.asked).toEqual([]);
 
@@ -894,7 +894,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     symlinkSync(elsewhere, join(b.dir, "versions", v2), "junction");
     const linked = await install(b, mirror, { env: { PASTOR_TAG: `v${v2}` } });
     expectFailed(linked);
-    expect(linked.out).toContain("is a junction or a link");
+    expect(linked.out).toContain("é uma junção ou um link");
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(existsSync(join(elsewhere, "bin", "pastor.exe"))).toBe(true);
   }, 90_000);
@@ -909,7 +909,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       expect(r.out).toContain(words);
     }
     expect(lastLine(r.out)).toContain("https://github.com/Ad3Digital/pastor/issues");
-    expect(r.out).not.toContain("is installed in");
+    expect(r.out).not.toContain("está instalado em");
     // The files stay: the install is safe to leave in place.
     expect(existsSync(join(b.dir, "current", "bin", "pastor.exe"))).toBe(true);
     expect(existsSync(join(b.dir, ".pastor-version-check.txt"))).toBe(false);
@@ -947,7 +947,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { env: { PASTOR_TAG: "1.0.0" } });
     expectFailed(r);
-    expect(r.out).toContain("is not a release tag");
+    expect(r.out).toContain("não é uma tag de versão");
     expect(r.asked).toEqual([]);
   }, 60_000);
 
@@ -955,7 +955,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { args: ["--beta"] });
     expectFailed(r, 2);
-    expect(r.out).toContain("install.ps1 takes no options");
+    expect(r.out).toContain("o install.ps1 não aceita opções");
     expect(r.asked).toEqual([]);
   }, 60_000);
 
@@ -965,14 +965,14 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     writeFileSync(join(other.dir, "notes.txt"), "mine\n");
     const r = await install(other, mirror);
     expectFailed(r);
-    expect(r.out).toContain("is not a Pastor install");
+    expect(r.out).toContain("não é uma instalação do Pastor");
     expect(readdirSync(other.dir)).toEqual(["notes.txt"]);
 
     const git = box();
     mkdirSync(join(git.dir, ".git"), { recursive: true });
     const g = await install(git, mirror);
     expect(g.code).toBe(0);
-    expect(g.out).toContain(`Pastor (a git checkout) is already installed in ${git.dir}. To update, run: pastor update`);
+    expect(g.out).toContain(`Pastor (checkout do git) já está instalado em ${git.dir}. Para atualizar, rode: pastor update`);
     expect(g.asked).toEqual([]);
     const pinned = await install(git, mirror, { env: { PASTOR_TAG: `v${v1}` } });
     expectFailed(pinned);
@@ -996,7 +996,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       "exit $code",
     ].join("; ");
     const r = await runPowerShell(b, ["-Command", command], childEnv(b, mirror, {}, false));
-    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`O Pastor ${v1} está instalado em ${b.dir}`);
     expect(r.code).toBe(0);
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(r.out).toContain("LEAK functions=0 eap=True progress=True tls=True");
@@ -1013,12 +1013,12 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const bad = box();
     const failed = await runPowerShell(bad, ["-File", SCRIPT], childEnv(bad, mirror, { PASTOR_TAG: `v${v}` }, false));
     expect(failed.code).toBe(1);
-    expect(lastLine(failed.out)).toMatch(/^Install failed\. /);
+    expect(lastLine(failed.out)).toMatch(/^A instalação falhou\. /);
     expect(failed.out).toContain("CHECKSUM MISMATCH");
 
     const ok = box();
     const installed = await runPowerShell(ok, ["-File", SCRIPT], childEnv(ok, mirror, {}, false));
-    expect(installed.out).toContain(`Pastor ${v1} is installed in ${ok.dir}`);
+    expect(installed.out).toContain(`O Pastor ${v1} está instalado em ${ok.dir}`);
     expect(installed.code).toBe(0);
   }, 90_000);
 
@@ -1032,7 +1032,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       childEnv(b, mirror, { PASTOR_TAG: "v0.35.0" }, false),
     );
     expect(r.code).toBe(1);
-    expect(r.out).toContain("Install failed.");
+    expect(r.out).toContain("A instalação falhou.");
     expect(lastLine(r.out)).toBe("STILL HERE 1");
   }, 60_000);
 
@@ -1040,7 +1040,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const wow = join(SYSTEM_ROOT, "SysWOW64", "WindowsPowerShell", "v1.0", "powershell.exe");
     const r = await runPowerShell(b, ["-Command", `& ${psQuote(SCRIPT)}; exit $LASTEXITCODE`], childEnv(b, mirror, {}, false), wow);
-    expect(r.out).toContain(`Pastor ${v1} is installed in ${b.dir}`);
+    expect(r.out).toContain(`O Pastor ${v1} está instalado em ${b.dir}`);
     expect(r.code).toBe(0);
   }, 60_000);
 
@@ -1053,7 +1053,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       childEnv(b, mirror, {}, false),
     );
     expectFailed(r);
-    expect(r.out).toContain("ConstrainedLanguage mode");
+    expect(r.out).toContain("modo ConstrainedLanguage");
     expect(existsSync(b.dir)).toBe(false);
   }, 60_000);
 
@@ -1130,7 +1130,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
-    expect(r.out).toContain("Added ");
+    expect(r.out).toContain(" foi adicionado ao PATH");
     expect(r.out).toContain(`PATH C:\\Windows\\System32;${bin}`);
     expect(r.out).toContain("NAME pastor\r\n");
     expect(r.out).toContain("ONCE 1");
@@ -1152,8 +1152,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     );
     expect(r.code).toBe(0);
     const lines = r.out.trim().split(/\r?\n/);
-    expect(lines[0]).toContain("no Windows binary for Arm64");
-    expect(lines[1]).toContain("no Windows binary for X86");
+    expect(lines[0]).toContain("para Arm64. S");
+    expect(lines[1]).toContain("para X86. S");
     expect(lines[2]).toContain("build 18363");
     expect(lines.slice(3)).toEqual(["NULL", "NULL", "NULL"]);
   }, 60_000);
@@ -1180,9 +1180,9 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(r.code).toBe(0);
     const lines = r.out.trim().split(/\r?\n/);
     expect(lines[0]).toBe("NULL");
-    expect(lines[1]).toBe("VALUE CHECKSUM MISMATCH for x.zip");
-    expect(lines[2]).toContain("names y.zip");
-    expect(lines[3]).toContain("is not one");
+    expect(lines[1]).toBe("VALUE CHECKSUM DIFERENTE em x.zip");
+    expect(lines[2]).toContain("indica y.zip");
+    expect(lines[3]).toContain("uma linha");
     // The name may be left out, a `*` (binary mode) is read through, anything more is refused.
     expect(lines.slice(4, 8).map((l) => l === "NULL")).toEqual([true, true, false, false]);
     // Zip entries: two under the root pass; every other one names its reason.
@@ -1212,10 +1212,10 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
-    expect(r.out).toContain("ERR could not point");
+    expect(r.out).toContain("ERR n&#xE3;o deu para apontar");
     expect(r.out).toContain("simulated: the rename was refused");
-    expect(r.out).toContain("still names");
-    expect(r.out).toContain("Nothing was changed.");
+    expect(r.out).toContain("continua apontando");
+    expect(r.out).toContain("Nada foi alterado.");
     expect(currentTarget(b)).toBe(versionDir(b, v1));
     expect(existsSync(join(b.dir, ".current.new"))).toBe(false);
     expect(existsSync(join(b.dir, "versions", v1, "bin", "sentinel.txt"))).toBe(true);
@@ -1236,8 +1236,8 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
       ].join("\r\n"),
     );
     expect(r.code).toBe(0);
-    expect(r.out).toContain("putting it back failed too");
-    expect(r.out).toContain(`FIX Make it again by hand:  cmd /c mklink /J "${b.dir}\\current" "${b.dir}\\versions\\${v1}"`);
+    expect(r.out).toContain("tamb&#xE9;m falhou");
+    expect(r.out).toContain(`FIX Crie de novo &#xE0; m&#xE3;o:  cmd /c mklink /J "${b.dir}\\current" "${b.dir}\\versions\\${v1}"`);
     expect(existsSync(join(b.dir, "versions", v1, "bin", "sentinel.txt"))).toBe(true);
   }, 60_000);
 
@@ -1252,7 +1252,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
         "\r\n",
       ),
     );
-    expect(r.out).toContain("is a real folder or file, not a junction");
+    expect(r.out).toContain("é uma pasta ou arquivo de verdade, não uma junção");
     expect(existsSync(join(b.dir, "current", "mine.txt"))).toBe(true);
   }, 60_000);
 });

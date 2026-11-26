@@ -345,7 +345,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   test("stops when curl is missing, and says how to get it", () => {
     const r = run({ without: ["curl"] });
     expect(r.code).toBe(1);
-    expect(r.out).toContain("curl is required");
+    expect(r.out).toContain("o curl é necessário");
   });
 
   test("refuses to install unverified: no sha256 tool means no install", () => {
@@ -380,7 +380,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
     });
     expect(r.code).toBe(1);
-    expect(r.out).toContain("CHECKSUM MISMATCH");
+    expect(r.out).toContain("CHECKSUM DIFERENTE");
     expect(r.installed).toBe(false);
   });
 
@@ -404,7 +404,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
     });
     expect(r.code).toBe(1);
-    expect(r.out).toContain("from source");
+    expect(r.out).toContain("plugin do Herdr");
     expect(r.installed).toBe(false);
   });
 
@@ -426,13 +426,13 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   });
 
   test("warns — never fails — when ~/.local/bin is not on PATH", () => {
-    expect(run().out).toContain("is not on your PATH");
-    expect(run({ onPath: true }).out).not.toContain("is not on your PATH");
+    expect(run().out).toContain("não está no seu PATH");
+    expect(run({ onPath: true }).out).not.toContain("não está no seu PATH");
   });
 
   test("ends by printing the next steps, and starts nothing", () => {
     const r = run();
-    expect(r.out).toContain("nothing is running yet");
+    expect(r.out).toContain("Nada está rodando ainda");
     expect(r.out).toContain("PASTOR_MUX");
     expect(r.out).toContain("pastor start");
     // Pairing is always on (ADR 0086): the install names `pastor pair` as a step of its own.
@@ -450,7 +450,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     expect(r.out).toContain("pastor update");
     // …and the two ways forward when that verb is itself the thing that is broken.
     expect(r.out).toContain("PASTOR_TAG=vX.Y.Z");
-    expect(r.out).toContain('docs/upgrading.md, section "When pastor will not run"');
+    expect(r.out).toContain('docs/upgrading.md, seção "When pastor will not run"');
   });
 
   test("leaves a git checkout at PASTOR_DIR alone too", () => {
@@ -460,7 +460,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
     });
     expect(r.code).toBe(0);
-    expect(r.out).toContain("leaving it alone");
+    expect(r.out).toContain("Nada foi alterado");
   });
 
   // ── PASTOR_TAG ─────────────────────────────────────────────────────────────
@@ -496,7 +496,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
       (r) => {
         expect(r.code).toBe(0);
-        expect(r.out).toContain("beside it");
+        expect(r.out).toContain("ao lado");
         // The version that was already there survives — a rescue is never a clobber.
         expect(existsSync(join(r.dir, "versions", "0.35.0"))).toBe(true);
         expect(existsSync(join(r.dir, "versions", VERSION, "bin", "pastor"))).toBe(true);
@@ -517,7 +517,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
       (r) => {
         expect(r.code).toBe(0);
-        expect(r.out).toContain("nothing was downloaded");
+        expect(r.out).toContain("nada foi baixado");
         expect(r.out).toContain("linked");
         expect(r.curl).toBe("");
         expect(readlinkSync(join(r.dir, "current"))).toBe(`versions/${VERSION}`);
@@ -540,9 +540,9 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   test("a rate-limited tags API is named as one, with the pin that skips the call", () => {
     const r = run({ env: { PASTOR_TEST_API_CODE: "403" } });
     expect(r.code).toBe(1);
-    expect(r.out).toContain("rate limit");
-    expect(r.out).toContain("60 calls an hour");
-    expect(r.out).toContain("Set GH_TOKEN");
+    expect(r.out).toContain("limite de consultas");
+    expect(r.out).toContain("60 consultas por hora");
+    expect(r.out).toContain("Defina GH_TOKEN");
     expect(r.out).toContain("PASTOR_TAG=vX.Y.Z");
     expect(r.headers).not.toContain("Authorization");
     expect(r.installed).toBe(false);
@@ -559,14 +559,14 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     expect(ok.curlrcMode).toBe("600");
     const limited = run({ env: { PASTOR_TEST_API_CODE: "403", GITHUB_TOKEN: "ghp_secret" } });
     expect(limited.code).toBe(1);
-    expect(limited.out).toContain("even with the token in GITHUB_TOKEN");
-    expect(limited.out).not.toContain("Set GH_TOKEN");
+    expect(limited.out).toContain("mesmo com o token em GITHUB_TOKEN");
+    expect(limited.out).not.toContain("Defina GH_TOKEN");
     expect(limited.out).not.toContain("ghp_secret");
     const refused = run({
       env: { PASTOR_TEST_API_CODE: "401", PASTOR_GITHUB_TOKEN: "ghp_bad", GH_TOKEN: "ghp_second" },
     });
     expect(refused.code).toBe(1);
-    expect(refused.out).toContain("refused the token in PASTOR_GITHUB_TOKEN");
+    expect(refused.out).toContain("recusou o token em PASTOR_GITHUB_TOKEN");
     expect(refused.out).not.toContain("ghp_bad");
     expect(refused.installed).toBe(false);
   });

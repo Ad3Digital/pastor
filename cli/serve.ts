@@ -141,14 +141,14 @@ export function cmdServe(deps: ServeDeps): number {
     // In http mode the listener IS the bridge port, so honouring both would be publishing on a port
     // neither setting names. One question, one answer.
     deps.io.err(
-      "error: PASTOR_SERVE_PORT applies to the https front door only — under PASTOR_SERVE_MODE=http " +
-        "the tailnet listener is PASTOR_PORT. Unset one of them.",
+      "erro: PASTOR_SERVE_PORT vale só para o acesso https — com PASTOR_SERVE_MODE=http " +
+        "a porta no tailnet é a PASTOR_PORT. Tire uma das duas.",
     );
     return EXIT.FAIL;
   }
   const parsedServePort = parseServePort(deps.ctx.env);
   if (!parsedServePort.ok) {
-    deps.io.err(`error: ${parsedServePort.message}`);
+    deps.io.err(`erro: ${parsedServePort.message}`);
     return EXIT.FAIL;
   }
   const httpsPort = parsedServePort.port;
@@ -162,7 +162,7 @@ export function cmdServe(deps: ServeDeps): number {
     deps.io.out(
       // F13: name the bind, not loopback — under Variant C a peer is routinely bound elsewhere
       // and this line was the one telling the operator to go and look at a dead port.
-      `tailscale serve skipped (PASTOR_SKIP_SERVE=1) — bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} only`,
+      `tailscale serve pulado (PASTOR_SKIP_SERVE=1): o Pastor está só em ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
     );
     return EXIT.OK;
   }
@@ -190,8 +190,8 @@ export function cmdServe(deps: ServeDeps): number {
     const torn = stopTailscaleServe(deps);
     if (torn !== EXIT.OK) return torn;
     deps.io.out(
-      "tailscale serve skipped — this pastor is a PEER of a crew, and a peer publishes no front" +
-        " door (ADR 0013). The lead's door speaks for the whole crew.",
+      "tailscale serve pulado: este Pastor é um MEMBRO de uma crew, e um membro não publica" +
+        " acesso próprio (ADR 0013). O acesso do líder atende a crew inteira.",
     );
     return EXIT.OK;
   }
@@ -200,14 +200,14 @@ export function cmdServe(deps: ServeDeps): number {
   if (torn !== EXIT.OK) return torn;
 
   if (deps.exec.which("tailscale") === null) {
-    deps.io.err("error: tailscale not found; cannot publish the tailnet front door");
+    deps.io.err("erro: tailscale não encontrado; não dá para publicar o acesso pelo tailnet");
     return EXIT.FAIL;
   }
   // A mapping we can't name is a mapping we can't later prove we own.
   const host = tailnetName(deps.exec);
   if (host === null) {
     deps.io.err(
-      "error: cannot determine Tailscale hostname; refusing to publish an untrackable root mount",
+      "erro: não deu para descobrir o nome deste computador no Tailscale; o acesso não foi publicado",
     );
     return EXIT.FAIL;
   }
@@ -220,8 +220,8 @@ export function cmdServe(deps: ServeDeps): number {
     const domains = tailnetCertDomains(deps.exec);
     if (domains !== null && domains.length === 0) {
       deps.io.err(
-        "error: HTTPS certificates are not enabled on this tailnet, so `tailscale serve` would stop" +
-          ` and wait for an answer nobody sees; ${HTTPS_DISABLED_HINT}`,
+        "erro: os certificados HTTPS não estão ligados neste tailnet, então o `tailscale serve` ia parar" +
+          ` esperando uma resposta que ninguém vê; ${HTTPS_DISABLED_HINT}`,
       );
       return EXIT.FAIL;
     }
@@ -230,8 +230,8 @@ export function cmdServe(deps: ServeDeps): number {
     // the one failure it cannot rule out is the hang the check exists to prevent (#172).
     if (domains === null) {
       deps.io.err(
-        "warn: could not read this tailnet's HTTPS status from `tailscale status --json`;" +
-          " publishing anyway. If the command seems to hang, HTTPS is off:" +
+        "aviso: não deu para ler o estado do HTTPS deste tailnet em `tailscale status --json`;" +
+          " publicando mesmo assim. Se o comando parecer travado, o HTTPS está desligado:" +
           ` ${HTTPS_DISABLED_HINT}`,
       );
     }
@@ -274,8 +274,8 @@ export function cmdServe(deps: ServeDeps): number {
   deps.files.remove(deps.ctx.handlerFile);
   deps.io.out(
     deps.ctx.serveMode === "http"
-      ? "note: tailscale serve failed (try 'sudo tailscale set --operator=$USER')"
-      : "note: tailscale serve (https) failed — on Headscale/.internal domains use PASTOR_SERVE_MODE=http",
+      ? "nota: o tailscale serve falhou (tente 'sudo tailscale set --operator=$USER')"
+      : "nota: o tailscale serve (https) falhou — em Headscale/domínios .internal use PASTOR_SERVE_MODE=http",
   );
   // No echo of the failure text: tailscale printed it on this terminal as it happened.
   return EXIT.FAIL;
@@ -296,7 +296,7 @@ export function cmdServeVerb(deps: ServeDeps): number {
   const code = cmdServe(deps);
   if (code !== EXIT.OK) return code;
   if (crewModeOnDisk(deps) === "peer") return EXIT.OK;
-  deps.io.out(`open: ${bridgeUrl(deps.exec, deps.ctx)}`);
+  deps.io.out(`abra: ${bridgeUrl(deps.exec, deps.ctx)}`);
   return EXIT.OK;
 }
 
@@ -343,7 +343,7 @@ function ensureRootAvailable(
   const r = deps.exec.capture("tailscale", ["serve", "status", "--json"]);
   if (!r.found || r.code !== 0) {
     deps.io.err(
-      `error: cannot inspect Tailscale serve status; refusing to overwrite the ${name} on :${port}`,
+      `erro: não deu para ler o tailscale serve status; o ${name} em :${port} não foi sobrescrito`,
     );
     return false;
   }
@@ -352,22 +352,22 @@ function ensureRootAvailable(
     verdict = rootAvailability(parseServeStatus(r.stdout), port, protocol, expectedProxy, path);
   } catch {
     deps.io.err(
-      `error: invalid Tailscale serve status; refusing to overwrite the ${name} on :${port}`,
+      `erro: tailscale serve status inválido; o ${name} em :${port} não foi sobrescrito`,
     );
     return false;
   }
   if (verdict === "protocol-mismatch") {
-    deps.io.err(`error: Tailscale serve :${port} already uses the opposite listener protocol`);
+    deps.io.err(`erro: o tailscale serve em :${port} já usa o outro protocolo`);
     return false;
   }
   if (verdict === "occupied") {
     deps.io.err(
-      `error: Tailscale serve already has an unowned ${name} on :${port}; refusing to overwrite it`,
+      `erro: o tailscale serve já tem um ${name} em :${port} que não é do Pastor; ele não foi sobrescrito`,
     );
     return false;
   }
   if (verdict === "adoptable") {
-    deps.io.out(`tailscale serve: adopting the existing Pastor ${name} on :${port}`);
+    deps.io.out(`tailscale serve: aproveitando o ${name} do Pastor que já existe em :${port}`);
   }
   return true;
 }

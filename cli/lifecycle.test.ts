@@ -158,13 +158,13 @@ describe("the Host allowlist discovery", () => {
       },
     });
     expect(resolveTailscaleHosts(h.deps)).toBe("desk.tail1234.ts.net");
-    expect(h.io.stderr.join("\n")).toContain("keeping the one already in the unit");
+    expect(h.io.stderr.join("\n")).toContain("mantendo a que já estava no serviço");
   });
 
   test("a failed probe with nothing to keep says the gate will refuse everything", () => {
     const h = harness({ answers: [["tailscale status --json", { code: 1 }]] });
     expect(resolveTailscaleHosts(h.deps)).toBe("");
-    expect(h.io.stderr.join("\n")).toContain("the Host gate will refuse every request");
+    expect(h.io.stderr.join("\n")).toContain("o Pastor vai recusar todo pedido");
     expect(h.io.stderr.join("\n")).toContain("PASTOR_TAILSCALE_HOSTS");
   });
 
@@ -327,14 +327,14 @@ describe("start, on systemd", () => {
     expect(unit).toContain(`ExecStart=${BINARY} _exec-bridge`);
     expect(h.exec.calls).toContain("systemctl --user daemon-reload");
     expect(h.exec.calls).toContain("systemctl --user enable --now pastor");
-    expect(h.io.stdout).toContain("bridge started (systemd --user: pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (systemd --user: pastor)");
   });
 
   test("refuses to install a unit pointing at a binary that isn't there", async () => {
     const h = harness();
     h.files.remove(binaryOn("linux"));
     expect(await cmdStart(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stderr.join("\n")).toContain(`no pastor binary at ${binaryOn("linux")}`);
+    expect(h.io.stderr.join("\n")).toContain(`não há binário do pastor em ${binaryOn("linux")}`);
     expect(h.exec.calls).not.toContain("systemctl --user enable --now pastor");
   });
 
@@ -343,8 +343,8 @@ describe("start, on systemd", () => {
     // the README's troubleshooting flow tells people to read.
     const h = harness({ serve: () => Promise.resolve(EXIT.FAIL) });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stderr.join("\n")).toContain("the tailnet front door did not come up");
-    expect(h.io.stdout.join("\n")).toContain("✓ Pastor is running");
+    expect(h.io.stderr.join("\n")).toContain("o acesso pelo tailnet não subiu");
+    expect(h.io.stdout.join("\n")).toContain("✓ O Pastor está rodando");
   });
 
   test("hands `serve` the CURRENT `deps.io`, not whatever `io` this deps object was originally built with", async () => {
@@ -379,7 +379,7 @@ describe("start, on systemd", () => {
     const broken = harness({ answers: [[`${join(ROOT, "web")}$ bun run build --`, { code: 1 }]] });
     expect(await cmdStart(broken.deps)).toBe(EXIT.OK);
     expect(broken.io.stderr.join("\n")).toContain("the UI will 503");
-    expect(broken.io.stdout.join("\n")).toContain("bridge started");
+    expect(broken.io.stdout.join("\n")).toContain("Pastor ligado");
   });
 });
 
@@ -405,7 +405,7 @@ describe("start, on launchd", () => {
     expect(h.exec.calls).toContain(
       `launchctl bootstrap gui/501 ${join(HOME, "Library", "LaunchAgents", "ad3.pastor.plist")}`,
     );
-    expect(h.io.stdout).toContain("bridge started (launchd: ad3.pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (launchd: ad3.pastor)");
   });
 
   test("kickstarts the job after bootstrap, and says started once a pid shows", async () => {
@@ -416,16 +416,16 @@ describe("start, on launchd", () => {
     // No `-k`: a job that is already running is left alone.
     expect(launchctl[boot + 1]).toBe("launchctl kickstart gui/501/ad3.pastor");
     expect(launchctl[boot + 2]).toBe(JOB);
-    expect(h.io.stdout).toContain("bridge started (launchd: ad3.pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (launchd: ad3.pastor)");
     expect(h.io.stderr.join("\n")).not.toContain("no process is running");
   });
 
   test("a job that never ran is a warning with the manual command, not 'started'", async () => {
     const h = darwin({ answers: [LOADED] });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).not.toContain("bridge started");
+    expect(h.io.stdout.join("\n")).not.toContain("Pastor ligado");
     const err = h.io.stderr.join("\n");
-    expect(err).toContain("warn: launchd loaded ad3.pastor but no process is running");
+    expect(err).toContain("aviso: o launchd carregou ad3.pastor mas nenhum processo está rodando");
     expect(err).toContain("launchctl kickstart gui/501/ad3.pastor");
     expect(err).toContain(join(CONFIG, "pastor.log"));
     // Five reads of the job, one more than the waits between them.
@@ -450,7 +450,7 @@ describe("start, on launchd", () => {
       answers: [[JOB, { perCall: (n) => (n < 3 ? { stdout: "state = not running\n" } : { stdout: "\tpid = 4242\n" }) }]],
     });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout).toContain("bridge started (launchd: ad3.pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (launchd: ad3.pastor)");
     expect(h.io.stderr.join("\n")).not.toContain("no process is running");
   });
 
@@ -458,7 +458,7 @@ describe("start, on launchd", () => {
     // RunAtLoad already started it, so kickstart may refuse; the pid is what decides.
     const h = darwin({ answers: [["launchctl kickstart", { code: 113, stderr: "Could not find service" }]] });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout).toContain("bridge started (launchd: ad3.pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (launchd: ad3.pastor)");
     expect(h.io.stderr.join("\n")).not.toContain("no process is running");
   });
 
@@ -466,7 +466,7 @@ describe("start, on launchd", () => {
     const h = darwin({ answers: [["launchctl bootstrap", { code: 5, stderr: "Bootstrap failed: 5" }]] });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls.some((c) => c.startsWith("launchctl kickstart"))).toBe(false);
-    expect(h.io.stdout.join("\n")).not.toContain("bridge started (launchd:");
+    expect(h.io.stdout.join("\n")).not.toContain("Pastor ligado (launchd:");
   });
 
   test("migrates an install predating launchd support by releasing the port", async () => {
@@ -492,7 +492,7 @@ describe("start, on launchd", () => {
     });
     expect(await cmdStart(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls.filter((c) => c.startsWith("launchctl bootstrap")).length).toBe(2);
-    expect(h.io.stdout).toContain("bridge started (launchd: ad3.pastor)");
+    expect(h.io.stdout).toContain("Pastor ligado (launchd: ad3.pastor)");
   });
 
   test("degrades to unsupervised after three failures instead of leaving no bridge at all", async () => {
@@ -509,8 +509,8 @@ describe("start, on launchd", () => {
     expect(err).toContain("gui/501 does not exist");
     expect(err).toContain("unsupervised");
     // It must NOT claim the agent is running — the operator has to know supervision is absent.
-    expect(h.io.stdout.join("\n")).not.toContain("bridge started (launchd:");
-    expect(h.io.stdout.join("\n")).toContain("unsupervised)");
+    expect(h.io.stdout.join("\n")).not.toContain("Pastor ligado (launchd:");
+    expect(h.io.stdout.join("\n")).toContain("sem supervisor)");
     // …and it must leave a pidfile, or there is nothing to stop later.
     expect(h.files.read(`${CONFIG}/pastor.pid`)).toBe("4242\n");
   });
@@ -525,7 +525,7 @@ describe("start, unsupervised", () => {
     expect(h.exec.spawned[0]?.env.PASTOR_PLUGIN_ROOT).toBe(ROOT);
     expect(h.exec.spawned[0]?.env.PASTOR_PORT).toBe("8787");
     expect(h.exec.spawned[0]?.logPath).toBe(join(CONFIG, "pastor.log"));
-    expect(h.io.stdout).toContain("bridge started (pid 4242, unsupervised)");
+    expect(h.io.stdout).toContain("Pastor ligado (pid 4242, sem supervisor)");
   });
 
   test("passes the merged .env through — the daemon is the only reader of a mode-600 secret", async () => {
@@ -573,7 +573,7 @@ describe("the first-run multiplexer gate", () => {
     expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
     // The whole point: no service manager was touched, and the line `stop` prints was never printed.
     expect(h.exec.calls).toEqual([`${TMUX_BIN} list-sessions -F #{session_name}`]);
-    expect(h.io.stdout).not.toContain("bridge stopped");
+    expect(h.io.stdout).not.toContain("Pastor parado");
     expect(h.exec.spawned).toHaveLength(0);
     const said = h.io.stderr.join("\n");
     expect(said).toContain("no PASTOR_MUX is set, and 2 multiplexers are running");
@@ -653,11 +653,11 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(xml).toContain(`<Arguments>--headless ${WIN_BINARY} _supervise HERDR_SOCKET_PATH=`);
       expect(xml).toContain(`HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`);
       expect(xml).toContain(`<WorkingDirectory>${ROOT}</WorkingDirectory>`);
-      expect(h.io.stdout).toContain("bridge started (Task Scheduler: ad3.pastor)");
+      expect(h.io.stdout).toContain("Pastor ligado (Agendador de Tarefas: ad3.pastor)");
       // No unsupervised bridge beside the task, and no front door: Pastor publishes none on Windows.
       expect(h.exec.spawned).toHaveLength(0);
       expect(served).toBe(0);
-      expect(h.io.stdout.join("\n")).toContain("note: Pastor publishes no front door here");
+      expect(h.io.stdout.join("\n")).toContain("nota: aqui o Pastor não publica acesso externo");
     });
 
     test("a path with a '%' is refused before the task is written: Task Scheduler would expand it", async () => {
@@ -667,8 +667,8 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(schtasks(h)).toEqual([]);
       expect(h.files.exists(taskFilePath("C:\\cfg%TEMP%x", null, WIN))).toBe(false);
       expect(h.io.stderr.slice(-2)).toEqual([
-        "error: Pastor cannot start from C:\\cfg%TEMP%x, because that path has a % sign. Windows replaces %NAME% in a scheduled task's settings with the value of a variable, so the task would use the wrong path.",
-        "       Move Pastor, and its config folder, to a folder whose path has no % sign, for example C:\\pastor. Then run: pastor start",
+        "erro: o Pastor não pode ligar de C:\\cfg%TEMP%x, porque esse caminho tem um sinal de %. O Windows troca %NOME% nas configurações de uma tarefa agendada pelo valor de uma variável, então a tarefa usaria o caminho errado.",
+        "       Mova o Pastor, e a pasta de configuração dele, para uma pasta sem % no caminho, por exemplo C:\\pastor. Depois rode: pastor start",
       ]);
     });
 
@@ -681,8 +681,8 @@ describe("the Task Scheduler tier (Windows)", () => {
       down.deps.sleep = () => Promise.resolve();
       expect(await cmdStart(down.deps)).toBe(EXIT.FAIL);
       expect(schtasks(down)).toContain("schtasks /Run /TN ad3.pastor");
-      expect(down.io.stdout).not.toContain("bridge started (Task Scheduler: ad3.pastor)");
-      expect(down.io.stderr.join("\n")).toContain("error: Pastor did not answer on 127.0.0.1:");
+      expect(down.io.stdout).not.toContain("Pastor ligado (Agendador de Tarefas: ad3.pastor)");
+      expect(down.io.stderr.join("\n")).toContain("erro: o Pastor não respondeu em 127.0.0.1:");
       expect(down.io.stderr.join("\n")).toContain("pastor logs");
     });
 
@@ -698,16 +698,16 @@ describe("the Task Scheduler tier (Windows)", () => {
     test("prints one line that proves the switch to Task Scheduler", async () => {
       const h = windows();
       expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-      expect(h.io.stdout).toContain("Registered Task Scheduler job ad3.pastor (starts at logon)");
+      expect(h.io.stdout).toContain("Tarefa ad3.pastor registrada no Agendador de Tarefas (liga quando você entra no Windows)");
     });
 
-    test("refuses to take over a task that runs another install: one Pastor per Windows machine", async () => {
+    test("refuses to take over a task that roda outra instalação: one Pastor per Windows machine", async () => {
       const h = windows({ answers: [[QUERY, { stdout: taskAnswer('--headless "D:\\other\\bin\\pastor.exe" _supervise') }]] });
       expect(await cmdStart(h.deps)).toBe(EXIT.FAIL);
       expect(schtasks(h)).toEqual([]);
       expect(h.files.exists(TASK_FILE)).toBe(false);
-      expect(h.io.stderr.join("\n")).toContain("runs D:\\other\\bin\\pastor.exe, not this Pastor");
-      expect(h.io.stderr.join("\n")).toContain("run `pastor uninstall` from that install first");
+      expect(h.io.stderr.join("\n")).toContain("roda D:\\other\\bin\\pastor.exe, e não este Pastor");
+      expect(h.io.stderr.join("\n")).toContain("rode `pastor uninstall` naquela instalação antes");
     });
 
     test("takes over its own task, the community script's task of this checkout, and no task at all", async () => {
@@ -772,10 +772,10 @@ describe("the Task Scheduler tier (Windows)", () => {
         const h = windows({ answers: [["schtasks /Create", { code: 1, stderr: said }]] });
         expect(await cmdStart(h.deps)).toBe(EXIT.FAIL);
         const err = h.io.stderr.join("\n");
-        expect(err).toContain('lacks the right "Log on as a batch job"');
-        expect(err).toContain("Local Security Policy > Local Policies > User Rights Assignment");
+        expect(err).toContain('não tem o direito "Fazer logon como um trabalho em lotes"');
+        expect(err).toContain("Diretiva de Segurança Local > Diretivas Locais > Atribuição de Direitos de Usuário");
         expect(err).toContain("desk\\pat");
-        expect(h.io.stderr.at(-1)).toContain("Then run: pastor start");
+        expect(h.io.stderr.at(-1)).toContain("Depois rode: pastor start");
       }
       // Any other refusal says nothing about the right.
       const other = windows({ answers: [["schtasks /Create", { code: 1, stderr: "ERROR: Access is denied." }]] });
@@ -788,7 +788,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       h.files.remove(WIN_BINARY);
       expect(await cmdStart(h.deps)).toBe(EXIT.FAIL);
       expect(schtasks(h)).toEqual([]);
-      expect(h.io.stderr.join("\n")).toContain("no pastor binary");
+      expect(h.io.stderr.join("\n")).toContain("não há binário do pastor");
     });
 
     test("a refused registration fails start, and nothing is run", async () => {
@@ -796,7 +796,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(await cmdStart(h.deps)).toBe(EXIT.FAIL);
       expect(schtasks(h)).toHaveLength(1);
       expect(h.io.stderr.join("\n")).toContain("Access is denied.");
-      expect(h.io.stderr.join("\n")).toContain("schtasks /Create /TN ad3.pastor failed");
+      expect(h.io.stderr.join("\n")).toContain("schtasks /Create /TN ad3.pastor falhou");
     });
 
     test("PASTOR_TASK_RUN_LEVEL=highest registers an elevated task only from an elevated shell", async () => {
@@ -810,13 +810,13 @@ describe("the Task Scheduler tier (Windows)", () => {
       const limited = windows({ env: { PASTOR_TASK_RUN_LEVEL: "highest" } });
       expect(await cmdStart(limited.deps)).toBe(EXIT.FAIL);
       expect(schtasks(limited)).toEqual([]);
-      expect(limited.io.stderr.join("\n")).toContain("needs an elevated (Administrator) shell");
+      expect(limited.io.stderr.join("\n")).toContain("precisa de um terminal como Administrador");
 
       // A privilege knob fails closed on a typo.
       const typo = windows({ env: { PASTOR_TASK_RUN_LEVEL: "hihgest" } });
       expect(await cmdStart(typo.deps)).toBe(EXIT.FAIL);
       expect(schtasks(typo)).toEqual([]);
-      expect(typo.io.stderr.join("\n")).toContain("must be 'limited' or 'highest'");
+      expect(typo.io.stderr.join("\n")).toContain("tem que ser 'limited' ou 'highest'");
 
       const explicit = windows({ env: { PASTOR_TASK_RUN_LEVEL: "Limited" } });
       expect(await cmdStart(explicit.deps)).toBe(EXIT.OK);
@@ -838,7 +838,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       // The launcher first, so it cannot relaunch the bridge in between.
       expect(h.exec.killed).toEqual([7100, 7200]);
       expect(h.files.exists(RECORD)).toBe(false);
-      expect(h.io.stdout.join("\n")).toContain("replaced the contrib\\windows\\pastor-ctl.ps1 launcher");
+      expect(h.io.stdout.join("\n")).toContain("o iniciador contrib\\windows\\pastor-ctl.ps1 foi trocado");
     });
 
     test("a community record left by a reboot is dropped quietly, and nothing is killed", async () => {
@@ -847,7 +847,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(h.exec.killed).toEqual([]);
       expect(h.files.exists(RECORD)).toBe(false);
       expect(h.io.stdout.join("\n")).not.toContain("replaced");
-      expect(h.io.stdout).toContain("bridge started (Task Scheduler: ad3.pastor)");
+      expect(h.io.stdout).toContain("Pastor ligado (Agendador de Tarefas: ad3.pastor)");
     });
 
     test("leaves a launcher of its own running: start is idempotent", async () => {
@@ -870,7 +870,7 @@ describe("the Task Scheduler tier (Windows)", () => {
     test("a second instance gets its own task, record and launcher marker, and a warning", async () => {
       const h = windows({ instance: "v1" });
       expect(await cmdStart(h.deps)).toBe(EXIT.OK);
-      expect(h.io.stderr.join("\n")).toContain("one Pastor per Windows machine is supported; instance v1 gets its own task ad3.pastor-v1");
+      expect(h.io.stderr.join("\n")).toContain("só um Pastor por Windows é suportado; a instância v1 ganha a tarefa ad3.pastor-v1");
       const file = taskFilePath(CONFIG, "v1", WIN);
       expect(schtasks(h)).toEqual([
         `schtasks /Create /TN ad3.pastor-v1 /XML ${file} /F`,
@@ -893,7 +893,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(schtasks(h)).toEqual(["schtasks /Change /TN ad3.pastor /DISABLE", "schtasks /End /TN ad3.pastor"]);
       expect(h.exec.killed).toEqual([7100, 7200]);
       expect(h.files.exists(RECORD)).toBe(false);
-      expect(h.io.stdout).toContain("bridge stopped");
+      expect(h.io.stdout).toContain("Pastor parado");
     });
 
     test("the order: disable, end, the launcher, then the bridge, then one sweep after a pause", async () => {
@@ -992,15 +992,15 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(await cmdStop(h.deps)).toBe(EXIT.OK);
       expect(h.exec.killed).toEqual([]);
       expect(h.files.exists(RECORD)).toBe(false);
-      expect(h.io.stderr.join("\n")).toContain("names no process");
+      expect(h.io.stderr.join("\n")).toContain("não indica nenhum processo");
     });
 
     describe("a process table that does not answer", () => {
       const unreadable = (h: { io: { stdout: string[]; stderr: string[] } }): void => {
-        expect(h.io.stdout).not.toContain("bridge stopped");
+        expect(h.io.stdout).not.toContain("Pastor parado");
         expect(h.io.stderr).toEqual([
-          "error: Pastor could not read the list of running programs on this PC (PowerShell did not answer within 60s).",
-          "       The bridge may still be running. Pastor did not change its record. Close it in Task Manager, then run `pastor stop` again.",
+          "erro: o Pastor não conseguiu ler a lista de programas rodando neste PC (PowerShell did not answer within 60s).",
+          "       O Pastor pode ainda estar rodando, e o registro dele não foi alterado. Feche no Gerenciador de Tarefas e rode `pastor stop` de novo.",
         ]);
       };
 
@@ -1024,7 +1024,7 @@ describe("the Task Scheduler tier (Windows)", () => {
         const h = windows({ files: { [RECORD]: V2(7100, 7200) }, ps: { 7100: OUR_LAUNCHER, 7200: OUR_BRIDGE }, listUnknown: true });
         expect(await cmdStop(h.deps)).toBe(EXIT.FAIL);
         expect(h.files.exists(RECORD)).toBe(true);
-        expect(h.io.stdout).not.toContain("bridge stopped");
+        expect(h.io.stdout).not.toContain("Pastor parado");
         expect(h.io.stderr[0]).toContain("(the process list did not answer)");
       });
 
@@ -1033,10 +1033,10 @@ describe("the Task Scheduler tier (Windows)", () => {
         // A dead launcher sends restart to stop + start.
         restart.exec.processLookup = (pid) => (pid === 7100 ? { kind: "gone" } : { kind: "running", command: OUR_BRIDGE });
         expect(await cmdRestart(restart.deps)).toBe(EXIT.FAIL);
-        expect(restart.io.stderr.at(-1)).toContain("then run `pastor restart` again.");
+        expect(restart.io.stderr.at(-1)).toContain("e rode `pastor restart` de novo.");
         const uninstall = windows({ files: { [RECORD]: V2(7100, 7200) }, ps: { 7100: OUR_LAUNCHER }, psUnknown: [7100] });
         expect(await cmdUninstall(uninstall.deps)).toBe(EXIT.FAIL);
-        expect(uninstall.io.stderr.at(-1)).toContain("then run `pastor uninstall` again.");
+        expect(uninstall.io.stderr.at(-1)).toContain("e rode `pastor uninstall` de novo.");
       });
 
       test("uninstall stops there too, and removes no task", async () => {
@@ -1050,10 +1050,10 @@ describe("the Task Scheduler tier (Windows)", () => {
     test("a launcher or bridge that survives its kill fails stop, names it, and keeps the record", async () => {
       const h = windows({ files: { [RECORD]: V2(7100, 7200) }, ps: { 7100: OUR_LAUNCHER, 7200: OUR_BRIDGE }, unkillable: [7200] });
       expect(await cmdStop(h.deps)).toBe(EXIT.FAIL);
-      expect(h.io.stdout).not.toContain("bridge stopped");
+      expect(h.io.stdout).not.toContain("Pastor parado");
       expect(h.io.stderr).toEqual([
-        "error: Windows did not let Pastor stop pastor.exe (pid 7200). It may run as another account or as administrator.",
-        "       The bridge may still be running. Pastor did not change its record. Close it in Task Manager, then run `pastor stop` again.",
+        "erro: o Windows não deixou o Pastor parar pastor.exe (pid 7200). Ele pode estar rodando com outra conta ou como administrador.",
+        "       O Pastor pode ainda estar rodando, e o registro dele não foi alterado. Feche no Gerenciador de Tarefas e rode `pastor stop` de novo.",
       ]);
       expect(h.files.read(RECORD)).toBe(V2(7100, 7200));
     });
@@ -1086,7 +1086,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       ]);
       expect(h.files.exists(TASK_FILE)).toBe(false);
       expect(h.files.exists(RECORD)).toBe(false);
-      expect(h.io.stdout.join("\n")).toContain("✓ uninstalled");
+      expect(h.io.stdout.join("\n")).toContain("✓ desinstalado");
     });
 
     test("a binary install prints how to remove its folder and its PATH entry; a checkout does not", async () => {
@@ -1097,7 +1097,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       h.deps.link = fakeLinkFs({ [`${install}\\current`]: { kind: "symlink", target: root } });
       expect(await cmdUninstall(h.deps)).toBe(EXIT.OK);
       expect(h.io.stdout.slice(-3)).toEqual([
-        "  To remove Pastor itself too, run these two lines in PowerShell:",
+        "  Para remover o próprio Pastor também, rode estas duas linhas no PowerShell:",
         `    cmd /c rmdir /s /q "${install}"`,
         "    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true); $k.SetValue('Path', (($k.GetValue('Path', '', 'DoNotExpandEnvironmentNames') -split ';' | Where-Object { $_.TrimEnd('\\') -ne 'C:\\Users\\o''neil\\AppData\\Local\\pastor\\current\\bin' }) -join ';'), $k.GetValueKind('Path')); $k.Close()",
       ]);
@@ -1136,7 +1136,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       // No second bridge, no task touched: ending the task could take the phone's update with it.
       expect(h.exec.spawned).toHaveLength(0);
       expect(schtasks(h)).toEqual([]);
-      expect(h.io.stdout.join("\n")).toContain("the Task Scheduler supervisor relaunches it");
+      expect(h.io.stdout.join("\n")).toContain("o Agendador de Tarefas liga de novo");
       expect(h.files.exists(RECORD)).toBe(true);
     });
 
@@ -1150,10 +1150,10 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
       expect(h.exec.killed).toEqual([7200]);
       expect(h.io.stderr).toEqual([
-        "error: Windows did not let Pastor stop the old bridge, pastor.exe (pid 7200). It may run as another account or as administrator.",
-        "       Close pastor.exe (pid 7200) in Task Manager, then run `pastor restart` again.",
+        "erro: o Windows não deixou o Pastor parar o processo antigo, pastor.exe (pid 7200). Ele pode estar rodando com outra conta ou como administrador.",
+        "       Feche o pastor.exe (pid 7200) no Gerenciador de Tarefas e rode `pastor restart` de novo.",
       ]);
-      expect(h.io.stdout.join("\n")).not.toContain("bridge stopped");
+      expect(h.io.stdout.join("\n")).not.toContain("Pastor parado");
       // The old bridge would have answered the health wait as if it were the new one.
       expect(probes).toBe(0);
       expect(h.files.exists(taskRestartPath(CONFIG, null, WIN))).toBe(false);
@@ -1165,7 +1165,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       let n = 0;
       h.exec.processLookup = (pid, ms) => (++n === 3 ? { kind: "unknown", why: "slow" } : lookup(pid, ms));
       expect(await cmdRestart(h.deps)).toBe(EXIT.OK);
-      expect(h.io.stdout.join("\n")).toContain("bridge stopped (pid 7200)");
+      expect(h.io.stdout.join("\n")).toContain("Pastor parado (pid 7200)");
     });
 
     test("tells the launcher first, so the killed bridge is not taken for a crash", async () => {
@@ -1192,7 +1192,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       // The next logon runs Pastor's launcher, not a script this release deleted.
       expect(schtasks(h)).toEqual([`schtasks /Create /TN ad3.pastor /XML ${TASK_FILE} /F`]);
       expect(h.exec.killed).toEqual([7200]);
-      expect(h.io.stdout.join("\n")).toContain("from the next logon");
+      expect(h.io.stdout.join("\n")).toContain("a partir do próximo login");
     });
 
     describe("the task's priority (#386)", () => {
@@ -1210,8 +1210,8 @@ describe("the Task Scheduler tier (Windows)", () => {
         expect(h.files.read(TASK_FILE)).toContain("<Priority>4</Priority>");
         // Only the bridge is killed: ending the launcher would end the phone's update with it.
         expect(h.exec.killed).toEqual([7200]);
-        expect(h.io.stdout.join("\n")).toContain("the task now runs Pastor at normal priority");
-        expect(h.io.stdout.join("\n")).toContain("`pastor stop` and `pastor start`");
+        expect(h.io.stdout.join("\n")).toContain("a tarefa agora roda o Pastor com prioridade normal");
+        expect(h.io.stdout.join("\n")).toContain("`pastor stop` e `pastor start`");
       });
 
       test("a task whose priority the query did not print is registered again too", async () => {
@@ -1235,7 +1235,7 @@ describe("the Task Scheduler tier (Windows)", () => {
         });
         expect(await cmdRestart(h.deps)).toBe(EXIT.OK);
         expect(schtasks(h)).toEqual([]);
-        expect(h.io.stderr.join("\n")).toContain("one Pastor per Windows machine");
+        expect(h.io.stderr.join("\n")).toContain("um Pastor por Windows");
         expect(h.exec.killed).toEqual([7200]);
       });
 
@@ -1265,7 +1265,7 @@ describe("the Task Scheduler tier (Windows)", () => {
         expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
         expect(h.exec.killed).toEqual([]);
         expect(h.exec.spawned).toHaveLength(0);
-        expect(h.io.stderr.join("\n")).toContain("not this checkout's bridge");
+        expect(h.io.stderr.join("\n")).toContain("não é deste Pastor");
       }
     });
 
@@ -1283,8 +1283,8 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(await cmdRestart(h.deps)).toBe(EXIT.OK);
       expect(h.exec.killed).toEqual([]);
       expect(h.files.exists(taskRestartPath(CONFIG, null, WIN))).toBe(true);
-      expect(h.io.stdout.join("\n")).toContain("the recorded bridge (pid 7200) has exited already");
-      expect(h.io.stderr.join("\n")).not.toContain("not this checkout's bridge");
+      expect(h.io.stdout.join("\n")).toContain("o processo registrado (pid 7200) já tinha saído");
+      expect(h.io.stderr.join("\n")).not.toContain("não é deste Pastor");
     });
 
     test("a process table that does not answer stops nothing, and says so in its own words", async () => {
@@ -1296,9 +1296,9 @@ describe("the Task Scheduler tier (Windows)", () => {
         expect(schtasks(h)).toEqual([]);
         expect(h.files.exists(taskRestartPath(CONFIG, null, WIN))).toBe(false);
         const said = h.io.stderr.join("\n");
-        expect(said).toContain("could not read the Windows process table (PowerShell did not answer within 60s); nothing was stopped");
+        expect(said).toContain("não deu para ler a lista de processos do Windows (PowerShell did not answer within 60s); nada foi parado");
         // Not the stranger's sentence, and not the wait's.
-        expect(said).not.toContain("not this checkout's bridge");
+        expect(said).not.toContain("não é deste Pastor");
         expect(said).not.toContain("did not answer on");
       }
     });
@@ -1351,7 +1351,7 @@ describe("the Task Scheduler tier (Windows)", () => {
         expect(await cmdRestart(h.deps)).toBe(EXIT.OK);
         expect(h.exec.killed).toEqual([]);
         expect(schtasks(h)).toContain("schtasks /Run /TN ad3.pastor");
-        expect(h.io.stderr.join("\n")).toContain("names no process");
+        expect(h.io.stderr.join("\n")).toContain("não indica nenhum processo");
       }
     });
 
@@ -1373,7 +1373,7 @@ describe("the Task Scheduler tier (Windows)", () => {
           `schtasks /Create /TN ad3.pastor /XML ${TASK_FILE} /F`,
           "schtasks /Run /TN ad3.pastor",
         ]);
-        expect(h.io.stdout).toContain("bridge started (Task Scheduler: ad3.pastor)");
+        expect(h.io.stdout).toContain("Pastor ligado (Agendador de Tarefas: ad3.pastor)");
       }
     });
 
@@ -1386,7 +1386,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(probes).toBeGreaterThanOrEqual(4);
     });
 
-    // The in-place update stops on this code, so a dead bridge must not read as `✓ update complete`.
+    // The in-place update stops on this code, so a dead bridge must not read as `✓ atualização concluída`.
     // The detached runner ignores it and polls its own gate (pinned in cli/update.test.ts).
     test("a relaunched bridge that never answers is a failure, after the whole wait", async () => {
       const h = running({ ready: false });
@@ -1398,7 +1398,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
       expect(h.exec.killed).toEqual([7200]);
       expect(slept).toBe(30);
-      expect(h.io.stderr.join("\n")).toContain("did not answer on 127.0.0.1:8787 within 30s; it may still be starting");
+      expect(h.io.stderr.join("\n")).toContain("não respondeu em 127.0.0.1:8787 em 30s; pode ainda estar ligando");
       expect(h.io.stderr.join("\n")).toContain("`pastor status`");
       expect(h.io.stderr.at(-1)).toContain("pastor logs");
       expect(h.exec.spawned).toHaveLength(0);
@@ -1413,7 +1413,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       };
       expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
       expect(slept).toBe(3);
-      expect(h.io.stderr.join("\n")).toContain("within 3s");
+      expect(h.io.stderr.join("\n")).toContain("em 3s");
 
       // A slow bridge that answers inside the raised budget is a success, and the wait stops there.
       const late = running({ env: { PASTOR_UPDATE_HEALTH_TIMEOUT_MS: "60000" } });
@@ -1442,7 +1442,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       // 1 s after the kill, then 6 s a round: the wait stops once 30 s have passed, not after 30 rounds.
       expect(clock - 1_000_000).toBeLessThanOrEqual(30_000 + 6_000 + 5_000);
       expect(probes).toBeLessThanOrEqual(7);
-      expect(h.io.stderr.join("\n")).toContain("within 30s");
+      expect(h.io.stderr.join("\n")).toContain("em 30s");
     });
 
     test("a probe that never answers is cut off at the budget: the worst case is the budget", async () => {
@@ -1453,7 +1453,7 @@ describe("the Task Scheduler tier (Windows)", () => {
       const started = performance.now();
       expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
       expect(performance.now() - started).toBeLessThan(1_800);
-      expect(h.io.stderr.join("\n")).toContain("within 2s");
+      expect(h.io.stderr.join("\n")).toContain("em 2s");
     });
 
     test("the default clock is performance.now, which a change of the wall clock does not move", async () => {
@@ -1486,7 +1486,7 @@ describe("the Task Scheduler tier (Windows)", () => {
         return Promise.resolve(false);
       };
       expect(await cmdRestart(h.deps)).toBe(EXIT.FAIL);
-      expect(h.io.stderr.join("\n")).toContain("did not answer");
+      expect(h.io.stderr.join("\n")).toContain("não respondeu");
     });
 
     test("off Windows the record means nothing, and restart is untouched", async () => {
@@ -1504,25 +1504,25 @@ describe("the Task Scheduler tier (Windows)", () => {
   describe("status", () => {
     test("names the task, its state, and Pastor's launcher as a supervised service", async () => {
       const h = windows();
-      expect(serviceDescription(h.deps)).toBe("Task Scheduler (ad3.pastor) · Running · launcher: Pastor's");
+      expect(serviceDescription(h.deps)).toBe("Agendador de Tarefas (ad3.pastor) · Running · iniciador: o do Pastor");
       const banner = (await statusBanner(h.deps)).join("\n");
-      expect(banner).toContain("service   Task Scheduler (ad3.pastor) · Running · launcher: Pastor's");
+      expect(banner).toContain("serviço     Agendador de Tarefas (ad3.pastor) · Running · iniciador: o do Pastor");
       expect(banner).not.toContain("not supervised");
     });
 
     test("an unregistered task, the old loop still running, and a task that still runs the old script", () => {
       const none = windows({ answers: [[QUERY, { code: 1 }]] });
-      expect(serviceDescription(none.deps)).toBe("Task Scheduler (ad3.pastor) · not registered");
+      expect(serviceDescription(none.deps)).toBe("Agendador de Tarefas (ad3.pastor) · não registrada");
       const loop = windows({ files: { [RECORD]: "7100|7200" } });
       expect(serviceDescription(loop.deps)).toBe(
-        "Task Scheduler (ad3.pastor) · Running · launcher: the legacy pastor-ctl.ps1 loop, until `pastor start`",
+        "Agendador de Tarefas (ad3.pastor) · Running · iniciador: o antigo pastor-ctl.ps1, até o `pastor start`",
       );
       const old = windows({ answers: [[QUERY, { stdout: taskAnswer(OLD_TASK_ARGS, "Ready") }]] });
       expect(serviceDescription(old.deps)).toBe(
-        "Task Scheduler (ad3.pastor) · Ready · Task ad3.pastor still runs the old script. Run: pastor restart",
+        "Agendador de Tarefas (ad3.pastor) · Ready · a tarefa ad3.pastor ainda roda o script antigo. Rode: pastor restart",
       );
       const other = windows({ answers: [[QUERY, { stdout: taskAnswer('--headless "D:\\other\\bin\\pastor.exe" _supervise') }]] });
-      expect(serviceDescription(other.deps)).toBe("Task Scheduler (ad3.pastor) · Running · runs another install: D:\\other\\bin\\pastor.exe");
+      expect(serviceDescription(other.deps)).toBe("Agendador de Tarefas (ad3.pastor) · Running · roda outra instalação: D:\\other\\bin\\pastor.exe");
     });
 
     test("logs reads the log file the launcher appends to", () => {
@@ -1539,7 +1539,7 @@ describe("stop", () => {
     const h = harness();
     expect(await cmdStop(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls).toContain("systemctl --user disable --now pastor");
-    expect(h.io.stdout).toContain("bridge stopped");
+    expect(h.io.stdout).toContain("Pastor parado");
   });
 
   test("launchd: disable AND bootout — together they are `disable --now`", async () => {
@@ -1563,11 +1563,11 @@ describe("stop", () => {
 describe("the status banner", () => {
   test("says running, or names the port it isn't answering on", async () => {
     expect((await statusBanner(harness({ ready: true }).deps)).join("\n")).toContain(
-      "✓ Pastor is running",
+      "✓ O Pastor está rodando",
     );
     const cold = (await statusBanner(harness({ ready: false }).deps)).join("\n");
-    expect(cold).toContain("⚠ Pastor isn't answering on :8787 yet");
-    expect(cold).toContain("check 'pastor logs'");
+    expect(cold).toContain("⚠ O Pastor ainda não responde em :8787");
+    expect(cold).toContain("veja 'pastor logs'");
   });
 
   test("probes loopback by default — the bridge's own resolved bind (bridge/config.ts)", async () => {
@@ -1584,22 +1584,22 @@ describe("the status banner", () => {
     const cold = harness({ ready: false, env: { PASTOR_HOST: "100.64.0.8" } });
     const lines = (await statusBanner(cold.deps)).join("\n");
     expect(cold.readyCalls).toEqual([{ port: 8787, host: "100.64.0.8" }]);
-    expect(lines).toContain("⚠ Pastor isn't answering on 100.64.0.8:8787 yet");
+    expect(lines).toContain("⚠ O Pastor ainda não responde em 100.64.0.8:8787");
   });
 
   // F13: the probe already resolved the bind; the `local` row two lines under it did not, so a peer
   // bound to its tailnet address was reported UP with a loopback URL that refuses to connect.
   test("the `local` row is the bind, and the two halves of the banner agree", async () => {
     const solo = (await statusBanner(harness({ ready: true }).deps)).join("\n");
-    expect(solo).toContain("local     http://127.0.0.1:8787");
+    expect(solo).toContain("local       http://127.0.0.1:8787");
 
     const moved = harness({ ready: false, env: { PASTOR_HOST: "192.168.77.1" } });
     const lines = (await statusBanner(moved.deps)).join("\n");
-    expect(lines).toContain("local     http://192.168.77.1:8787");
-    expect(lines).toContain("isn't answering on 192.168.77.1:8787");
+    expect(lines).toContain("local       http://192.168.77.1:8787");
+    expect(lines).toContain("ainda não responde em 192.168.77.1:8787");
     // Not "no 127.0.0.1 anywhere": the `tailnet` row's no-name fallback names loopback on purpose,
     // and says why on the same line. The `local` row is the one that claimed it silently.
-    expect(lines).not.toContain("local     http://127.0.0.1");
+    expect(lines).not.toContain("local       http://127.0.0.1");
   });
 
   // F22's other half: one resolution behind the probe and the `local` row. A wildcard bind means
@@ -1609,10 +1609,10 @@ describe("the status banner", () => {
     const h = harness({ ready: true, env: { PASTOR_HOST: "0.0.0.0" } });
     const lines = (await statusBanner(h.deps)).join("\n");
     expect(h.readyCalls).toEqual([{ port: 8787, host: "127.0.0.1" }]);
-    expect(lines).toContain("local     http://127.0.0.1:8787");
+    expect(lines).toContain("local       http://127.0.0.1:8787");
 
     const cold = harness({ ready: false, env: { PASTOR_HOST: "" } });
-    expect((await statusBanner(cold.deps)).join("\n")).toContain("⚠ Pastor isn't answering on :8787 yet");
+    expect((await statusBanner(cold.deps)).join("\n")).toContain("⚠ O Pastor ainda não responde em :8787");
     expect(cold.readyCalls).toEqual([{ port: 8787, host: "127.0.0.1" }]);
   });
 
@@ -1628,9 +1628,9 @@ describe("the status banner", () => {
     });
     const lines = (await statusBanner(h.deps)).join("\n");
     // The peer's main port is mutual TLS only, so `http://` there would never answer.
-    expect(lines).toContain("local     https://192.168.77.2:8787 (crew link, mutual TLS only)");
-    expect(lines).not.toContain("local     http://");
-    expect(lines).toContain("crew      peer — no front door here");
+    expect(lines).toContain("local       https://192.168.77.2:8787 (ligação da crew, só TLS mútuo)");
+    expect(lines).not.toContain("local       http://");
+    expect(lines).toContain("crew        membro — sem acesso próprio aqui");
     expect(lines).not.toContain("tailnet");
   });
 
@@ -1648,7 +1648,7 @@ describe("the status banner", () => {
   // peer, which has no door of its own, never shows the row.
   test("names `pastor pair` while no device is paired, and drops the row once one is", async () => {
     const fresh = (await statusBanner(harness({ ready: true }).deps)).join("\n");
-    expect(fresh).toContain("pairing   no device paired yet — run `pastor pair` to pair your phone");
+    expect(fresh).toContain("pareamento  nenhum aparelho pareado ainda — rode `pastor pair` para parear o celular");
 
     const registry = JSON.stringify({
       devices: [{ label: "phone", tokenHash: "a".repeat(64), createdAt: 1, lastSeenAt: 1 }],
@@ -1677,12 +1677,12 @@ describe("the status banner", () => {
       serviceDescription(
         darwin([["launchctl print gui/501/ad3.pastor", { stdout: "\tstate = running\n\tpid = 4242\n" }]]),
       ),
-    ).toBe("launchd (gui/501/ad3.pastor) · active (pid 4242)");
+    ).toBe("launchd (gui/501/ad3.pastor) · ativo (pid 4242)");
     expect(
       serviceDescription(darwin([["launchctl print gui/501/ad3.pastor", { stdout: "\tstate = waiting\n" }]])),
-    ).toBe("launchd (gui/501/ad3.pastor) · loaded, not running");
+    ).toBe("launchd (gui/501/ad3.pastor) · carregado, parado");
     expect(serviceDescription(darwin([["launchctl print", { code: 1 }]]))).toBe(
-      "launchd (ad3.pastor) · not loaded",
+      "launchd (ad3.pastor) · não carregado",
     );
     // Not loaded, but a pidfile: bootstrap was refused and a bridge IS serving. Saying "not loaded"
     // there reads as "nothing is up" while the phone is being answered.
@@ -1694,8 +1694,8 @@ describe("the status banner", () => {
   });
 
   test.each([
-    ["active (pid 4242)", "\tstate = running\n\tpid = 4242\n"],
-    ["loaded, not running", "\tstate = waiting\n"],
+    ["ativo (pid 4242)", "\tstate = running\n\tpid = 4242\n"],
+    ["carregado, parado", "\tstate = waiting\n"],
   ])("discovers background user agents: %s", (state, stdout) => {
     const h = harness({
       host: hostFor("darwin"),
@@ -1720,8 +1720,8 @@ describe("the status banner", () => {
       ],
     });
     expect(serviceDescription(h.deps)).toBe(
-      "launchd (gui/501/ad3.pastor) · loaded, not running; " +
-      "launchd (user/501/ad3.pastor) · active (pid 4242)",
+      "launchd (gui/501/ad3.pastor) · carregado, parado; " +
+      "launchd (user/501/ad3.pastor) · ativo (pid 4242)",
     );
   });
 
@@ -1734,7 +1734,7 @@ describe("the status banner", () => {
         ["launchctl print user/501/ad3.pastor", { stdout: "\tpid = 4242\n" }],
       ],
     });
-    expect(serviceDescription(h.deps)).toBe("launchd (user/501/ad3.pastor) · active (pid 4242)");
+    expect(serviceDescription(h.deps)).toBe("launchd (user/501/ad3.pastor) · ativo (pid 4242)");
   });
 
   test("status of a Home Manager agent is read-only and targets only the selected instance", async () => {
@@ -1753,7 +1753,7 @@ describe("the status banner", () => {
     h.files.readOnly.add(plist);
     const before = new Map(h.files.entries);
     expect(await cmdStatus(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("launchd (user/501/ad3.pastor-next) · active (pid 4242)");
+    expect(h.io.stdout.join("\n")).toContain("launchd (user/501/ad3.pastor-next) · ativo (pid 4242)");
     expect(h.exec.calls.filter((call) => call.startsWith("launchctl "))).toEqual([
       "launchctl print gui/501/ad3.pastor-next",
       "launchctl print user/501/ad3.pastor-next",
@@ -1768,26 +1768,26 @@ describe("the status banner", () => {
     const tailnet = harness({
       answers: [["tailscale status --json", { stdout: '{"Self":{"DNSName":"host.example."},"CertDomains":["host.example"]}' }]],
     });
-    expect((await statusBanner(tailnet.deps)).join("\n")).toContain("tailnet   https://host.example");
+    expect((await statusBanner(tailnet.deps)).join("\n")).toContain("tailnet     https://host.example");
 
     const proxied = harness({ env: { PASTOR_SKIP_SERVE: "1", PASTOR_PUBLIC_URL: "https://c.example" } });
     const lines = (await statusBanner(proxied.deps)).join("\n");
-    expect(lines).toContain("proxy     https://c.example");
+    expect(lines).toContain("proxy       https://c.example");
     expect(lines).not.toContain("tailnet");
 
     const unset = harness({ env: { PASTOR_SKIP_SERVE: "1" } });
-    expect((await statusBanner(unset.deps)).join("\n")).toContain("set PASTOR_PUBLIC_URL");
+    expect((await statusBanner(unset.deps)).join("\n")).toContain("defina PASTOR_PUBLIC_URL");
   });
 
   test("status appends the serve config, or says it was skipped", async () => {
     const h = harness({ answers: [["tailscale serve status", { stdout: "https://host (tailnet only)\n" }]] });
     await cmdStatus(h.deps);
-    expect(h.io.stdout).toContain("  serve config:");
+    expect(h.io.stdout).toContain("  tailscale serve:");
     expect(h.io.stdout).toContain("    https://host (tailnet only)");
 
     const skipped = harness({ env: { PASTOR_SKIP_SERVE: "1" } });
     await cmdStatus(skipped.deps);
-    expect(skipped.io.stdout).toContain("  serve config: skipped (PASTOR_SKIP_SERVE=1)");
+    expect(skipped.io.stdout).toContain("  tailscale serve: pulado (PASTOR_SKIP_SERVE=1)");
   });
 });
 
@@ -1813,7 +1813,7 @@ describe("url", () => {
 
     const noTailscale = harness({ absent: ["tailscale"] });
     cmdUrl(noTailscale.deps);
-    expect(noTailscale.io.stdout.join("")).toBe("http://127.0.0.1:8787 (Tailscale name unavailable)");
+    expect(noTailscale.io.stdout.join("")).toBe("http://127.0.0.1:8787 (nome no Tailscale indisponível)");
   });
 });
 
@@ -1827,7 +1827,7 @@ describe("logs", () => {
     expect(dflt.exec.calls).toContain("journalctl --user -u pastor -n 50 --no-pager");
   });
 
-  test("otherwise: the tail of the unsupervised log, or `(no log)`", () => {
+  test("otherwise: the tail of the unsupervised log, or `(sem log)`", () => {
     const h = harness({
       answers: NO_SYSTEMD,
       files: { [`${CONFIG}/pastor.log`]: "one\ntwo\nthree\n" },
@@ -1837,7 +1837,7 @@ describe("logs", () => {
 
     const empty = harness({ answers: NO_SYSTEMD });
     cmdLogs(empty.deps, []);
-    expect(empty.io.stdout).toEqual(["(no log)"]);
+    expect(empty.io.stdout).toEqual(["(sem log)"]);
   });
 });
 
@@ -1867,8 +1867,8 @@ describe("uninstall", () => {
     expect(h.files.exists(RECORD)).toBe(false);
     // `uninstall` removes only what `start` created.
     expect(h.files.exists(`${CONFIG}/.env`)).toBe(true);
-    expect(h.io.stdout.join("\n")).toContain("✓ uninstalled:");
-    expect(h.io.stdout.join("\n")).toContain(`kept: ${join(CONFIG, ".env")} and the checkout`);
+    expect(h.io.stdout.join("\n")).toContain("✓ desinstalado:");
+    expect(h.io.stdout.join("\n")).toContain(`mantidos: ${join(CONFIG, ".env")} e os arquivos do Pastor`);
   });
 
   test("on Linux and macOS a binary install's uninstall output is exactly what it was", async () => {
@@ -1885,7 +1885,7 @@ describe("uninstall", () => {
       };
       const plain = await run(false);
       expect(await run(true)).toEqual(plain);
-      expect(plain.at(-1)).toContain("kept: ");
+      expect(plain.at(-1)).toContain("mantidos: ");
       expect(plain.join("\n")).not.toContain("rmdir");
     }
   });
@@ -1926,7 +1926,7 @@ describe("uninstall", () => {
     expect(h.io.stderr.join("\n")).toContain("refusing to remove");
     expect(h.files.exists(RECORD)).toBe(true);
     expect(h.files.exists(UNIT_FILE)).toBe(true);
-    expect(h.io.stdout.join("\n")).not.toContain("✓ uninstalled");
+    expect(h.io.stdout.join("\n")).not.toContain("✓ desinstalado");
   });
 });
 
@@ -1943,7 +1943,7 @@ describe("the PASTOR_INSTANCE knob", () => {
     expect(h.files.exists(`${HOME}/.config/systemd/user/pastor.service`)).toBe(false);
     expect(h.exec.calls).toContain("systemctl --user enable --now pastor-v1");
     expect(h.exec.calls).not.toContain("systemctl --user enable --now pastor");
-    expect(h.io.stdout.join("\n")).toContain("bridge started (systemd --user: pastor-v1)");
+    expect(h.io.stdout.join("\n")).toContain("Pastor ligado (systemd --user: pastor-v1)");
   });
 
   test("the unit runs the binary with its instance marker, and carries PASTOR_INSTANCE", () => {
@@ -2008,7 +2008,7 @@ describe("the PASTOR_INSTANCE knob", () => {
 
   test("the banner names the instance, and a solo banner still does not", async () => {
     const v1 = harness({ instance: "v1" });
-    expect((await statusBanner(v1.deps)).join("\n")).toContain("instance  v1");
+    expect((await statusBanner(v1.deps)).join("\n")).toContain("instância   v1");
     const solo = harness();
     expect((await statusBanner(solo.deps)).join("\n")).not.toContain("instance ");
     expect(serviceDescription(v1.deps)).toContain("(pastor-v1)");
@@ -2050,19 +2050,19 @@ describe("restart off Windows, golden", () => {
   const ENV = "systemctl --user show-environment";
   const banner = (service: string): string[] => [
     "",
-    "  ✓ Pastor is running  ·  vunknown",
-    `    service   ${service}`,
-    "    local     http://127.0.0.1:8787",
-    "    tailnet   http://127.0.0.1:8787 (Tailscale name unavailable)",
+    "  ✓ O Pastor está rodando  ·  vunknown",
+    `    serviço     ${service}`,
+    "    local       http://127.0.0.1:8787",
+    "    tailnet     http://127.0.0.1:8787 (nome no Tailscale indisponível)",
     // These fakes hold no paired device, so the banner names `pastor pair` (ADR 0086).
-    "    pairing   no device paired yet — run `pastor pair` to pair your phone",
+    "    pareamento  nenhum aparelho pareado ainda — rode `pastor pair` para parear o celular",
     "",
   ];
-  const head = ["took PASTOR_MUX=herdr from your environment; wrote PASTOR_MUX=herdr to /cfg/.env", "bridge stopped", "building web UI (first run)…"];
+  const head = ["took PASTOR_MUX=herdr from your environment; wrote PASTOR_MUX=herdr to /cfg/.env", "Pastor parado", "building web UI (first run)…"];
   const noTailnet = [
-    "error: 'tailscale status' named no host for this node — the allowlist was not discovered.",
-    "       no allowlist is set, so the Host gate will refuse every request. Set",
-    "       PASTOR_TAILSCALE_HOSTS (or PASTOR_PUBLIC_HOSTS) in .env, or fix Tailscale and retry.",
+    "erro: o 'tailscale status' não deu nome para este computador — a lista de endereços aceitos não foi descoberta.",
+    "       nenhuma lista de endereços está definida, então o Pastor vai recusar todo pedido. Defina",
+    "       PASTOR_TAILSCALE_HOSTS (ou PASTOR_PUBLIC_HOSTS) no .env, ou arrume o Tailscale e tente de novo.",
   ];
 
   test("systemd: disable --now, build, enable --now, the banner", async () => {
@@ -2073,7 +2073,7 @@ describe("restart off Windows, golden", () => {
       "systemctl --user daemon-reload", "systemctl --user enable --now pastor", ENV,
       "systemctl --user is-active pastor", "tailscale status --json",
     ]);
-    expect(fold(h.io.stdout)).toEqual([...head, "bridge started (systemd --user: pastor)", ...banner("systemd --user (pastor) · unknown")]);
+    expect(fold(h.io.stdout)).toEqual([...head, "Pastor ligado (systemd --user: pastor)", ...banner("systemd --user (pastor) · unknown")]);
     expect(fold(h.io.stderr)).toEqual(noTailnet);
     expect(h.exec.killed).toEqual([]);
   });
@@ -2091,7 +2091,7 @@ describe("restart off Windows, golden", () => {
       "launchctl kickstart gui/501/ad3.pastor", "launchctl print gui/501/ad3.pastor", ENV, ENV,
       "launchctl print gui/501/ad3.pastor", "launchctl print user/501/ad3.pastor", "tailscale status --json",
     ]);
-    expect(fold(h.io.stdout)).toEqual([...head, "bridge started (launchd: ad3.pastor)", ...banner("launchd (gui/501/ad3.pastor) · active (pid 4242)")]);
+    expect(fold(h.io.stdout)).toEqual([...head, "Pastor ligado (launchd: ad3.pastor)", ...banner("launchd (gui/501/ad3.pastor) · ativo (pid 4242)")]);
     expect(fold(h.io.stderr)).toEqual(noTailnet);
   });
 
@@ -2099,7 +2099,7 @@ describe("restart off Windows, golden", () => {
     const h = harness({ answers: NO_SYSTEMD });
     expect(await cmdRestart(h.deps)).toBe(EXIT.OK);
     expect(fold(h.exec.calls)).toEqual([ENV, ENV, ENV, ENV, ...BUILD, ENV, ENV, "tailscale status --json", ENV, ENV, "tailscale status --json"]);
-    expect(fold(h.io.stdout)).toEqual([...head, "bridge started (pid 4242, unsupervised)", ...banner("pid 4242 (unsupervised)")]);
+    expect(fold(h.io.stdout)).toEqual([...head, "Pastor ligado (pid 4242, sem supervisor)", ...banner("pid 4242 (sem supervisor)")]);
     expect(h.exec.spawned.map((x) => fold(x.command))).toEqual([["/opt/pastor/bin/pastor", "_exec-bridge"]]);
   });
 });

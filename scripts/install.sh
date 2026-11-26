@@ -28,7 +28,7 @@ BETA=0
 for arg in "$@"; do
   case "$arg" in
     --beta) BETA=1 ;;
-    *) echo "pastor install: unknown option '$arg' — the only option is --beta." >&2; exit 2 ;;
+    *) echo "pastor install: opção desconhecida '$arg'. A única opção é --beta." >&2; exit 2 ;;
   esac
 done
 
@@ -41,18 +41,18 @@ die() { echo "pastor install: $1" >&2; exit 1; }
 PIN="${PASTOR_TAG:-}"
 if [ -n "$PIN" ]; then
   printf '%s\n' "$PIN" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$' ||
-    die "PASTOR_TAG='$PIN' is not a release tag. It has to look like v1.0.0, or v1.0.0-beta.49 for a prerelease."
+    die "PASTOR_TAG='$PIN' não é uma tag de versão. Tem que ser como v1.0.0, ou v1.0.0-beta.49 para uma prévia."
 fi
 
 # ── What has to be here already ──────────────────────────────────────────────
 # Three ordinary tools, and no toolchain: the payload is a compiled binary plus a built web bundle,
 # so nothing is installed and nothing is built here. Bun is needed only to build FROM SOURCE, which
 # is the other documented route.
-command -v curl >/dev/null 2>&1 || die "curl is required. Install it with your package manager, then run this again."
-command -v tar  >/dev/null 2>&1 || die "tar is required. Install it with your package manager, then run this again."
+command -v curl >/dev/null 2>&1 || die "o curl é necessário. Instale pelo gerenciador de pacotes e rode isto de novo."
+command -v tar  >/dev/null 2>&1 || die "o tar é necessário. Instale pelo gerenciador de pacotes e rode isto de novo."
 if command -v sha256sum >/dev/null 2>&1; then SHA="sha256sum"
 elif command -v shasum >/dev/null 2>&1; then SHA="shasum -a 256"
-else die "no sha256 tool found (sha256sum or shasum). The download must be verified, so this stops here."
+else die "nenhuma ferramenta de sha256 encontrada (sha256sum ou shasum). O download precisa ser conferido, então a instalação para aqui."
 fi
 
 # ── Which platform ───────────────────────────────────────────────────────────
@@ -61,12 +61,12 @@ fi
 case "$(uname -s)" in
   Linux)  OS=linux ;;
   Darwin) OS=macos ;;
-  *) die "Pastor publishes no binary for $(uname -s). Build from source instead: https://github.com/${REPO}#from-source" ;;
+  *) die "o Pastor não publica binário para $(uname -s). Instale como plugin do Herdr: https://github.com/${REPO}#instalar-no-linux" ;;
 esac
 case "$(uname -m)" in
   x86_64|amd64) ARCH=x64 ;;
   aarch64|arm64) ARCH=arm64 ;;
-  *) die "Pastor publishes no binary for $(uname -m). Build from source instead: https://github.com/${REPO}#from-source" ;;
+  *) die "o Pastor não publica binário para $(uname -m). Instale como plugin do Herdr: https://github.com/${REPO}#instalar-no-linux" ;;
 esac
 # A shell under Rosetta on Apple Silicon reports x86_64, and the x64 build dies there with an illegal
 # instruction (seen on the macos-14 runner, #385), so a translated shell gets the native arm64 one.
@@ -86,20 +86,20 @@ RESCUE=0
 if [ -e "$DIR" ]; then
   if [ -d "$DIR/.git" ]; then
     [ -z "$PIN" ] ||
-      die "$DIR is a git checkout, and PASTOR_TAG only pins a binary install. Pin it with git instead:  git -C $DIR checkout $PIN"
+      die "$DIR é um checkout do git, e PASTOR_TAG só fixa a versão de uma instalação binária. Fixe pelo git:  git -C $DIR checkout $PIN"
   elif [ -d "$DIR/versions" ] && [ -n "$PIN" ]; then
-    echo "Pastor is already installed at $DIR — laying $PIN down beside it, and pointing current at it."
+    echo "O Pastor já está instalado em $DIR. Instalando $PIN ao lado e apontando current para ela."
     RESCUE=1
   fi
   if [ "$RESCUE" -eq 0 ]; then
     if [ -d "$DIR/versions" ] || [ -d "$DIR/.git" ]; then
-      echo "Pastor is already installed at $DIR — leaving it alone."
-      echo "To move it forward, run:  pastor update"
-      echo "To put one specific version there instead, re-run this script with PASTOR_TAG=vX.Y.Z"
-      echo "If \`pastor update\` itself fails, see docs/upgrading.md, section \"When pastor will not run\"."
+      echo "O Pastor já está instalado em $DIR. Nada foi alterado."
+      echo "Para atualizar, rode:  pastor update"
+      echo "Para instalar uma versão específica, rode este script de novo com PASTOR_TAG=vX.Y.Z"
+      echo "Se o próprio \`pastor update\` falhar, veja docs/upgrading.md, seção \"When pastor will not run\"."
       exit 0
     fi
-    die "$DIR already exists and is not a Pastor install. Move it aside, or set PASTOR_DIR to somewhere else."
+    die "$DIR já existe e não é uma instalação do Pastor. Tire do lugar, ou defina PASTOR_DIR com outra pasta."
   fi
 fi
 
@@ -108,7 +108,7 @@ fi
 # because the tag lookup below writes its answer to a file — reading the HTTP status is how a rate
 # limit gets named as a rate limit instead of failing as "no release tag found".
 TMP="${DIR}.download.$$"
-mkdir -p "$TMP" || die "could not create $TMP."
+mkdir -p "$TMP" || die "não deu para criar $TMP."
 trap 'rm -rf "$TMP"' EXIT INT HUP TERM
 
 # ── Which release ────────────────────────────────────────────────────────────
@@ -133,7 +133,7 @@ fi
 tags_api() {
   if [ -n "$TOKEN" ]; then
     ( umask 077; printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" > "$TMP/auth.curlrc" ) ||
-      die "could not write $TMP/auth.curlrc."
+      die "não deu para gravar $TMP/auth.curlrc."
     curl -sSL -o "$TMP/tags.json" -w '%{http_code}' -H 'Accept: application/vnd.github+json' \
       -K "$TMP/auth.curlrc" "$1"
   else
@@ -144,18 +144,18 @@ if [ -n "$PIN" ]; then
   TAG="$PIN"
 else
   CODE=$(tags_api "https://api.github.com/repos/${REPO}/tags?per_page=100") ||
-    die "could not reach api.github.com to list the releases. Check your network and try again."
+    die "não deu para acessar api.github.com para listar as versões. Confira a sua internet e tente de novo."
   case "$CODE" in
     200) ;;
     401) if [ -n "$TOKEN" ]; then
-           die "GitHub refused the token in ${TOKEN_SRC} (HTTP 401). Fix it or unset it, then run this again."
+           die "o GitHub recusou o token em ${TOKEN_SRC} (HTTP 401). Corrija ou remova e rode isto de novo."
          fi
-         die "api.github.com answered HTTP 401 when asked for the tags of ${REPO}. Try again later, or name the version you want and skip this call:  PASTOR_TAG=vX.Y.Z" ;;
+         die "api.github.com respondeu HTTP 401 ao pedir as tags de ${REPO}. Tente de novo mais tarde, ou diga a versão e pule esta consulta:  PASTOR_TAG=vX.Y.Z" ;;
     403|429) if [ -n "$TOKEN" ]; then
-           die "GitHub's API rate limit says no (HTTP ${CODE}), even with the token in ${TOKEN_SRC}. Wait an hour, or name the version you want and skip this call entirely:  PASTOR_TAG=vX.Y.Z  (the tags are listed at https://github.com/${REPO}/releases)."
+           die "o limite de consultas da API do GitHub foi atingido (HTTP ${CODE}), mesmo com o token em ${TOKEN_SRC}. Espere uma hora, ou diga a versão e pule esta consulta:  PASTOR_TAG=vX.Y.Z  (as tags estão em https://github.com/${REPO}/releases)."
          fi
-         die "GitHub's API rate limit says no (HTTP ${CODE}). Without a token GitHub allows 60 calls an hour, counted per network address, so everyone behind your router shares one budget. Set GH_TOKEN to a GitHub token with no scopes and run this again, wait an hour, or name the version you want and skip this call entirely:  PASTOR_TAG=vX.Y.Z  (the tags are listed at https://github.com/${REPO}/releases)." ;;
-    *) die "api.github.com answered HTTP ${CODE} when asked for the tags of ${REPO}. Try again later, or name the version you want and skip this call:  PASTOR_TAG=vX.Y.Z" ;;
+         die "o limite de consultas da API do GitHub foi atingido (HTTP ${CODE}). Sem token o GitHub permite 60 consultas por hora por endereço de rede, então todo mundo atrás do seu roteador divide a mesma cota. Defina GH_TOKEN com um token do GitHub sem permissões e rode de novo, espere uma hora, ou diga a versão e pule esta consulta:  PASTOR_TAG=vX.Y.Z  (as tags estão em https://github.com/${REPO}/releases)." ;;
+    *) die "api.github.com respondeu HTTP ${CODE} ao pedir as tags de ${REPO}. Tente de novo mais tarde, ou diga a versão e pule esta consulta:  PASTOR_TAG=vX.Y.Z" ;;
   esac
   # One `"name"` per tag object, and no other key in that payload is called `name` — so this is a
   # grep, not a JSON parser, and the install stays dependency-light (no jq).
@@ -165,7 +165,7 @@ else
   else
     TAG=$(printf '%s\n' "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
   fi
-  [ -n "${TAG:-}" ] || die "no release tag found for ${REPO}. Pass --beta to include prereleases, or report this at https://github.com/${REPO}/issues."
+  [ -n "${TAG:-}" ] || die "nenhuma tag de versão encontrada para ${REPO}. Use --beta para incluir prévias, ou avise em https://github.com/${REPO}/issues."
 fi
 VERSION="${TAG#v}"
 BASE="https://github.com/${REPO}/releases/download/${TAG}"
@@ -178,10 +178,10 @@ NAME="pastor-${VERSION}-${PLATFORM}.tar.gz"
 # function because the rescue path below reaches the end of the install without downloading anything.
 publish_name() {
   "$DIR/versions/$VERSION/bin/pastor" link ||
-    echo "note: \`pastor link\` did not publish the name — run \`$DIR/current/bin/pastor link\` to see why."
+    echo "nota: o \`pastor link\` não publicou o nome. Rode \`$DIR/current/bin/pastor link\` para ver o motivo."
   case ":${PATH}:" in
     *":$HOME/.local/bin:"*) ;;
-    *) echo "note: $HOME/.local/bin is not on your PATH, so a bare \`pastor\` will not resolve yet. Add it in your shell profile, or spell the verbs $DIR/current/bin/pastor <verb>." ;;
+    *) echo "nota: $HOME/.local/bin não está no seu PATH, então \`pastor\` sozinho ainda não funciona. Adicione no perfil do shell, ou use $DIR/current/bin/pastor <comando>." ;;
   esac
 }
 
@@ -191,10 +191,10 @@ publish_name() {
 # an otherwise free operation.
 if [ "$RESCUE" -eq 1 ] && [ -d "$DIR/versions/$VERSION" ]; then
   [ -x "$DIR/versions/$VERSION/bin/pastor" ] ||
-    die "$DIR/versions/$VERSION is there but holds no runnable bin/pastor. Move it aside and run this again."
+    die "$DIR/versions/$VERSION existe mas não tem um bin/pastor que rode. Tire do lugar e rode isto de novo."
   ln -sfn "versions/$VERSION" "$DIR/current" || die "could not point $DIR/current at versions/$VERSION."
   publish_name
-  echo "✓ Pastor ${TAG} was already at $DIR/versions/${VERSION} — current now points at it, and nothing was downloaded."
+  echo "✓ O Pastor ${TAG} já estava em $DIR/versions/${VERSION}. current agora aponta para ele, e nada foi baixado."
   exit 0
 fi
 
@@ -203,27 +203,27 @@ fi
 # would run by hand. The release manifest is fetched too and cross-checked: it is the release's own
 # integrity document, so a digest that is not in it does not get installed. A mismatch is fatal —
 # there is no flag to skip it.
-echo "Downloading Pastor ${TAG} for ${PLATFORM}…"
+echo "Baixando o Pastor ${TAG} para ${PLATFORM}…"
 curl -fsSL -o "$TMP/$NAME" "$BASE/$NAME" ||
-  die "release ${TAG} has no ${PLATFORM} artifact — either that tag does not exist or it never published one. Check the tag name against https://github.com/${REPO}/releases, or build from source instead: https://github.com/${REPO}#from-source"
-curl -fsSL -o "$TMP/$NAME.sha256" "$BASE/$NAME.sha256" || die "could not download $NAME.sha256 — refusing to install an unverified binary."
-curl -fsSL -o "$TMP/manifest.json" "$BASE/pastor-${VERSION}.manifest.json" || die "could not download the release manifest for ${VERSION}."
+  die "a versão ${TAG} não tem arquivo para ${PLATFORM}: ou essa tag não existe, ou nunca publicou um. Confira o nome da tag em https://github.com/${REPO}/releases, ou instale como plugin do Herdr: https://github.com/${REPO}#instalar-no-linux"
+curl -fsSL -o "$TMP/$NAME.sha256" "$BASE/$NAME.sha256" || die "não deu para baixar $NAME.sha256. Um binário que não foi conferido não é instalado."
+curl -fsSL -o "$TMP/manifest.json" "$BASE/pastor-${VERSION}.manifest.json" || die "não deu para baixar o manifesto da versão ${VERSION}."
 grep -q '"schemaVersion":[[:space:]]*1' "$TMP/manifest.json" ||
-  die "release ${VERSION} uses a manifest this installer does not understand. Get a newer install.sh from https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.sh"
+  die "a versão ${VERSION} usa um manifesto que este instalador não entende. Pegue um install.sh mais novo em https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.sh"
 ( cd "$TMP" && $SHA -c "$NAME.sha256" >/dev/null 2>&1 ) ||
-  die "CHECKSUM MISMATCH for $NAME — the download was discarded and nothing was installed. Try again; if it repeats, report it."
+  die "CHECKSUM DIFERENTE em $NAME. O download foi descartado e nada foi instalado. Tente de novo; se repetir, avise."
 DIGEST=$(cd "$TMP" && $SHA "$NAME" | cut -d' ' -f1)
 grep -q "\"$DIGEST\"" "$TMP/manifest.json" ||
-  die "the digest of $NAME is not the one release ${VERSION}'s manifest names — nothing was installed."
+  die "o hash de $NAME não é o que o manifesto da versão ${VERSION} indica. Nada foi instalado."
 
 # ── Lay it down ──────────────────────────────────────────────────────────────
 # One complete payload per version, and a `current` symlink pointing at one of them. An update lays
 # the next version down beside this one and flips that symlink, so the two halves — the binary and
 # the web bundle it serves from disk — can never skew.
-tar -xzf "$TMP/$NAME" -C "$TMP" || die "could not unpack $NAME."
-[ -x "$TMP/pastor-${VERSION}-${PLATFORM}/bin/pastor" ] || die "$NAME does not contain bin/pastor — refusing to install it."
-mkdir -p "$DIR/versions" || die "could not create $DIR/versions."
-mv "$TMP/pastor-${VERSION}-${PLATFORM}" "$DIR/versions/$VERSION" || die "could not move the payload into $DIR/versions/$VERSION."
+tar -xzf "$TMP/$NAME" -C "$TMP" || die "não deu para descompactar $NAME."
+[ -x "$TMP/pastor-${VERSION}-${PLATFORM}/bin/pastor" ] || die "$NAME não contém bin/pastor. A instalação foi recusada."
+mkdir -p "$DIR/versions" || die "não deu para criar $DIR/versions."
+mv "$TMP/pastor-${VERSION}-${PLATFORM}" "$DIR/versions/$VERSION" || die "não deu para mover os arquivos para $DIR/versions/$VERSION."
 ln -sfn "versions/$VERSION" "$DIR/current" || die "could not point $DIR/current at versions/$VERSION."
 
 publish_name
@@ -231,25 +231,25 @@ publish_name
 # ── What is left, which is yours ─────────────────────────────────────────────
 cat <<EOF
 
-✓ Pastor $TAG is installed at $DIR — and nothing is running yet.
+✓ O Pastor $TAG está instalado em $DIR. Nada está rodando ainda.
 
-Four steps left, and each one is a decision:
+Faltam quatro passos, e cada um é uma escolha sua:
 
-  1. Seed the config:
+  1. Crie a configuração:
        mkdir -p ~/.config/pastor
        cp $DIR/current/.env.example ~/.config/pastor/.env
 
-  2. Name your multiplexer in that file — PASTOR_MUX=herdr, tmux or zellij. Leave it out and the
-     first \`pastor start\` probes for one and asks you.
-     Herdr needs its server running; tmux and zellij need an endpoint naming which server or
-     session to mirror. Both walkthroughs: $DIR/current/docs/multiplexers.md
+  2. Diga o seu multiplexador nesse arquivo: PASTOR_MUX=herdr, tmux ou zellij. Se deixar de fora,
+     o primeiro \`pastor start\` procura um e pergunta.
+     O Herdr precisa estar rodando; tmux e zellij precisam de um endpoint dizendo qual servidor
+     ou sessão espelhar. Passo a passo: $DIR/current/docs/multiplexers.md
 
-  3. Start it, and read the banner it prints:
+  3. Ligue o Pastor e leia o quadro que ele mostra:
        pastor start
 
-  4. Pair your phone. Pastor answers no device until one is paired:
+  4. Pareie o celular. O Pastor não responde a nenhum aparelho até um ser pareado:
        pastor pair
 
-Read $DIR/current/docs/security.md before you open the URL on a phone. A Pastor is remote shell
-access to your machine, by design.
+Leia $DIR/current/docs/security.md antes de abrir o endereço no celular. O Pastor dá acesso remoto
+ao terminal do seu computador, de propósito.
 EOF

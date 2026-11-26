@@ -55,23 +55,30 @@
 
 # Stop the install. What happened, then the one thing to do about it. The entry function prints both,
 # with "Install failed." in front of the fix, as the last line.
-function Stop-PastorInstall([string]$What, [string]$Fix = "Fix the problem above, then run the installer again.") {
+function Stop-PastorInstall([string]$What, [string]$Fix = "Corrija o problema acima e rode o instalador de novo.") {
   $failure = New-Object System.Exception $What
   $failure.Data["PastorFix"] = $Fix
   throw $failure
 }
 
+# The messages are Portuguese, but this file must stay plain ASCII (Windows PowerShell 5.1 reads a
+# file with no byte-order mark as the ANSI code page). So an accented letter is written as an
+# entity such as &#xE7; and turned back into the letter here, just before it is printed.
+function ConvertFrom-PastorText([string]$Text) {
+  return [regex]::Replace($Text, '&#x([0-9A-Fa-f]{2,4});', { param($m) [string][char][Convert]::ToInt32($m.Groups[1].Value, 16) })
+}
+
 function Write-PastorLine([string]$Text) {
-  Write-Host $Text
+  Write-Host (ConvertFrom-PastorText $Text)
 }
 
 # Is this machine one Pastor publishes a binary for? Returns the reason it is not, or $null.
 function Get-PastorHostProblem([string]$Arch, [int]$Build) {
   if ($Arch -ne "AMD64" -and $Arch -ne "X64") {
-    return "Pastor publishes no Windows binary for $Arch. Only x64 (AMD64) is published."
+    return "o Pastor n&#xE3;o publica bin&#xE1;rio do Windows para $Arch. S&#xF3; existe para x64 (AMD64)."
   }
   if ($Build -lt 19041) {
-    return "this Windows is build $Build. Pastor needs Windows 10 build 19041 or newer, and is tested on Windows 11."
+    return "este Windows &#xE9; o build $Build. O Pastor precisa do Windows 10 build 19041 ou mais novo, e &#xE9; testado no Windows 11."
   }
   return $null
 }
@@ -105,10 +112,10 @@ function Test-PastorRepo([string]$Repo) {
 # not the drive itself, and hold no `;` or `%`: the folder goes into your PATH, where `;` splits an
 # entry and `%` starts a variable. A space, `&` or a non-ASCII letter is fine.
 function Get-PastorDirProblem([string]$Path) {
-  if ($Path -cnotmatch '\A[A-Za-z]:[\\/]') { return "PASTOR_DIR='$Path' is not a full path on a drive, such as C:\Users\you\pastor" }
-  if ($Path.Contains(';') -or $Path.Contains('%')) { return "PASTOR_DIR='$Path' holds a ';' or a '%', which would break your PATH" }
+  if ($Path -cnotmatch '\A[A-Za-z]:[\\/]') { return "PASTOR_DIR='$Path' n&#xE3;o &#xE9; um caminho completo num disco, como C:\Users\voce\pastor" }
+  if ($Path.Contains(';') -or $Path.Contains('%')) { return "PASTOR_DIR='$Path' tem um ';' ou um '%', que quebraria o seu PATH" }
   $full = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
-  if ($full -cmatch '\A[A-Za-z]:\z') { return "PASTOR_DIR='$Path' is the root of a drive" }
+  if ($full -cmatch '\A[A-Za-z]:\z') { return "PASTOR_DIR='$Path' &#xE9; a raiz de um disco" }
   return $null
 }
 
@@ -123,11 +130,11 @@ function Sort-PastorTags([string[]]$Names) {
 function Get-PastorDigestProblem([string]$Sidecar, [string]$Name, [string]$Actual) {
   $words = @("$Sidecar".Trim() -split '\s+')
   if ($words.Count -gt 2 -or $words[0] -cnotmatch '\A[0-9a-fA-F]{64}\z') {
-    return "$Name.sha256 is not one '<sha256>  <name>' line"
+    return "$Name.sha256 n&#xE3;o &#xE9; uma linha '<sha256>  <nome>'"
   }
-  if ($words.Count -eq 2 -and $words[1].TrimStart('*') -cne $Name) { return "$Name.sha256 names $($words[1]), not $Name" }
+  if ($words.Count -eq 2 -and $words[1].TrimStart('*') -cne $Name) { return "$Name.sha256 indica $($words[1]), e n&#xE3;o $Name" }
   if (-not [string]::Equals($words[0], $Actual, [StringComparison]::OrdinalIgnoreCase)) {
-    return "CHECKSUM MISMATCH for $Name"
+    return "CHECKSUM DIFERENTE em $Name"
   }
   return $null
 }
@@ -156,7 +163,7 @@ function Set-PastorUserPath([string]$Entry) {
     $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
     if ($null -ne $key.GetValue("Path")) { $kind = $key.GetValueKind("Path") }
     if ($kind -ne [Microsoft.Win32.RegistryValueKind]::String -and $kind -ne [Microsoft.Win32.RegistryValueKind]::ExpandString) {
-      Stop-PastorInstall "your user PATH is stored as $kind, which this script does not edit." "Add $Entry to your user PATH by hand, or set PASTOR_NO_PATH_EDIT=1 and run the installer again."
+      Stop-PastorInstall "o PATH do seu usu&#xE1;rio est&#xE1; gravado como $kind, que este script n&#xE3;o edita." "Adicione $Entry ao PATH do seu usu&#xE1;rio &#xE0; m&#xE3;o, ou defina PASTOR_NO_PATH_EDIT=1 e rode o instalador de novo."
     }
     $new = Add-PastorUserPathEntry $raw $Entry
     if ($null -eq $new) { return $false }
@@ -205,11 +212,11 @@ function Get-PastorFile([string]$Url, [string]$OutFile) {
 # stream (':'), no leading slash and no '..' part. This is what stops a zip that writes outside the
 # folder it is unpacked into.
 function Get-PastorEntryProblem([string]$Name, [string]$Root) {
-  if ($Name -ceq '') { return "an entry with no name" }
-  if ($Name.Contains(':')) { return "'$Name' names a drive or a stream" }
-  if ($Name.StartsWith('/') -or $Name.StartsWith('\')) { return "'$Name' starts at the root" }
-  if (@($Name -split '[\\/]' | Where-Object { $_ -ceq '..' }).Count -gt 0) { return "'$Name' climbs out with '..'" }
-  if (-not $Name.StartsWith("$Root/", [StringComparison]::Ordinal)) { return "'$Name' is not under $Root/" }
+  if ($Name -ceq '') { return "uma entrada sem nome" }
+  if ($Name.Contains(':')) { return "'$Name' indica um disco ou um fluxo alternativo" }
+  if ($Name.StartsWith('/') -or $Name.StartsWith('\')) { return "'$Name' come&#xE7;a na raiz" }
+  if (@($Name -split '[\\/]' | Where-Object { $_ -ceq '..' }).Count -gt 0) { return "'$Name' sai da pasta com '..'" }
+  if (-not $Name.StartsWith("$Root/", [StringComparison]::Ordinal)) { return "'$Name' n&#xE3;o est&#xE1; dentro de $Root/" }
   return $null
 }
 
@@ -226,9 +233,9 @@ function Expand-PastorZip([string]$Zip, [string]$Destination, [string]$Root) {
       $problem = Get-PastorEntryProblem $entry.FullName $Root
       if ($null -eq $problem) {
         $target = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($dest, $entry.FullName.Replace('/', '\')))
-        if (-not $target.StartsWith($dest, [StringComparison]::OrdinalIgnoreCase)) { $problem = "'$($entry.FullName)' resolves outside the folder" }
+        if (-not $target.StartsWith($dest, [StringComparison]::OrdinalIgnoreCase)) { $problem = "'$($entry.FullName)' aponta para fora da pasta" }
       }
-      if ($null -ne $problem) { Stop-PastorInstall "the zip is not safe to unpack: $problem. Nothing was installed." "Report it at https://github.com/Ad3Digital/pastor/issues" }
+      if ($null -ne $problem) { Stop-PastorInstall "o zip n&#xE3;o &#xE9; seguro para descompactar: $problem. Nada foi instalado." "Avise em https://github.com/Ad3Digital/pastor/issues" }
       [void]$plan.Add(@($entry, $target))
     }
     foreach ($item in $plan) {
@@ -319,12 +326,12 @@ function Set-PastorCurrent([string]$Dir, [string]$Target) {
     return
   }
   if ($state -eq "other") {
-    Stop-PastorInstall "$current is a real folder or file, not a junction, so it is not Pastor's to remove." "Move $current aside, then run the installer again."
+    Stop-PastorInstall "$current &#xE9; uma pasta ou arquivo de verdade, n&#xE3;o uma jun&#xE7;&#xE3;o, ent&#xE3;o o Pastor n&#xE3;o pode remov&#xEA;-lo." "Tire $current do lugar e rode o instalador de novo."
   }
   $old = Get-PastorLinkTarget $current
   switch (Get-PastorLinkState $staged) {
     "link" { Remove-PastorLink $staged }
-    "other" { Stop-PastorInstall "$staged is in the way and is not a junction." "Move $staged aside, then run the installer again." }
+    "other" { Stop-PastorInstall "$staged est&#xE1; no caminho e n&#xE3;o &#xE9; uma jun&#xE7;&#xE3;o." "Tire $staged do lugar e rode o instalador de novo." }
   }
   New-PastorJunction $staged $Target
   try {
@@ -339,10 +346,10 @@ function Set-PastorCurrent([string]$Dir, [string]$Target) {
     try {
       New-PastorJunction $current $old
     } catch {
-      Stop-PastorInstall "could not point $current at $Target ($why). $current is missing now, and putting it back failed too." "Make it again by hand:  cmd /c mklink /J `"$current`" `"$old`""
+      Stop-PastorInstall "n&#xE3;o deu para apontar $current para $Target ($why). $current sumiu, e recoloc&#xE1;-lo tamb&#xE9;m falhou." "Crie de novo &#xE0; m&#xE3;o:  cmd /c mklink /J `"$current`" `"$old`""
     }
   }
-  Stop-PastorInstall "could not point $current at $Target ($why). $current still names $old. Nothing was changed." "Close every program that runs Pastor from $Dir, then run the installer again."
+  Stop-PastorInstall "n&#xE3;o deu para apontar $current para $Target ($why). $current continua apontando para $old. Nada foi alterado." "Feche todo programa que roda o Pastor de $Dir e rode o instalador de novo."
 }
 
 # Stop a process and every process below it, children first, so none is left without a parent to
@@ -361,7 +368,7 @@ function Stop-PastorTree([int]$Id) {
 # timeout the whole tree goes (Stop-PastorTree): killing cmd.exe alone left a hung pastor.exe
 # running, and it held the version folder open.
 function Test-PastorRuns([string]$Exe, [string]$Log) {
-  if (-not (Test-Path -LiteralPath $Exe -PathType Leaf)) { return "$Exe is missing" }
+  if (-not (Test-Path -LiteralPath $Exe -PathType Leaf)) { return "$Exe n&#xE3;o existe" }
   $start = New-Object System.Diagnostics.ProcessStartInfo
   $start.FileName = Join-Path ([Environment]::SystemDirectory) "cmd.exe"
   $start.Arguments = "/d /s /c `"`"$Exe`" version < NUL > `"$Log`" 2>&1`""
@@ -370,34 +377,34 @@ function Test-PastorRuns([string]$Exe, [string]$Log) {
   if (-not $run.WaitForExit(30000)) {
     Stop-PastorTree $run.Id
     [void]$run.WaitForExit(5000)
-    return "pastor.exe version did not finish in 30 seconds"
+    return "pastor.exe version n&#xE3;o terminou em 30 segundos"
   }
   if ($run.ExitCode -eq 0) { return $null }
   $said = ""
   if (Test-Path -LiteralPath $Log) { $said = "$(@([System.IO.File]::ReadAllLines($Log) | Where-Object { $_.Trim() -ne '' })[0])".Trim() }
-  return "pastor.exe version stopped with exit code $($run.ExitCode): $said"
+  return "pastor.exe version parou com o c&#xF3;digo de sa&#xED;da $($run.ExitCode): $said"
 }
 
 # The one message for a pastor.exe that Windows did not let run. The files stay where they are.
 function Stop-PastorBlocked([string]$Dir, [string]$Exe, [string]$Why) {
-  Stop-PastorInstall ("Pastor was installed in $Dir, but Windows did not let pastor.exe run ($Why). " +
-    "The usual causes are Smart App Control, Microsoft Defender (it may have quarantined the file), or a policy set by whoever manages this computer. " +
-    "The install is safe to leave in place. Smart App Control cannot be overridden for one program, and turning it off is permanent, so decide that first. " +
-    "If you saw 'Windows protected your PC' (SmartScreen), choose More info, then Run anyway.") "Fix the cause, then run  `"$Exe`" version  to check. If you are stuck, report it at https://github.com/Ad3Digital/pastor/issues"
+  Stop-PastorInstall ("o Pastor foi instalado em $Dir, mas o Windows n&#xE3;o deixou o pastor.exe rodar ($Why). " +
+    "As causas comuns s&#xE3;o o Controle Inteligente de Aplicativos, o Microsoft Defender (ele pode ter colocado o arquivo em quarentena) ou uma pol&#xED;tica de quem administra este computador. " +
+    "A instala&#xE7;&#xE3;o pode ficar onde est&#xE1;. O Controle Inteligente de Aplicativos n&#xE3;o abre exce&#xE7;&#xE3;o para um programa, e deslig&#xE1;-lo &#xE9; definitivo, ent&#xE3;o decida isso antes. " +
+    "Se apareceu 'O Windows protegeu o computador' (SmartScreen), clique em Mais informa&#xE7;&#xF5;es e depois em Executar assim mesmo.") "Resolva a causa e rode  `"$Exe`" version  para conferir. Se travar, avise em https://github.com/Ad3Digital/pastor/issues"
 }
 
 # Add the PATH entry, unless PASTOR_NO_PATH_EDIT says no. Returns one line that says what happened.
 function Publish-PastorName([string]$Dir) {
   $bin = Join-Path $Dir "current\bin"
   if ($env:PASTOR_NO_PATH_EDIT -eq "1") {
-    return "PASTOR_NO_PATH_EDIT=1 is set, so your PATH was not changed. Run Pastor as $bin\pastor.exe."
+    return "PASTOR_NO_PATH_EDIT=1 est&#xE1; definido, ent&#xE3;o o seu PATH n&#xE3;o foi alterado. Rode o Pastor como $bin\pastor.exe."
   }
   $added = Set-PastorUserPath $bin
   # This window too, so the steps below work here without a new terminal. Appended, like the user PATH.
   $here = Add-PastorUserPathEntry $env:Path $bin
   if ($null -ne $here) { $env:Path = $here }
-  if ($added) { return "Added $bin to your user PATH." }
-  return "$bin is on your user PATH already."
+  if ($added) { return "$bin foi adicionado ao PATH do seu usu&#xE1;rio." }
+  return "$bin j&#xE1; estava no PATH do seu usu&#xE1;rio."
 }
 
 # How to spell Pastor in the printed steps: `pastor` when that name finds THIS install's pastor.exe,
@@ -412,46 +419,46 @@ function Invoke-PastorInstall {
   $repo = "$env:PASTOR_UPDATE_REPO".Trim()
   if ($repo -eq '') { $repo = "Ad3Digital/pastor" }
   if (-not (Test-PastorRepo $repo)) {
-    Stop-PastorInstall "PASTOR_UPDATE_REPO='$repo' is not a GitHub repository name like Ad3Digital/pastor." "Set PASTOR_UPDATE_REPO to owner/name, or remove it to take Pastor's own releases."
+    Stop-PastorInstall "PASTOR_UPDATE_REPO='$repo' n&#xE3;o &#xE9; um nome de reposit&#xF3;rio do GitHub como Ad3Digital/pastor." "Defina PASTOR_UPDATE_REPO como dono/nome, ou remova para usar as vers&#xF5;es do pr&#xF3;prio Pastor."
   }
   if ($repo -cne "Ad3Digital/pastor") {
-    Write-PastorLine "WARNING: PASTOR_UPDATE_REPO is set. This installs Pastor from github.com/$repo, not from Ad3Digital/pastor."
+    Write-PastorLine "AVISO: PASTOR_UPDATE_REPO est&#xE1; definido. Isto instala o Pastor de github.com/$repo, n&#xE3;o de Ad3Digital/pastor."
   }
   $dir = "$env:PASTOR_DIR".Trim()
   if ($dir -eq '') {
-    if ("$env:LOCALAPPDATA" -eq '') { Stop-PastorInstall "LOCALAPPDATA is not set." "Set PASTOR_DIR to the folder to install into, then run the installer again." }
+    if ("$env:LOCALAPPDATA" -eq '') { Stop-PastorInstall "LOCALAPPDATA n&#xE3;o est&#xE1; definido." "Defina PASTOR_DIR com a pasta onde instalar e rode o instalador de novo." }
     $dir = Join-Path $env:LOCALAPPDATA "pastor"
   }
   $problem = Get-PastorDirProblem $dir
-  if ($null -ne $problem) { Stop-PastorInstall "$problem." "Set PASTOR_DIR to a full folder path such as C:\Users\you\pastor, then run the installer again." }
+  if ($null -ne $problem) { Stop-PastorInstall "$problem." "Defina PASTOR_DIR com o caminho completo de uma pasta, como C:\Users\voce\pastor, e rode o instalador de novo." }
   $dir = [System.IO.Path]::GetFullPath($dir).TrimEnd('\')
   $mirror = "$env:PASTOR_INSTALL_MIRROR".Trim().TrimEnd('/')
   if ($mirror -ne '') {
     if (-not (Test-PastorMirror $mirror)) {
-      Stop-PastorInstall "PASTOR_INSTALL_MIRROR='$mirror' is not a file:/// URL or an http://127.0.0.1 or http://localhost URL. It is a test seam, never a download source." "Remove PASTOR_INSTALL_MIRROR to install from GitHub."
+      Stop-PastorInstall "PASTOR_INSTALL_MIRROR='$mirror' n&#xE3;o &#xE9; uma URL file:/// nem http://127.0.0.1 ou http://localhost. Serve s&#xF3; para testes, nunca como fonte de download." "Remova PASTOR_INSTALL_MIRROR para instalar do GitHub."
     }
-    Write-PastorLine "WARNING: PASTOR_INSTALL_MIRROR is set. This is a test seam: everything comes from $mirror, not from GitHub."
+    Write-PastorLine "AVISO: PASTOR_INSTALL_MIRROR est&#xE1; definido. Isto &#xE9; s&#xF3; para testes: tudo vem de $mirror, n&#xE3;o do GitHub."
   }
 
   # A pinned tag is checked before anything is fetched or touched.
   $pin = "$env:PASTOR_TAG".Trim()
   if ($pin -ne '' -and -not (Test-PastorTag $pin -AllowPrerelease)) {
-    Stop-PastorInstall "PASTOR_TAG='$pin' is not a release tag." "Set PASTOR_TAG to a tag like v1.16.0 (or v1.16.0-rc.1), or remove it to take the newest release."
+    Stop-PastorInstall "PASTOR_TAG='$pin' n&#xE3;o &#xE9; uma tag de vers&#xE3;o." "Defina PASTOR_TAG com uma tag como v1.16.0 (ou v1.16.0-rc.1), ou remova para pegar a vers&#xE3;o mais nova."
   }
 
   $problem = Get-PastorHostProblem (Get-PastorArch) ([Environment]::OSVersion.Version.Build)
-  if ($null -ne $problem) { Stop-PastorInstall $problem "Install Pastor on an x64 machine with Windows 10 build 19041 or newer." }
+  if ($null -ne $problem) { Stop-PastorInstall $problem "Instale o Pastor numa m&#xE1;quina x64 com Windows 10 build 19041 ou mais novo." }
 
   # Leave an existing install alone, unless a tag was pinned. A pin lays that version down BESIDE
   # what is there and points `current` at it. That is the way back when the installed version is
   # the broken one.
   $rescue = $false
   if (Test-Path -LiteralPath $dir) {
-    if (-not (Test-Path -LiteralPath $dir -PathType Container)) { Stop-PastorInstall "$dir is a file." "Move $dir aside, or set PASTOR_DIR to another folder." }
+    if (-not (Test-Path -LiteralPath $dir -PathType Container)) { Stop-PastorInstall "$dir &#xE9; um arquivo." "Tire $dir do lugar, ou defina PASTOR_DIR com outra pasta." }
     $isGit = Test-Path -LiteralPath (Join-Path $dir ".git")
     $hasVersions = Test-Path -LiteralPath (Join-Path $dir "versions") -PathType Container
     if ($isGit -and $pin -ne '') {
-      Stop-PastorInstall "$dir is a git checkout, and PASTOR_TAG only pins a binary install." "Pin it with git instead:  git -C $dir checkout $pin"
+      Stop-PastorInstall "$dir &#xE9; um checkout do git, e PASTOR_TAG s&#xF3; fixa a vers&#xE3;o de uma instala&#xE7;&#xE3;o bin&#xE1;ria." "Fixe a vers&#xE3;o pelo git:  git -C $dir checkout $pin"
     }
     if ($hasVersions -and -not $isGit -and $pin -ne '') {
       $rescue = $true
@@ -459,17 +466,17 @@ function Invoke-PastorInstall {
       # A rerun is not an update: `pastor update` owns that, so a working `current` is never moved
       # from here without a pin, and nothing is changed or downloaded.
       $installed = "Pastor"
-      if ($isGit) { $installed = "Pastor (a git checkout)" }
+      if ($isGit) { $installed = "Pastor (checkout do git)" }
       else {
         $target = Get-PastorLinkTarget (Join-Path $dir "current")
         if ($null -ne $target) { $installed = "Pastor " + [System.IO.Path]::GetFileName($target.TrimEnd('\')) }
       }
-      Write-PastorLine "$installed is already installed in $dir. To update, run: pastor update"
-      Write-PastorLine "To lay one exact version beside it instead, set PASTOR_TAG (for example `$env:PASTOR_TAG = 'v1.16.0') and run the installer again."
+      Write-PastorLine "$installed j&#xE1; est&#xE1; instalado em $dir. Para atualizar, rode: pastor update"
+      Write-PastorLine "Para instalar uma vers&#xE3;o exata ao lado, defina PASTOR_TAG (por exemplo `$env:PASTOR_TAG = 'v1.16.0') e rode o instalador de novo."
       return
     } else {
       $other = @(Get-ChildItem -LiteralPath $dir -Force | Where-Object { $_.Name -ne ".staging" })
-      if ($other.Count -gt 0) { Stop-PastorInstall "$dir already exists and is not a Pastor install." "Move $dir aside, or set PASTOR_DIR to another folder." }
+      if ($other.Count -gt 0) { Stop-PastorInstall "$dir j&#xE1; existe e n&#xE3;o &#xE9; uma instala&#xE7;&#xE3;o do Pastor." "Tire $dir do lugar, ou defina PASTOR_DIR com outra pasta." }
     }
   }
 
@@ -490,11 +497,11 @@ function Invoke-PastorInstall {
       if ("$value" -ne '') { $tokenFrom = $name; break }
     }
     if ($tokenFrom -ne '' -and $mirror -eq '') { $headers.Authorization = "Bearer " + [Environment]::GetEnvironmentVariable($tokenFrom) }
-    $pinFix = "Name the version and skip this call:  `$env:PASTOR_TAG = 'vX.Y.Z'  (the tags are at $releases)"
+    $pinFix = "diga a vers&#xE3;o e pule esta consulta:  `$env:PASTOR_TAG = 'vX.Y.Z'  (as tags est&#xE3;o em $releases)"
     try {
       if ($api.StartsWith("file:///")) {
         $tagsFile = ([Uri]"$api/repos/$repo/tags").LocalPath
-        if (-not (Test-Path -LiteralPath $tagsFile -PathType Leaf)) { Stop-PastorInstall "the mirror has no $tagsFile." "Put the tags list there, or remove PASTOR_INSTALL_MIRROR." }
+        if (-not (Test-Path -LiteralPath $tagsFile -PathType Leaf)) { Stop-PastorInstall "o espelho n&#xE3;o tem $tagsFile." "Coloque a lista de tags l&#xE1;, ou remova PASTOR_INSTALL_MIRROR." }
         $rows = @([System.IO.File]::ReadAllText($tagsFile) | ConvertFrom-Json | ForEach-Object { $_ })
       } else {
         # Every page: GitHub serves 100 tags a page, and a newer tag can sit on a later one. A page
@@ -512,16 +519,16 @@ function Invoke-PastorInstall {
     } catch {
       if ($null -ne $_.Exception.Data["PastorFix"]) { throw }
       $code = Get-PastorHttpCode $_
-      if ($code -eq 0) { Stop-PastorInstall "could not reach $api to list the releases." "Check your network, or $pinFix" }
-      if ($code -eq 401 -and $headers.ContainsKey("Authorization")) { Stop-PastorInstall "GitHub refused the token in $tokenFrom (HTTP 401)." "Fix or remove $tokenFrom, then run the installer again." }
+      if ($code -eq 0) { Stop-PastorInstall "n&#xE3;o deu para acessar $api para listar as vers&#xF5;es." "Confira a sua internet, ou $pinFix" }
+      if ($code -eq 401 -and $headers.ContainsKey("Authorization")) { Stop-PastorInstall "o GitHub recusou o token em $tokenFrom (HTTP 401)." "Corrija ou remova $tokenFrom e rode o instalador de novo." }
       if ($code -eq 403 -or $code -eq 429) {
-        Stop-PastorInstall "GitHub's API rate limit says no (HTTP $code). Without a token GitHub allows 60 calls an hour per network address." "Wait an hour, set GH_TOKEN to a GitHub token with no scopes, or $pinFix"
+        Stop-PastorInstall "o limite de consultas da API do GitHub foi atingido (HTTP $code). Sem token o GitHub permite 60 consultas por hora por endere&#xE7;o de rede." "Espere uma hora, defina GH_TOKEN com um token do GitHub sem permiss&#xF5;es, ou $pinFix"
       }
-      Stop-PastorInstall "$api answered HTTP $code when asked for the tags of $repo." "Try again later, or $pinFix"
+      Stop-PastorInstall "$api respondeu HTTP $code ao pedir as tags de $repo." "Tente de novo mais tarde, ou $pinFix"
     }
     $names = @($rows | ForEach-Object { "$($_.name)" })
     $candidates = @(Sort-PastorTags $names | Select-Object -First 5)
-    if ($candidates.Count -eq 0) { Stop-PastorInstall "no release tag found for $repo." "Pin a version with PASTOR_TAG, or report this at https://github.com/Ad3Digital/pastor/issues" }
+    if ($candidates.Count -eq 0) { Stop-PastorInstall "nenhuma tag de vers&#xE3;o encontrada para $repo." "Fixe uma vers&#xE3;o com PASTOR_TAG, ou avise em https://github.com/Ad3Digital/pastor/issues" }
   }
   $current = Join-Path $dir "current"
 
@@ -533,22 +540,22 @@ function Invoke-PastorInstall {
   if ($rescue) {
     foreach ($folder in (Join-Path $dir "versions"), $versionDir) {
       if ((Get-PastorLinkState $folder) -eq "link") {
-        Stop-PastorInstall "$folder is a junction or a link, not a folder this installer made." "Move $folder aside, then run the installer again."
+        Stop-PastorInstall "$folder &#xE9; uma jun&#xE7;&#xE3;o ou um link, n&#xE3;o uma pasta criada por este instalador." "Tire $folder do lugar e rode o instalador de novo."
       }
     }
     if ((Get-PastorLinkState $current) -eq "other") {
-      Stop-PastorInstall "$current is a real folder or file, not a junction, so it is not Pastor's to remove." "Move $current aside, then run the installer again."
+      Stop-PastorInstall "$current &#xE9; uma pasta ou arquivo de verdade, n&#xE3;o uma jun&#xE7;&#xE3;o, ent&#xE3;o o Pastor n&#xE3;o pode remov&#xEA;-lo." "Tire $current do lugar e rode o instalador de novo."
     }
   }
   if ($rescue -and (Test-Path -LiteralPath $versionDir)) {
     # A folder from a move that stopped half way is not an install: it must hold bin\pastor.exe.
     if (-not (Test-Path -LiteralPath (Join-Path $versionDir "bin\pastor.exe"))) {
-      Stop-PastorInstall "$versionDir is there but holds no bin\pastor.exe." "Move $versionDir aside, then run the installer again."
+      Stop-PastorInstall "$versionDir existe mas n&#xE3;o tem bin\pastor.exe." "Tire $versionDir do lugar e rode o instalador de novo."
     }
     $now = Get-PastorLinkTarget $current
     if ($null -ne $now -and $now.TrimEnd('\') -eq $versionDir) {
       Write-PastorLine (Publish-PastorName $dir)
-      Write-PastorLine "OK  Pastor $tag is installed at $dir and current names it already. Nothing was changed, and nothing was downloaded."
+      Write-PastorLine "OK  O Pastor $tag est&#xE1; instalado em $dir e current j&#xE1; aponta para ele. Nada foi alterado nem baixado."
       return
     }
     Set-PastorCurrent $dir $versionDir
@@ -556,14 +563,14 @@ function Invoke-PastorInstall {
     $blocked = Test-PastorRuns (Join-Path $current "bin\pastor.exe") (Join-Path $dir ".pastor-version-check.txt")
     Remove-Item -LiteralPath (Join-Path $dir ".pastor-version-check.txt") -Force -ErrorAction SilentlyContinue
     if ($null -ne $blocked) { Stop-PastorBlocked $dir (Join-Path $current "bin\pastor.exe") $blocked }
-    Write-PastorLine "OK  Pastor $tag was already at $versionDir. current now names it, and nothing was downloaded."
-    Write-PastorLine "If Pastor is running, run  pastor restart  to start this version."
+    Write-PastorLine "OK  O Pastor $tag j&#xE1; estava em $versionDir. current agora aponta para ele, e nada foi baixado."
+    Write-PastorLine "Se o Pastor estiver rodando, rode  pastor restart  para usar esta vers&#xE3;o."
     return
   }
 
   # Download, and verify before anything is unpacked. The scratch folder is inside PASTOR_DIR, and
   # it is removed on every way out.
-  if ($rescue) { Write-PastorLine "Pastor is already installed in $dir. Laying $pin down beside it, and pointing current at it." }
+  if ($rescue) { Write-PastorLine "O Pastor j&#xE1; est&#xE1; instalado em $dir. Instalando $pin ao lado e apontando current para ela." }
   $createdDir = -not (Test-Path -LiteralPath $dir)
   $staging = Join-Path $dir ".staging"
   $work = Join-Path $staging "install-$PID"
@@ -581,56 +588,56 @@ function Invoke-PastorInstall {
       $zipName = "pastor-$($candidate.Substring(1))-$platform.zip"
       $base = if ($mirror -ne '') { "$mirror/$repo/releases/download/$candidate" } else { "$releases/download/$candidate" }
       $code = Get-PastorFile "$base/$zipName.sha256" (Join-Path $work "$zipName.sha256")
-      if ($code -eq 0) { Stop-PastorInstall "could not reach the download for $candidate." "Check your network, then run the installer again." }
+      if ($code -eq 0) { Stop-PastorInstall "n&#xE3;o deu para acessar o download de $candidate." "Confira a sua internet e rode o instalador de novo." }
       if ($code -eq 200) { $tag = $candidate; break }
       if ($pin -ne '') {
-        Stop-PastorInstall "release $pin has no $zipName.sha256 (HTTP $code), so a download could not be checked. Either that release has no Windows build, or its checksum file is missing. Nothing was installed." "Check the tag against $releases, or pin another one with PASTOR_TAG."
+        Stop-PastorInstall "a vers&#xE3;o $pin n&#xE3;o tem $zipName.sha256 (HTTP $code), ent&#xE3;o o download n&#xE3;o pode ser conferido. Ou essa vers&#xE3;o n&#xE3;o tem build para Windows, ou falta o arquivo de checksum. Nada foi instalado." "Confira a tag em $releases, ou fixe outra com PASTOR_TAG."
       }
-      Write-PastorLine "$candidate has no Windows build. Trying the next older release."
+      Write-PastorLine "$candidate n&#xE3;o tem build para Windows. Tentando a vers&#xE3;o anterior."
     }
     if ($null -eq $tag) {
-      Stop-PastorInstall "none of the newest $($candidates.Count) releases of $repo carries a Windows build yet. Nothing was installed." "Pin a release that has one:  `$env:PASTOR_TAG = 'vX.Y.Z'  (see $releases)"
+      Stop-PastorInstall "nenhuma das $($candidates.Count) vers&#xF5;es mais novas de $repo tem build para Windows ainda. Nada foi instalado." "Fixe uma vers&#xE3;o que tenha:  `$env:PASTOR_TAG = 'vX.Y.Z'  (veja $releases)"
     }
     $version = $tag.Substring(1)
     $versionDir = Join-Path $dir "versions\$version"
     $zip = Join-Path $work $zipName
-    if ($mirror -ne '') { Write-PastorLine "Downloading Pastor $tag for $platform from the mirror $mirror ..." }
-    else { Write-PastorLine "Downloading Pastor $tag for $platform ..." }
+    if ($mirror -ne '') { Write-PastorLine "Baixando o Pastor $tag para $platform do espelho $mirror ..." }
+    else { Write-PastorLine "Baixando o Pastor $tag para $platform ..." }
     $code = Get-PastorFile "$base/$zipName" $zip
-    if ($code -eq 0) { Stop-PastorInstall "could not reach the download for $zipName." "Check your network, then run the installer again." }
+    if ($code -eq 0) { Stop-PastorInstall "n&#xE3;o deu para acessar o download de $zipName." "Confira a sua internet e rode o instalador de novo." }
     if ($code -ne 200) {
-      Stop-PastorInstall "release $tag has a checksum file but no $zipName (HTTP $code). Nothing was installed." "Try again later. If it happens again, report it at https://github.com/Ad3Digital/pastor/issues"
+      Stop-PastorInstall "a vers&#xE3;o $tag tem arquivo de checksum mas n&#xE3;o tem $zipName (HTTP $code). Nada foi instalado." "Tente de novo mais tarde. Se acontecer de novo, avise em https://github.com/Ad3Digital/pastor/issues"
     }
     $manifestPath = Join-Path $work "manifest.json"
     if ((Get-PastorFile "$base/pastor-$version.manifest.json" $manifestPath) -ne 200) {
-      Stop-PastorInstall "could not download the release manifest for $version. Nothing was installed." "Try again later. If it happens again, report it at https://github.com/Ad3Digital/pastor/issues"
+      Stop-PastorInstall "n&#xE3;o deu para baixar o manifesto da vers&#xE3;o $version. Nada foi instalado." "Tente de novo mais tarde. Se acontecer de novo, avise em https://github.com/Ad3Digital/pastor/issues"
     }
     $manifest = [System.IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
     if ($manifest.schemaVersion -ne 1) {
-      Stop-PastorInstall "release $version uses a manifest this installer does not understand." "Report it at https://github.com/Ad3Digital/pastor/issues"
+      Stop-PastorInstall "a vers&#xE3;o $version usa um manifesto que este instalador n&#xE3;o entende." "Avise em https://github.com/Ad3Digital/pastor/issues"
     }
     $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
     $problem = Get-PastorDigestProblem ([System.IO.File]::ReadAllText("$zip.sha256")) $zipName $digest
     if ($null -ne $problem) {
-      Stop-PastorInstall "$problem. The download was discarded and nothing was installed." "Run the installer again. If it happens again, report it at https://github.com/Ad3Digital/pastor/issues"
+      Stop-PastorInstall "$problem. O download foi descartado e nada foi instalado." "Rode o instalador de novo. Se acontecer de novo, avise em https://github.com/Ad3Digital/pastor/issues"
     }
     # The manifest's own Windows entry, matched by platform, and its digest compared as a whole value.
     $entries = @($manifest.artifacts | Where-Object { "$($_.platform)" -ceq $platform })
     $named = ($entries.Count -eq 1) -and ("$($entries[0].name)" -ceq $zipName) -and [string]::Equals("$($entries[0].sha256)", $digest, [StringComparison]::OrdinalIgnoreCase)
-    if (-not $named) { Stop-PastorInstall "the digest of $zipName is not the one release $version's manifest names. Nothing was installed." "Report it at https://github.com/Ad3Digital/pastor/issues" }
+    if (-not $named) { Stop-PastorInstall "o hash de $zipName n&#xE3;o &#xE9; o que o manifesto da vers&#xE3;o $version indica. Nada foi instalado." "Avise em https://github.com/Ad3Digital/pastor/issues" }
 
     # Lay it down: one complete payload per version, and `current` names one of them.
     $unpacked = Join-Path $work "unpacked"
     Expand-PastorZip $zip $unpacked "pastor-$version-$platform"
     $payload = Join-Path $unpacked "pastor-$version-$platform"
     if (-not (Test-Path -LiteralPath (Join-Path $payload "bin\pastor.exe"))) {
-      Stop-PastorInstall "$zipName does not contain bin\pastor.exe. Refusing to install it." "Report it at https://github.com/Ad3Digital/pastor/issues"
+      Stop-PastorInstall "$zipName n&#xE3;o cont&#xE9;m bin\pastor.exe. A instala&#xE7;&#xE3;o foi recusada." "Avise em https://github.com/Ad3Digital/pastor/issues"
     }
     New-Item -ItemType Directory -Force -Path (Join-Path $dir "versions") | Out-Null
-    if ((Get-PastorLinkState (Join-Path $dir "versions")) -ne "other") { Stop-PastorInstall "$dir\versions is a junction or a link, not a folder this installer made." "Move $dir\versions aside, then run the installer again." }
-    if ((Get-PastorLinkState $versionDir) -ne "absent") { Stop-PastorInstall "$versionDir exists already." "Move $versionDir aside, then run the installer again." }
+    if ((Get-PastorLinkState (Join-Path $dir "versions")) -ne "other") { Stop-PastorInstall "$dir\versions &#xE9; uma jun&#xE7;&#xE3;o ou um link, n&#xE3;o uma pasta criada por este instalador." "Tire $dir\versions do lugar e rode o instalador de novo." }
+    if ((Get-PastorLinkState $versionDir) -ne "absent") { Stop-PastorInstall "$versionDir j&#xE1; existe." "Tire $versionDir do lugar e rode o instalador de novo." }
     try { Move-PastorItem $payload $versionDir }
-    catch { Stop-PastorInstall "could not move the payload into $versionDir ($($_.Exception.Message))." "Close programs that may hold files in $dir (an antivirus scan can), then run the installer again." }
+    catch { Stop-PastorInstall "n&#xE3;o deu para mover os arquivos para $versionDir ($($_.Exception.Message))." "Feche programas que possam estar usando arquivos em $dir (um antiv&#xED;rus pode) e rode o instalador de novo." }
     Set-PastorCurrent $dir $versionDir
   } finally {
     try { Remove-PastorTree $work } catch { }
@@ -655,48 +662,48 @@ function Invoke-PastorInstall {
   # as for a rescue that found the version on disk, never a first start.
   if ($rescue) {
     Write-PastorLine ""
-    Write-PastorLine "OK  Pastor $version is installed in $dir, and current names it."
-    Write-PastorLine "    The download matches the checksum published with the release, and pastor.exe runs."
+    Write-PastorLine "OK  O Pastor $version est&#xE1; instalado em $dir, e current aponta para ele."
+    Write-PastorLine "    O download confere com o checksum publicado na vers&#xE3;o, e o pastor.exe roda."
     Write-PastorLine $published
-    Write-PastorLine "If Pastor is running, run  $pastor restart  to start this version."
+    Write-PastorLine "Se o Pastor estiver rodando, rode  $pastor restart  para usar esta vers&#xE3;o."
     return
   }
 
   # What is left is yours.
   Write-PastorLine ""
-  Write-PastorLine "OK  Pastor $version is installed in $dir. Nothing is running yet."
-  Write-PastorLine "    The download matches the checksum published with the release, and pastor.exe runs."
+  Write-PastorLine "OK  O Pastor $version est&#xE1; instalado em $dir. Nada est&#xE1; rodando ainda."
+  Write-PastorLine "    O download confere com o checksum publicado na vers&#xE3;o, e o pastor.exe roda."
   Write-PastorLine $published
-  if ($null -eq $herdr) { Write-PastorLine "Herdr not found on your PATH. Pastor on Windows needs it (step 2)." }
-  else { Write-PastorLine "Herdr found: $($herdr.Source)" }
+  if ($null -eq $herdr) { Write-PastorLine "O Herdr n&#xE3;o foi encontrado no PATH. O Pastor no Windows precisa dele (passo 2)." }
+  else { Write-PastorLine "Herdr encontrado: $($herdr.Source)" }
   Write-PastorLine ""
-  Write-PastorLine "Next steps. This script does not take them for you:"
+  Write-PastorLine "Pr&#xF3;ximos passos. Este script n&#xE3;o faz por voc&#xEA;:"
   Write-PastorLine ""
-  if ($env:PASTOR_NO_PATH_EDIT -eq "1") { Write-PastorLine "  1. Open a NEW terminal window." }
-  else { Write-PastorLine "  1. Open a NEW terminal window. Windows gives the new PATH only to windows opened after this install." }
+  if ($env:PASTOR_NO_PATH_EDIT -eq "1") { Write-PastorLine "  1. Abra uma janela NOVA do terminal." }
+  else { Write-PastorLine "  1. Abra uma janela NOVA do terminal. O Windows s&#xF3; entrega o PATH novo para janelas abertas depois desta instala&#xE7;&#xE3;o." }
   Write-PastorLine ""
-  Write-PastorLine "  2. Start Herdr in another terminal window, and leave it running. Pastor needs it before it starts."
-  Write-PastorLine "     Get Herdr at https://herdr.dev (its installer: irm https://herdr.dev/install.ps1 | iex). Then run:"
+  Write-PastorLine "  2. Abra o Herdr em outra janela do terminal e deixe rodando. O Pastor precisa dele antes de ligar."
+  Write-PastorLine "     Baixe o Herdr em https://herdr.dev (instalador: irm https://herdr.dev/install.ps1 | iex). Depois rode:"
   Write-PastorLine "       herdr"
   Write-PastorLine ""
-  Write-PastorLine "  3. Start Pastor, then print its address:"
+  Write-PastorLine "  3. Ligue o Pastor e mostre o endere&#xE7;o dele:"
   Write-PastorLine "       $pastor start"
   Write-PastorLine "       $pastor url"
-  Write-PastorLine "     On Windows, Pastor listens on this machine only. To open it on your phone, reach it through"
-  Write-PastorLine "     your Tailscale network: $current\docs\deployment.md"
+  Write-PastorLine "     No Windows, o Pastor s&#xF3; atende neste computador. Para abrir no celular, use a sua rede do"
+  Write-PastorLine "     Tailscale (passo 6 do README): https://github.com/Ad3Digital/pastor#instalar-no-windows"
   Write-PastorLine ""
-  Write-PastorLine "  4. Pair your phone. Pastor answers no device until one is paired:"
+  Write-PastorLine "  4. Pareie o celular. O Pastor n&#xE3;o responde a nenhum aparelho at&#xE9; um ser pareado:"
   Write-PastorLine "       $pastor pair"
   Write-PastorLine ""
-  Write-PastorLine "Linking several machines (crew) does not work on Windows yet. Pastor on one machine works fine."
-  Write-PastorLine "pastor.exe is unsigned: Windows does not know the publisher of this file. If Windows blocks it later, run  `"$exe`" version  to see why."
-  Write-PastorLine "Read $current\docs\security.md before you open Pastor on a phone. Pastor gives remote shell access to this machine, by design."
+  Write-PastorLine "Ligar v&#xE1;rios computadores (crew) ainda n&#xE3;o funciona no Windows. O Pastor num computador s&#xF3; funciona normalmente."
+  Write-PastorLine "O pastor.exe n&#xE3;o &#xE9; assinado: o Windows n&#xE3;o conhece quem publicou o arquivo. Se o Windows bloquear depois, rode  `"$exe`" version  para ver o motivo."
+  Write-PastorLine "Leia $current\docs\security.md antes de abrir o Pastor no celular. O Pastor d&#xE1; acesso remoto ao terminal deste computador, de prop&#xF3;sito."
 }
 
 # Print a failure: what happened, then "Install failed." and the one fix, as the last line.
 function Write-PastorFailure([string]$What, [string]$Fix) {
-  Write-Host "pastor install: $What" -ForegroundColor Red
-  Write-Host "Install failed. $Fix" -ForegroundColor Red
+  Write-Host (ConvertFrom-PastorText "pastor install: $What") -ForegroundColor Red
+  Write-Host (ConvertFrom-PastorText "A instala&#xE7;&#xE3;o falhou. $Fix") -ForegroundColor Red
 }
 
 # The install and its outcome. It sets $LASTEXITCODE (0 on success, 1 on a failure, 2 on an option)
@@ -706,12 +713,12 @@ function Invoke-PastorEntry([object[]]$Arguments) {
   $ErrorActionPreference = "Stop"
   $ProgressPreference = "SilentlyContinue"
   if ($ExecutionContext.SessionState.LanguageMode -ne "FullLanguage") {
-    Write-PastorFailure "this PowerShell runs in $($ExecutionContext.SessionState.LanguageMode) mode, and the installer needs FullLanguage (a device policy sets this)." "Ask whoever manages this machine, or install by hand: https://github.com/Ad3Digital/pastor/blob/main/docs/install.md"
+    Write-PastorFailure "este PowerShell roda no modo $($ExecutionContext.SessionState.LanguageMode), e o instalador precisa do FullLanguage (uma pol&#xED;tica do aparelho define isso)." "Pe&#xE7;a a quem administra este computador, ou instale &#xE0; m&#xE3;o: https://github.com/Ad3Digital/pastor/blob/main/docs/install.md"
     $global:LASTEXITCODE = 1
     return
   }
   if (@($Arguments).Count -gt 0) {
-    Write-PastorFailure "install.ps1 takes no options, and got '$(@($Arguments)[0])'." "Run it with no options. Steer it with PASTOR_DIR, PASTOR_UPDATE_REPO and PASTOR_TAG."
+    Write-PastorFailure "o install.ps1 n&#xE3;o aceita op&#xE7;&#xF5;es, e recebeu '$(@($Arguments)[0])'." "Rode sem op&#xE7;&#xF5;es. Ajuste com PASTOR_DIR, PASTOR_UPDATE_REPO e PASTOR_TAG."
     $global:LASTEXITCODE = 2
     return
   }
@@ -722,7 +729,7 @@ function Invoke-PastorEntry([object[]]$Arguments) {
     $global:LASTEXITCODE = 0
   } catch {
     $fix = $_.Exception.Data["PastorFix"]
-    if ($null -eq $fix) { $fix = "Report it at https://github.com/Ad3Digital/pastor/issues with the lines above." }
+    if ($null -eq $fix) { $fix = "Avise em https://github.com/Ad3Digital/pastor/issues com as linhas acima." }
     Write-PastorFailure $_.Exception.Message $fix
     $global:LASTEXITCODE = 1
   } finally {

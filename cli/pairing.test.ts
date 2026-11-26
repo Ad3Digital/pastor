@@ -95,9 +95,9 @@ describe("pastor pair", () => {
     const out = d.io.stdout.join("\n");
     expect(d.io.stderr).toEqual([]);
     expect(out).toContain(new Date(NOW + CODE_TTL_MS).toISOString());
-    expect(out).toContain("10 minutes");
-    expect(out).toContain("single-use");
-    expect(out).toContain("Settings");
+    expect(out).toContain("10 minutos");
+    expect(out).toContain("uso único");
+    expect(out).toContain("Configurações");
     expect(out).not.toContain("restart pastor");
     // The bare code is the first line, undecorated, so it can be read off or piped.
     expect(d.io.stdout[0]).toBe(d.io.stdout[0]!.trim());
@@ -113,7 +113,7 @@ describe("pastor pair", () => {
 
     const later = second.io.stdout[0]!;
     expect(later).not.toBe(first);
-    expect(second.io.stdout.join("\n")).toContain("earlier `pastor pair`");
+    expect(second.io.stdout.join("\n")).toContain("`pastor pair` anterior");
     // Exactly one pending pairing exists, and it is the newer one.
     expect(coercePending(JSON.parse(d.files.entries.get(PENDING)!.text))!.codeHash).toBe(
       sha256Hex(later),
@@ -137,7 +137,7 @@ describe("pastor pair", () => {
     // name field the phone is meant to land on.
     expect(out).not.toContain("#paired-devices");
     expect(out).toContain("\u2588");
-    expect(out).toContain("Scan it:");
+    expect(out).toContain("Leia com a câmera:");
     expect(d.io.stderr).toEqual([]);
   });
 
@@ -146,9 +146,9 @@ describe("pastor pair", () => {
     expect(await cmdPair(d)).toBe(EXIT.OK);
     expect(d.io.stdout[0]).toHaveLength(CODE_LENGTH);
     expect(d.files.entries.has(PENDING)).toBe(true);
-    expect(d.io.stdout.join("\n")).toContain("No QR:");
+    expect(d.io.stdout.join("\n")).toContain("Sem QR:");
     // `urlToEncode` already said why, on stderr, in its own words.
-    expect(d.io.stderr.join("\n")).toContain("tailnet front door isn't up");
+    expect(d.io.stderr.join("\n")).toContain("o acesso pelo tailnet não está publicado");
   });
 
   test("no --expires writes the pending file without a token lifetime, exactly as before", async () => {
@@ -166,8 +166,8 @@ describe("pastor pair", () => {
     const d = deps();
     expect(await cmdPair(d)).toBe(EXIT.OK);
     const out = d.io.stdout.join("\n");
-    expect(out).toContain("  This token never expires. Add --expires 30d to limit it.");
-    expect(out).not.toContain("once claimed");
+    expect(out).toContain("  Este acesso não vence. Use --expires 30d para limitar.");
+    expect(out).not.toContain("depois de usado");
   });
 
   test("--expires prints the resolved local date and time, and not the never-expires hint", async () => {
@@ -177,8 +177,8 @@ describe("pastor pair", () => {
     const two = (n: number): string => String(n).padStart(2, "0");
     const local = `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())} ${two(at.getHours())}:${two(at.getMinutes())}`;
     const out = d.io.stdout.join("\n");
-    expect(out).toContain(`  Expires ${local} once claimed.`);
-    expect(out).not.toContain("never expires");
+    expect(out).toContain(`  Vence em ${local} depois de usado.`);
+    expect(out).not.toContain("não vence.");
   });
 
   test("--expires 30d puts the token lifetime on the pending code and says so", async () => {
@@ -189,7 +189,7 @@ describe("pastor pair", () => {
       expect(pending!.tokenLifetimeMs).toBe(30 * 86_400_000);
       // The CODE's own ten minutes are untouched by the token's lifetime.
       expect(pending!.expiresAt).toBe(NOW + CODE_TTL_MS);
-      expect(d.io.stdout.join("\n")).toContain("30 days after it pairs");
+      expect(d.io.stdout.join("\n")).toContain("30 dias depois de parear");
     }
   });
 
@@ -199,7 +199,7 @@ describe("pastor pair", () => {
       expect(await cmdPair(d, ["--expires", bad])).toBe(EXIT.USAGE);
       expect(d.files.entries.has(PENDING)).toBe(false);
       expect(d.io.stdout).toEqual([]);
-      expect(d.io.stderr.join("\n")).toContain("usage: pastor pair [--expires <duration>]");
+      expect(d.io.stderr.join("\n")).toContain("uso: pastor pair [--expires <duração>]");
     }
   });
 
@@ -226,8 +226,8 @@ describe("pastor devices list", () => {
     const d = deps();
     expect(cmdDevicesList(d)).toBe(EXIT.OK);
     const out = d.io.stdout.join("\n");
-    expect(out).toContain("no devices paired");
-    expect(out).toContain("always on");
+    expect(out).toContain("nenhum aparelho pareado");
+    expect(out).toContain("sempre exigido");
     expect(out).not.toContain("not enforced");
     expect(out).toContain("pastor pair");
   });
@@ -237,7 +237,7 @@ describe("pastor devices list", () => {
     for (const seed of seeds) {
       const d = { ...deps(seed) };
       expect(cmdDevicesList(d)).toBe(EXIT.OK);
-      expect(d.io.stdout.join("\n")).toContain("no devices paired");
+      expect(d.io.stdout.join("\n")).toContain("nenhum aparelho pareado");
     }
   });
 
@@ -251,7 +251,7 @@ describe("pastor devices list", () => {
     expect(d.io.stdout[0]).toContain(new Date(NOW - 86_400_000).toISOString());
     expect(d.io.stdout[0]).toContain(new Date(NOW - 60_000).toISOString());
     // A device that has never made a request reads as `never`, not as the epoch.
-    expect(d.io.stdout[1]).toContain("never");
+    expect(d.io.stdout[1]).toContain("nunca");
     expect(d.io.stdout[1]).not.toContain("1970");
   });
 
@@ -285,11 +285,11 @@ describe("pastor devices list", () => {
       ),
     );
     expect(cmdDevicesList(d)).toBe(EXIT.OK);
-    expect(d.io.stdout[0]).toContain("no expiry");
-    expect(d.io.stdout[1]).toContain(`expires ${new Date(NOW + 86_400_000).toISOString()}`);
-    expect(d.io.stdout[2]).toContain(`EXPIRED ${new Date(NOW - 1).toISOString()}`);
+    expect(d.io.stdout[0]).toContain("sem validade");
+    expect(d.io.stdout[1]).toContain(`vence ${new Date(NOW + 86_400_000).toISOString()}`);
+    expect(d.io.stdout[2]).toContain(`VENCIDO ${new Date(NOW - 1).toISOString()}`);
     // One closing line says what an expired entry still does, and what to do about it.
-    expect(d.io.stdout[3]).toContain("revoke it");
+    expect(d.io.stdout[3]).toContain("revogue");
   });
 
   test("no token hash is ever printed — the registry's secrets stay in the file", () => {
@@ -318,8 +318,8 @@ describe("pastor devices revoke", () => {
     expect(labels).toEqual(["ipad"]);
     const out = d.io.stdout.join("\n");
     expect(out).toContain("pixel");
-    expect(out).toContain("next request");
-    expect(out).toContain("no restart");
+    expect(out).toContain("próximo pedido");
+    expect(out).toContain("não precisa reiniciar");
   });
 
   test("revoking the last device says Pastor now answers nobody, and points at `pastor pair`", () => {
@@ -327,7 +327,7 @@ describe("pastor devices revoke", () => {
     expect(cmdDevicesRevoke(d, ["pixel"])).toBe(EXIT.OK);
     // Always on (ADR 0086): the last device leaving does not open the bridge again.
     expect(d.io.stdout.join("\n")).not.toContain("no longer enforced");
-    expect(d.io.stdout.join("\n")).toContain("answers no phone or browser");
+    expect(d.io.stdout.join("\n")).toContain("não responde a nenhum celular ou navegador");
     expect(d.io.stdout.join("\n")).toContain("pastor pair");
     expect(JSON.parse(d.files.entries.get(REGISTRY)!.text)).toEqual({ devices: [] });
   });
@@ -336,7 +336,7 @@ describe("pastor devices revoke", () => {
     const d = deps(registryFile(device({ label: "pixel" })));
     expect(cmdDevicesRevoke(d, ["nope"])).toBe(EXIT.FAIL);
     expect(d.io.stdout).toEqual([]);
-    expect(d.io.stderr.join("\n")).toContain("no paired device labelled `nope`");
+    expect(d.io.stderr.join("\n")).toContain("nenhum aparelho pareado com o nome `nope`");
     expect(d.io.stderr.join("\n")).toContain("pixel");
     expect(d.files.entries.get(REGISTRY)!.text).toBe(
       JSON.stringify({ devices: [device({ label: "pixel" })] }),
@@ -346,7 +346,7 @@ describe("pastor devices revoke", () => {
   test("a revoke against an empty registry says so rather than listing nothing", () => {
     const d = deps();
     expect(cmdDevicesRevoke(d, ["pixel"])).toBe(EXIT.FAIL);
-    expect(d.io.stderr.join("\n")).toContain("nothing is paired");
+    expect(d.io.stderr.join("\n")).toContain("nada está pareado");
     expect(d.files.entries.has(REGISTRY)).toBe(false);
   });
 
@@ -354,7 +354,7 @@ describe("pastor devices revoke", () => {
     for (const args of [[], [""]]) {
       const d = deps(registryFile(device()));
       expect(cmdDevicesRevoke(d, args)).toBe(EXIT.USAGE);
-      expect(d.io.stderr.join("\n")).toContain("usage: pastor devices revoke <label>");
+      expect(d.io.stderr.join("\n")).toContain("uso: pastor devices revoke <nome>");
     }
   });
 
@@ -386,7 +386,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
     expect("expiresAt" in ipad!).toBe(false);
     const out = d.io.stdout.join("\n");
     expect(out).toContain(new Date(NOW + 12 * 3_600_000).toISOString());
-    expect(out).toContain("12 hours from now");
+    expect(out).toContain("daqui a 12 horas");
   });
 
   test("set-expiry gives an expired device a fresh lifetime", () => {
@@ -399,7 +399,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
     const d = deps(registryFile(device({ label: "pixel", expiresAt: NOW + 1000 })));
     expect(cmdDevicesClearExpiry(d, ["pixel"])).toBe(EXIT.OK);
     expect(writtenDevices(d)).toEqual([device({ label: "pixel" })]);
-    expect(d.io.stdout.join("\n")).toContain("no longer expires");
+    expect(d.io.stdout.join("\n")).toContain("não vence mais");
   });
 
   test("clear-expiry on a device without one says so and writes nothing", () => {
@@ -407,7 +407,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
     const d = deps(seed);
     expect(cmdDevicesClearExpiry(d, ["pixel"])).toBe(EXIT.OK);
     expect(d.files.entries.get(REGISTRY)!.text).toBe(seed[REGISTRY]!);
-    expect(d.io.stdout.join("\n")).toContain("nothing to clear");
+    expect(d.io.stdout.join("\n")).toContain("nada para tirar");
   });
 
   test("an unknown label fails, names the paired labels, and writes nothing", () => {
@@ -418,7 +418,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
       const seed = registryFile(device({ label: "pixel", expiresAt: NOW + 1 }));
       const d = deps(seed);
       expect(run(d)).toBe(EXIT.FAIL);
-      expect(d.io.stderr.join("\n")).toContain("no paired device labelled `nope`");
+      expect(d.io.stderr.join("\n")).toContain("nenhum aparelho pareado com o nome `nope`");
       expect(d.io.stderr.join("\n")).toContain("pixel");
       expect(d.files.entries.get(REGISTRY)!.text).toBe(seed[REGISTRY]!);
     }
@@ -433,7 +433,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
     const ambiguous = deps(seed);
     expect(cmdDevicesSetExpiry(ambiguous, ["pixel", "1d"])).toBe(EXIT.FAIL);
     const err = ambiguous.io.stderr.join("\n");
-    expect(err).toContain("more than one paired device: Pixel, PIXEL");
+    expect(err).toContain("mais de um aparelho pareado: Pixel, PIXEL");
     expect(ambiguous.files.entries.get(REGISTRY)!.text).toBe(seed[REGISTRY]!);
     // An exact match always wins over the folded ones.
     const exact = deps(seed);
@@ -450,7 +450,7 @@ describe("pastor devices set-expiry / clear-expiry", () => {
     }
     const clear = deps(registryFile(device()));
     expect(cmdDevicesClearExpiry(clear, [])).toBe(EXIT.USAGE);
-    expect(clear.io.stderr.join("\n")).toContain("usage: pastor devices clear-expiry <label>");
+    expect(clear.io.stderr.join("\n")).toContain("uso: pastor devices clear-expiry <nome>");
   });
 });
 
@@ -458,11 +458,11 @@ describe("the devices parent verb", () => {
   test("routes its sub-verbs", () => {
     const list = deps();
     expect(cmdDevices(list, ["list"])).toBe(EXIT.OK);
-    expect(list.io.stdout.join("\n")).toContain("no devices paired");
+    expect(list.io.stdout.join("\n")).toContain("nenhum aparelho pareado");
 
     const revoke = deps(registryFile(device({ label: "pixel" })));
     expect(cmdDevices(revoke, ["revoke", "pixel"])).toBe(EXIT.OK);
-    expect(revoke.io.stdout.join("\n")).toContain("revoked");
+    expect(revoke.io.stdout.join("\n")).toContain("revogado");
 
     const set = deps(registryFile(device({ label: "pixel" })));
     expect(cmdDevices(set, ["set-expiry", "pixel", "30d"])).toBe(EXIT.OK);
@@ -481,7 +481,7 @@ describe("the devices parent verb", () => {
       expect(err).toContain("set-expiry ");
       expect(err).toContain("clear-expiry ");
       // Only a real mistake is called one.
-      expect(err.includes("unknown devices subcommand")).toBe(args[0] === "lst");
+      expect(err.includes("subcomando de devices desconhecido")).toBe(args[0] === "lst");
     }
   });
 });
@@ -519,7 +519,7 @@ describe("pastor devices revoke — the device's launcher rows", () => {
     expect((JSON.parse(entry.text) as { rows: { command: string }[] }).rows.map((r) => r.command)).toEqual(["btop", "top"]);
     expect(audit).toHaveLength(1);
     expect(JSON.parse(audit[0]!)).toMatchObject({ action: "launcher.remove", detail: { addedBy: "pixel", reason: "device-revoked" } });
-    expect(d.io.stdout.join("\n")).toContain("Removed 1 launcher row");
+    expect(d.io.stdout.join("\n")).toContain("Removido 1 atalho");
   });
 
   test("no file, or a file it may not write over, is left alone", () => {
@@ -530,6 +530,6 @@ describe("pastor devices revoke — the device's launcher rows", () => {
     const d = deps({ ...registryFile(device({ label: "pixel" })), [ADDED]: foreign });
     expect(cmdDevicesRevoke(d, ["pixel"])).toBe(EXIT.OK);
     expect(d.files.entries.get(ADDED)!.text).toBe(foreign);
-    expect(d.io.stderr.join("\n")).toContain("cannot be read");
+    expect(d.io.stderr.join("\n")).toContain("não pode ser lido");
   });
 });

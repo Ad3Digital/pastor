@@ -102,7 +102,7 @@ export function bridgeUrlFrom(
   port: number,
   servePort: number,
 ): string {
-  if (name === null) return `http://127.0.0.1:${port} (Tailscale name unavailable)`;
+  if (name === null) return `http://127.0.0.1:${port} (nome no Tailscale indisponível)`;
   if (mode === "http") return `http://${name}:${port}`;
   return servePort === DEFAULT_SERVE_PORT ? `https://${name}` : `https://${name}:${servePort}`;
 }
@@ -259,4 +259,4 @@ export function tailnetCertDomains(exec: Exec): string[] | null {
  * because two copies of an instruction drift and the operator only ever sees one of them.
  */
 export const HTTPS_DISABLED_HINT =
-  'enable HTTPS in the admin console (https://login.tailscale.com/admin/dns, "Enable HTTPS"), then run `pastor serve` again';
+  'ligue o HTTPS no painel do Tailscale (https://login.tailscale.com/admin/dns, "Enable HTTPS") e rode `pastor serve` de novo';

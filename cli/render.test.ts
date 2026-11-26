@@ -169,7 +169,7 @@ describe("projectAdd", () => {
     const view = projectAdd([
       ...START,
       { kind: "restart-begin", label: "bridge restarted (pastor-v1) · 1.0.0+abc" },
-      { kind: "line", text: "bridge stopped", tone: "info", stream: "out" },
+      { kind: "line", text: "Pastor parado", tone: "info", stream: "out" },
       { kind: "line", text: "│ Pastor is running │", tone: "info", stream: "out" },
       { kind: "restart-end", ok: true },
     ]);
@@ -182,11 +182,11 @@ describe("projectAdd", () => {
     const view = projectAdd([
       ...START,
       { kind: "restart-begin", label: "bridge restarted (pastor) · 1.0.0" },
-      { kind: "line", text: "error: could not start the bridge", tone: "error", stream: "err" },
+      { kind: "line", text: "erro: não deu para ligar o Pastor", tone: "error", stream: "err" },
       { kind: "restart-end", ok: false },
     ]);
     expect(view.legs[0]!.notes).toEqual([
-      { text: "error: could not start the bridge", tone: "warn" },
+      { text: "erro: não deu para ligar o Pastor", tone: "warn" },
       { text: "↻ bridge restarted (pastor) · 1.0.0 — the restart failed", tone: "error" },
     ]);
   });

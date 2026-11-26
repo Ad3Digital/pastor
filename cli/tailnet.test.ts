@@ -73,10 +73,10 @@ describe("bridgeUrlFrom", () => {
 
   test("without a name, says loopback AND why", () => {
     expect(bridgeUrlFrom(null, "https", 8787, 443)).toBe(
-      "http://127.0.0.1:8787 (Tailscale name unavailable)",
+      "http://127.0.0.1:8787 (nome no Tailscale indisponível)",
     );
     expect(bridgeUrlFrom(null, "https", 8787, 8443)).toBe(
-      "http://127.0.0.1:8787 (Tailscale name unavailable)",
+      "http://127.0.0.1:8787 (nome no Tailscale indisponível)",
     );
   });
 });

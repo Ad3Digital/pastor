@@ -98,13 +98,13 @@ function writeOwnerOnly<TDocument>(deps: PairingDeps, path: string, value: TDocu
   deps.files.write(path, `${JSON.stringify(value, null, 2)}\n`, 0o600);
 }
 
-const stamp = (ms: number): string => (ms > 0 ? new Date(ms).toISOString() : "never");
+const stamp = (ms: number): string => (ms > 0 ? new Date(ms).toISOString() : "nunca");
 
 /** One device's expiry, as the operator reads it: no expiry, a date ahead, or a date passed. */
 function expiryText(device: PairedDevice, now: number): string {
-  if (device.expiresAt === undefined) return "no expiry";
+  if (device.expiresAt === undefined) return "sem validade";
   const at = new Date(device.expiresAt).toISOString();
-  return isExpired(device, now) ? `EXPIRED ${at}` : `expires ${at}`;
+  return isExpired(device, now) ? `VENCIDO ${at}` : `vence ${at}`;
 }
 
 /** A moment in the operator's own clock and zone, to the minute: `2026-11-06 14:32`. */
@@ -118,9 +118,9 @@ function localStamp(ms: number): string {
 /** A lifetime in the operator's own unit back: `30 days`, `12 hours`, `2 weeks`. */
 function lifetimeText(ms: number): string {
   const units: [number, string][] = [
-    [7 * 86_400_000, "week"],
-    [86_400_000, "day"],
-    [3_600_000, "hour"],
+    [7 * 86_400_000, "semana"],
+    [86_400_000, "dia"],
+    [3_600_000, "hora"],
   ];
   for (const [size, name] of units) {
     if (ms % size === 0) {
@@ -128,7 +128,7 @@ function lifetimeText(ms: number): string {
       return `${n} ${name}${n === 1 ? "" : "s"}`;
     }
   }
-  return `${Math.round(ms / 3_600_000)} hours`;
+  return `${Math.round(ms / 3_600_000)} horas`;
 }
 
 /**
@@ -173,8 +173,8 @@ function parsePairArgs(args: readonly string[]): { ok: true; lifetimeMs?: number
 export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): Promise<number> {
   const parsed = parsePairArgs(args);
   if (!parsed.ok) {
-    deps.io.err(`error: ${parsed.reason}`);
-    deps.io.err("usage: pastor pair [--expires <duration>]   durations: 12h, 30d, 2w");
+    deps.io.err(`erro: ${parsed.reason}`);
+    deps.io.err("uso: pastor pair [--expires <duração>]   durações: 12h, 30d, 2w");
     return EXIT.USAGE;
   }
   const now = (deps.now ?? Date.now)();
@@ -186,7 +186,7 @@ export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): 
   try {
     writeOwnerOnly(deps, path, pending);
   } catch (err) {
-    deps.io.err(`error: could not write ${path} — ${err instanceof Error ? err.message : String(err)}`);
+    deps.io.err(`erro: não deu para gravar ${path} — ${err instanceof Error ? err.message : String(err)}`);
     return EXIT.FAIL;
   }
 
@@ -194,21 +194,21 @@ export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): 
   deps.io.out(code);
   deps.io.out("");
   deps.io.out(
-    `  single-use · expires ${new Date(pending.expiresAt).toISOString()} (${minutes} minutes)`,
+    `  uso único · vence ${new Date(pending.expiresAt).toISOString()} (${minutes} minutos)`,
   );
   if (parsed.lifetimeMs !== undefined) {
     deps.io.out(
-      `  The device this pairs stops working ${lifetimeText(parsed.lifetimeMs)} after it pairs; ` +
-        "`pastor devices set-expiry` or `clear-expiry` changes that later.",
+      `  O aparelho pareado com este código para de funcionar ${lifetimeText(parsed.lifetimeMs)} depois de parear; ` +
+        "`pastor devices set-expiry` ou `clear-expiry` muda isso depois.",
     );
-    deps.io.out(`  Expires ${localStamp(now + parsed.lifetimeMs)} once claimed.`);
+    deps.io.out(`  Vence em ${localStamp(now + parsed.lifetimeMs)} depois de usado.`);
   } else {
-    deps.io.out("  This token never expires. Add --expires 30d to limit it.");
+    deps.io.out("  Este acesso não vence. Use --expires 30d para limitar.");
   }
-  deps.io.out("  Open Pastor on your phone, go to Settings, and enter this code there.");
-  deps.io.out("  Shown once — only its hash is stored, and the bridge picks it up without a restart.");
+  deps.io.out("  Abra o Pastor no celular, vá em Configurações e digite este código lá.");
+  deps.io.out("  Aparece uma vez só: só o hash fica salvo, e o Pastor aceita o código sem reiniciar.");
   if (replaced) {
-    deps.io.out("  A code from an earlier `pastor pair` was still pending; it is now dead.");
+    deps.io.out("  Um código de um `pastor pair` anterior ainda estava valendo; agora ele não vale mais.");
   }
   await printPairQr(deps, code);
   return EXIT.OK;
@@ -222,7 +222,7 @@ export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): 
 async function printPairQr(deps: PairingDeps, code: string): Promise<void> {
   const base = urlToEncode({ ctx: deps.ctx, io: deps.io, exec: deps.exec });
   if (base === null) {
-    deps.io.out("  No QR: the bridge URL is unknown, see the note above; the code above still works.");
+    deps.io.out("  Sem QR: o endereço do Pastor é desconhecido, veja a nota acima; o código acima funciona mesmo assim.");
     return;
   }
   // NO `#paired-devices` FRAGMENT, deliberately, even though the Settings card answers to one. HTML
@@ -236,14 +236,14 @@ async function printPairQr(deps: PairingDeps, code: string): Promise<void> {
   try {
     drawn = await renderQr(url);
   } catch (err) {
-    deps.io.out(`  No QR: ${err instanceof Error ? err.message : String(err)}`);
+    deps.io.out(`  Sem QR: ${err instanceof Error ? err.message : String(err)}`);
     return;
   }
   deps.io.out("");
   for (const line of drawn.split("\n")) deps.io.out(line);
   deps.io.out("");
   deps.io.out(url);
-  deps.io.out("  Scan it: Pastor opens Settings on the phone with the code filled in.");
+  deps.io.out("  Leia com a câmera: o Pastor abre as Configurações no celular com o código já preenchido.");
 }
 
 // ── devices ──────────────────────────────────────────────────────────────────
@@ -252,20 +252,20 @@ async function printPairQr(deps: PairingDeps, code: string): Promise<void> {
 export function cmdDevicesList(deps: PairingDeps): number {
   const { devices } = readRegistry(deps);
   if (devices.length === 0) {
-    deps.io.out("no devices paired — Pastor answers no phone or browser until one is (pairing is always on).");
-    deps.io.out("Run `pastor pair` to enrol the first device.");
+    deps.io.out("nenhum aparelho pareado: o Pastor não responde a nenhum celular ou navegador até um ser pareado (o pareamento é sempre exigido).");
+    deps.io.out("Rode `pastor pair` para parear o primeiro aparelho.");
     return EXIT.OK;
   }
   const now = (deps.now ?? Date.now)();
   const width = Math.max(...devices.map((d) => escapeLabelForTerminal(d.label).length));
   for (const d of devices) {
     deps.io.out(
-      `${escapeLabelForTerminal(d.label).padEnd(width)}  created ${stamp(d.createdAt)}  last seen ${stamp(d.lastSeenAt)}  ${expiryText(d, now)}`,
+      `${escapeLabelForTerminal(d.label).padEnd(width)}  pareado ${stamp(d.createdAt)}  visto ${stamp(d.lastSeenAt)}  ${expiryText(d, now)}`,
     );
   }
   if (devices.some((d) => isExpired(d, now))) {
     deps.io.out(
-      "An expired device is refused but still listed; revoke it, or give it a new expiry.",
+      "Um aparelho vencido é recusado mas continua na lista; revogue, ou dê uma nova validade.",
     );
   }
   return EXIT.OK;
@@ -293,15 +293,15 @@ function matchLabel(registry: PairedRegistry, typed: string): LabelMatch {
 /** Say why a label named nothing (or too much) on stderr, in revoke's words. */
 function reportLabelMiss(deps: PairingDeps, registry: PairedRegistry, typed: string, match: LabelMatch): void {
   if (match.kind === "many") {
-    deps.io.err(`error: \`${escapeLabelForTerminal(typed)}\` matches more than one paired device: ${match.labels.map(escapeLabelForTerminal).join(", ")}`);
-    deps.io.err("  type the label exactly as `pastor devices list` prints it.");
+    deps.io.err(`error: \`${escapeLabelForTerminal(typed)}\` combina com mais de um aparelho pareado: ${match.labels.map(escapeLabelForTerminal).join(", ")}`);
+    deps.io.err("  digite o nome exatamente como o `pastor devices list` mostra.");
     return;
   }
-  deps.io.err(`error: no paired device labelled \`${escapeLabelForTerminal(typed)}\``);
+  deps.io.err(`erro: nenhum aparelho pareado com o nome \`${escapeLabelForTerminal(typed)}\``);
   deps.io.err(
     registry.devices.length === 0
-      ? "  nothing is paired on this machine, see `pastor devices list`."
-      : `  paired: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
+      ? "  nada está pareado neste computador, veja `pastor devices list`."
+      : `  pareados: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
   );
 }
 
@@ -312,7 +312,7 @@ function writeRegistryOrReport(deps: PairingDeps, next: PairedRegistry): boolean
     return true;
   } catch (err) {
     deps.io.err(
-      `error: could not write ${registryPath(deps.ctx)}: ${err instanceof Error ? err.message : String(err)}`,
+      `erro: não deu para gravar ${registryPath(deps.ctx)}: ${err instanceof Error ? err.message : String(err)}`,
     );
     return false;
   }
@@ -325,12 +325,12 @@ function writeRegistryOrReport(deps: PairingDeps, next: PairedRegistry): boolean
 export function cmdDevicesSetExpiry(deps: PairingDeps, args: readonly string[]): number {
   const [typed, duration] = args;
   if (typed === undefined || typed === "" || duration === undefined || duration === "" || args.length > 2) {
-    deps.io.err("usage: pastor devices set-expiry <label> <duration>   durations: 12h, 30d, 2w");
+    deps.io.err("uso: pastor devices set-expiry <nome> <duração>   durações: 12h, 30d, 2w");
     return EXIT.USAGE;
   }
   const lifetime = parseLifetime(duration);
   if (!lifetime.ok) {
-    deps.io.err(`error: ${lifetime.reason}`);
+    deps.io.err(`erro: ${lifetime.reason}`);
     return EXIT.USAGE;
   }
   const registry = readRegistry(deps);
@@ -347,7 +347,7 @@ export function cmdDevicesSetExpiry(deps: PairingDeps, args: readonly string[]):
   }
   if (!writeRegistryOrReport(deps, next)) return EXIT.FAIL;
   deps.io.out(
-    `✓ "${escapeLabelForTerminal(match.label)}" expires ${new Date(expiresAt).toISOString()} (${lifetimeText(lifetime.ms)} from now). No restart needed.`,
+    `✓ "${escapeLabelForTerminal(match.label)}" vence ${new Date(expiresAt).toISOString()} (daqui a ${lifetimeText(lifetime.ms)}). Não precisa reiniciar.`,
   );
   return EXIT.OK;
 }
@@ -356,7 +356,7 @@ export function cmdDevicesSetExpiry(deps: PairingDeps, args: readonly string[]):
 export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]): number {
   const [typed] = args;
   if (typed === undefined || typed === "" || args.length > 1) {
-    deps.io.err("usage: pastor devices clear-expiry <label>");
+    deps.io.err("uso: pastor devices clear-expiry <nome>");
     return EXIT.USAGE;
   }
   const registry = readRegistry(deps);
@@ -367,7 +367,7 @@ export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]
   }
   const had = registry.devices.find((d) => d.label === match.label)?.expiresAt;
   if (had === undefined) {
-    deps.io.out(`"${escapeLabelForTerminal(match.label)}" has no expiry, so there is nothing to clear.`);
+    deps.io.out(`"${escapeLabelForTerminal(match.label)}" não tem validade, então não há nada para tirar.`);
     return EXIT.OK;
   }
   const next = setDeviceExpiry(registry, match.label, null);
@@ -376,7 +376,7 @@ export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]
     return EXIT.FAIL;
   }
   if (!writeRegistryOrReport(deps, next)) return EXIT.FAIL;
-  deps.io.out(`✓ "${escapeLabelForTerminal(match.label)}" no longer expires. Its token works until you revoke it.`);
+  deps.io.out(`✓ "${escapeLabelForTerminal(match.label)}" não vence mais. O acesso funciona até você revogar.`);
   return EXIT.OK;
 }
 
@@ -384,17 +384,17 @@ export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]
 export function cmdDevicesRevoke(deps: PairingDeps, args: readonly string[]): number {
   const label = args[0];
   if (label === undefined || label === "") {
-    deps.io.err("usage: pastor devices revoke <label>");
+    deps.io.err("uso: pastor devices revoke <nome>");
     return EXIT.USAGE;
   }
   const registry = readRegistry(deps);
   const next = removeDevice(registry, label);
   if (next === null) {
-    deps.io.err(`error: no paired device labelled \`${escapeLabelForTerminal(label)}\``);
+    deps.io.err(`erro: nenhum aparelho pareado com o nome \`${escapeLabelForTerminal(label)}\``);
     deps.io.err(
       registry.devices.length === 0
-        ? "  nothing is paired on this machine — `pastor devices list`."
-        : `  paired: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
+        ? "  nada está pareado neste computador — `pastor devices list`."
+        : `  pareados: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
     );
     return EXIT.FAIL;
   }
@@ -403,20 +403,20 @@ export function cmdDevicesRevoke(deps: PairingDeps, args: readonly string[]): nu
     writeOwnerOnly(deps, registryPath(deps.ctx), next);
   } catch (err) {
     deps.io.err(
-      `error: could not write ${registryPath(deps.ctx)} — ${err instanceof Error ? err.message : String(err)}`,
+      `erro: não deu para gravar ${registryPath(deps.ctx)} — ${err instanceof Error ? err.message : String(err)}`,
     );
     return EXIT.FAIL;
   }
 
-  deps.io.out(`✓ revoked "${escapeLabelForTerminal(label)}" — it loses all access on its next request (no restart needed).`);
+  deps.io.out(`✓ "${escapeLabelForTerminal(label)}" revogado: perde todo o acesso no próximo pedido (não precisa reiniciar).`);
   const forgotten = forgetLauncherRows(deps, label);
   if (forgotten > 0) {
     deps.io.out(
-      `  Removed ${forgotten} launcher row${forgotten === 1 ? "" : "s"} it added from its phone. The running bridge removes the ones it added on crew members.`,
+      `  ${forgotten === 1 ? "Removido 1 atalho" : `Removidos ${forgotten} atalhos`} que ele criou pelo celular. O Pastor em execução remove os que ele criou nos membros da crew.`,
     );
   }
   if (next.devices.length === 0) {
-    deps.io.out("  That was the last paired device: Pastor now answers no phone or browser. Run `pastor pair` to pair one.");
+    deps.io.out("  Era o último aparelho pareado: o Pastor agora não responde a nenhum celular ou navegador. Rode `pastor pair` para parear um.");
   }
   return EXIT.OK;
 }
@@ -433,7 +433,7 @@ function forgetLauncherRows(deps: PairingDeps, label: string): number {
   if (text === null) return 0;
   const { rows } = parseAddedText(text);
   if (rows === null) {
-    deps.io.err(`  note: ${path} cannot be read, so the launcher rows "${escapeLabelForTerminal(label)}" added stay until it can.`);
+    deps.io.err(`  nota: ${path} não pode ser lido, então os atalhos que "${escapeLabelForTerminal(label)}" criou ficam até ser possível.`);
     return 0;
   }
   const gone = rows.filter((r) => r.device === label && r.via === "local");
@@ -443,7 +443,7 @@ function forgetLauncherRows(deps: PairingDeps, label: string): number {
     deps.files.write(tmp, formatAddedFile(rows.filter((r) => !gone.includes(r))), 0o600);
     deps.files.rename(tmp, path);
   } catch (err) {
-    deps.io.err(`  note: could not write ${path} — ${err instanceof Error ? err.message : String(err)}; the bridge drops the rows on its next read.`);
+    deps.io.err(`  nota: não deu para gravar ${path} — ${err instanceof Error ? err.message : String(err)}; o Pastor descarta os atalhos na próxima leitura.`);
     return 0;
   }
   const content = deps.ctx.env.PASTOR_AUDIT_CONTENT === "none" ? "none" : "preview";
@@ -485,13 +485,13 @@ export function cmdDevices(deps: PairingDeps, args: readonly string[]): number {
       return cmdDevicesClearExpiry(deps, rest);
     default:
       if (sub !== undefined && sub !== "" && sub !== "help") {
-        deps.io.err(`error: unknown devices subcommand \`${sub}\``);
+        deps.io.err(`erro: subcomando de devices desconhecido \`${sub}\``);
       }
       deps.io.err(devicesUsage());
-      deps.io.err("  list           the paired devices, with when each was paired, last seen, and expires");
-      deps.io.err("  revoke         drop one device by label: `devices revoke <label>`");
-      deps.io.err("  set-expiry     give a device a lifetime from now: `devices set-expiry <label> 30d`");
-      deps.io.err("  clear-expiry   remove a device's expiry: `devices clear-expiry <label>`");
+      deps.io.err("  list           os aparelhos pareados, com quando cada um foi pareado, visto por último e quando vence");
+      deps.io.err("  revoke         tira um aparelho pelo nome: `devices revoke <nome>`");
+      deps.io.err("  set-expiry     dá uma validade a partir de agora: `devices set-expiry <nome> 30d`");
+      deps.io.err("  clear-expiry   tira a validade de um aparelho: `devices clear-expiry <nome>`");
       return EXIT.USAGE;
   }
 }

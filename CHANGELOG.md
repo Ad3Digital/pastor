@@ -17,6 +17,10 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+### Changed
+
+- **The installers and the everyday terminal commands speak Brazilian Portuguese.** `install.ps1`, `install.sh`, `pastor start`, `status`, `stop`, `restart`, `pair`, `devices`, `serve`, `qr`, `url`, the help text and the common `update` lines now print Portuguese; the rarer diagnostics (`doctor`, `crew`, `stt`) stay in English. `install.ps1` stays plain ASCII and decodes its accents as it prints.
+
 ## [1.23.0] - 2026-11-26
 
 ### Changed

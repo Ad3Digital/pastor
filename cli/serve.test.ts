@@ -264,7 +264,7 @@ describe("serve — publishing", () => {
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
-    expect(h.io.stderr.join("\n")).toContain("unowned root mount on :8787");
+    expect(h.io.stderr.join("\n")).toContain("root mount em :8787 que não é do Pastor");
   });
 
   test("a pre-existing Pastor root is adopted, then recorded", () => {
@@ -273,28 +273,28 @@ describe("serve — publishing", () => {
       serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/", OURS)}}`,
     });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("adopting the existing Pastor root mount on :8787");
+    expect(h.io.stdout.join("\n")).toContain("aproveitando o root mount do Pastor que já existe em :8787");
     expect(h.files.read(HANDLER_FILE)).toBe("http:8787|host.example:8787|http://127.0.0.1:8787\n");
   });
 
   test("the opposite listener protocol refuses without touching anything", () => {
     const h = harness({ serveMode: "http", serveStatus: `{${tcp(8787, "HTTPS")}}` });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stderr.join("\n")).toContain("opposite listener protocol");
+    expect(h.io.stderr.join("\n")).toContain("já usa o outro protocolo");
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
   });
 
   test("an unreadable serve status refuses; it is never a fallthrough to publishing", () => {
     const garbage = harness({ serveMode: "http", serveStatus: "{not json" });
     expect(cmdServe(garbage.deps)).toBe(EXIT.FAIL);
-    expect(garbage.io.stderr.join("\n")).toContain("invalid Tailscale serve status");
+    expect(garbage.io.stderr.join("\n")).toContain("tailscale serve status inválido");
 
     const broken = harness({
       serveMode: "http",
       answers: [["tailscale serve status --json", { code: 1 }]],
     });
     expect(cmdServe(broken.deps)).toBe(EXIT.FAIL);
-    expect(broken.io.stderr.join("\n")).toContain("cannot inspect Tailscale serve status");
+    expect(broken.io.stderr.join("\n")).toContain("não deu para ler o tailscale serve status");
   });
 
   test("a failed publish takes the write-ahead record back down again", () => {
@@ -324,7 +324,7 @@ describe("serve — publishing", () => {
       answers: [["tailscale status --json", { stdout: '{"Self":{"DNSName":"host.example."}}' }]],
     });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stderr.join("\n")).toContain("HTTPS certificates are not enabled on this tailnet");
+    expect(h.io.stderr.join("\n")).toContain("os certificados HTTPS não estão ligados neste tailnet");
     expect(h.io.stderr.join("\n")).toContain("https://login.tailscale.com/admin/dns");
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
@@ -343,7 +343,7 @@ describe("serve — publishing", () => {
       ],
     });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stderr.join("\n")).toContain("could not read this tailnet's HTTPS status");
+    expect(h.io.stderr.join("\n")).toContain("não deu para ler o estado do HTTPS deste tailnet");
     expect(h.io.stderr.join("\n")).not.toContain("error:");
     expect(h.exec.calls).toContain("tailscale serve --bg --set-path=/ 8787");
   });
@@ -365,11 +365,11 @@ describe("serve — publishing", () => {
   test("a mapping we can't name is one we can't prove we own: no tailscale, no hostname", () => {
     const missing = harness({ absent: ["tailscale"] });
     expect(cmdServe(missing.deps)).toBe(EXIT.FAIL);
-    expect(missing.io.stderr.join("\n")).toContain("tailscale not found");
+    expect(missing.io.stderr.join("\n")).toContain("tailscale não encontrado");
 
     const nameless = harness({ answers: [["tailscale status --json", { stdout: "{}" }]] });
     expect(cmdServe(nameless.deps)).toBe(EXIT.FAIL);
-    expect(nameless.io.stderr.join("\n")).toContain("untrackable root mount");
+    expect(nameless.io.stderr.join("\n")).toContain("não deu para descobrir o nome deste computador no Tailscale");
     expect(nameless.files.exists(HANDLER_FILE)).toBe(false);
   });
 });
@@ -393,14 +393,14 @@ describe("serve — PASTOR_SERVE_PORT (one tailnet name, a listener port per dev
       serveStatus: `{${tcp(8443, "HTTPS")},${web("host.example:8443", "/", OURS)}}`,
     });
     expect(cmdServe(adopt.deps)).toBe(EXIT.OK);
-    expect(adopt.io.stdout.join("\n")).toContain("adopting the existing Pastor root mount on :8443");
+    expect(adopt.io.stdout.join("\n")).toContain("aproveitando o root mount do Pastor que já existe em :8443");
 
     const taken = harness({
       env: AT_8443,
       serveStatus: `{${tcp(8443, "HTTPS")},${web("host.example:8443", "/", "http://127.0.0.1:7000")}}`,
     });
     expect(cmdServe(taken.deps)).toBe(EXIT.FAIL);
-    expect(taken.io.stderr.join("\n")).toContain("unowned root mount on :8443");
+    expect(taken.io.stderr.join("\n")).toContain("root mount em :8443 que não é do Pastor");
     expect(taken.files.exists(HANDLER_FILE)).toBe(false);
   });
 
@@ -454,7 +454,7 @@ describe("serve — a peer publishes no front door (ADR 0013, §3)", () => {
     const h = harness({ files: peerOnDisk() });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
-    expect(h.io.stdout.join("\n")).toContain("a peer publishes no front");
+    expect(h.io.stdout.join("\n")).toContain("um membro não publica");
     expect(h.io.stdout.join("\n")).toContain("ADR 0013");
   });
 
@@ -482,14 +482,14 @@ describe("serve — a peer publishes no front door (ADR 0013, §3)", () => {
     const h = harness({ files: peerOnDisk() });
     expect(cmdServeVerb(h.deps)).toBe(EXIT.OK);
     const out = h.io.stdout.join("\n");
-    expect(out).toContain("a peer publishes no front");
+    expect(out).toContain("um membro não publica");
     expect(out).not.toContain("open:");
   });
 
   test("…and a solo pastor still gets it, unchanged", () => {
     const h = harness();
     expect(cmdServeVerb(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("open: ");
+    expect(h.io.stdout.join("\n")).toContain("abra: ");
   });
 
   test("a LEAD publishes exactly as it always did", () => {
@@ -514,8 +514,8 @@ describe("serve — PASTOR_SKIP_SERVE (docs/deployment.md Variants C/E)", () => 
     const h = harness({ env: { PASTOR_SKIP_SERVE: "1" } });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
-    expect(h.io.stdout.join("\n")).toContain("tailscale serve skipped (PASTOR_SKIP_SERVE=1)");
-    expect(h.io.stdout.join("\n")).toContain("bridge is on 127.0.0.1:8787 only");
+    expect(h.io.stdout.join("\n")).toContain("tailscale serve pulado (PASTOR_SKIP_SERVE=1)");
+    expect(h.io.stdout.join("\n")).toContain("o Pastor está só em 127.0.0.1:8787");
   });
 
   test("still tears down a mapping published before the flag was flipped", () => {
@@ -683,7 +683,7 @@ describe("serve — under a mount (PASTOR_BASE_PATH)", () => {
       serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/pastor/", "http://127.0.0.1:7000")}}`,
     });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stderr.join("\n")).toContain("unowned mount at /pastor/");
+    expect(h.io.stderr.join("\n")).toContain("mount at /pastor/ em :8787 que não é do Pastor");
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
   });
 

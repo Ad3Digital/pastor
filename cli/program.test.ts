@@ -403,14 +403,14 @@ describe("exit codes", () => {
     const io = capture();
     expect(await run(["nonsense"], io)).toBe(EXIT.USAGE);
     expect(io.stdout).toEqual([]);
-    expect(io.stderr.join("\n")).toContain("unknown command `nonsense`");
+    expect(io.stderr.join("\n")).toContain("comando desconhecido `nonsense`");
     expect(io.stderr.join("\n")).toContain(usageLine());
   });
 
   test("no verb exits 2 with usage but does not accuse the user of typing something", async () => {
     const io = capture();
     expect(await run([], io)).toBe(EXIT.USAGE);
-    expect(io.stderr.join("\n")).not.toContain("unknown command");
+    expect(io.stderr.join("\n")).not.toContain("comando desconhecido");
     expect(io.stderr.join("\n")).toContain(usageLine());
   });
 
@@ -448,7 +448,7 @@ describe("exit codes", () => {
   test("an unknown verb with arguments is still reported by its own name", async () => {
     const io = capture();
     expect(await run(["nonsense", "--flag", "x"], io)).toBe(EXIT.USAGE);
-    expect(io.stderr.join("\n")).toContain("unknown command `nonsense`");
+    expect(io.stderr.join("\n")).toContain("comando desconhecido `nonsense`");
   });
 
   // NOTHING in this file may dispatch a verb that touches the world. Dispatching `start` here would

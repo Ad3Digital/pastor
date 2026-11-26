@@ -54,7 +54,7 @@ describe("which URL gets a QR", () => {
     const d = deps({ PASTOR_SKIP_SERVE: "1" });
     expect(await cmdQr(d)).toBe(EXIT.FAIL);
     expect(d.io.stdout).toEqual([]);
-    expect(d.io.stderr.join("\n")).toContain("PASTOR_PUBLIC_URL is unset");
+    expect(d.io.stderr.join("\n")).toContain("PASTOR_PUBLIC_URL não está definido");
   });
 
   test("no tailnet name refuses rather than encoding a loopback placeholder", async () => {
@@ -62,7 +62,7 @@ describe("which URL gets a QR", () => {
     const d = deps({}, GRANTED, "{}");
     expect(await cmdQr(d)).toBe(EXIT.FAIL);
     expect(d.io.stdout).toEqual([]);
-    expect(d.io.stderr.join("\n")).toContain("tailnet front door isn't up");
+    expect(d.io.stderr.join("\n")).toContain("o acesso pelo tailnet não está publicado");
   });
 });
 
@@ -73,7 +73,7 @@ describe("a front door nothing can reach", () => {
     const d = deps({}, DENY_ALL);
     expect(await cmdQr(d)).toBe(EXIT.OK);
     expect(d.io.stdout.join("\n")).toContain("https://host.example");
-    expect(d.io.stderr.join("\n")).toContain("admits no peer");
+    expect(d.io.stderr.join("\n")).toContain("não aceita nenhum aparelho");
   });
 
   test("says nothing when the netmap cannot answer — a false alarm is worse than silence", async () => {

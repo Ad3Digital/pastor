@@ -61,7 +61,7 @@ describe("the status banner", () => {
   ];
 
   test("carries the verdict and every row the plain banner carries", () => {
-    const view: StatusView = { running: true, headline: "✓ Pastor is running  ·  v9.9.9", rows };
+    const view: StatusView = { running: true, headline: "✓ O Pastor está rodando  ·  v9.9.9", rows };
     const frame = plain(render(<Status view={view} />).lastFrame());
     expect(frame).toContain(view.headline);
     for (const r of rows) {
@@ -71,8 +71,8 @@ describe("the status banner", () => {
   });
 
   test("a bridge that isn't answering says so in the same words", () => {
-    const view: StatusView = { running: false, headline: "⚠ Pastor isn't answering on :8787 yet", rows };
-    expect(plain(render(<Status view={view} />).lastFrame())).toContain("isn't answering");
+    const view: StatusView = { running: false, headline: "⚠ O Pastor ainda não responde em :8787", rows };
+    expect(plain(render(<Status view={view} />).lastFrame())).toContain("ainda não responde");
   });
 });
 

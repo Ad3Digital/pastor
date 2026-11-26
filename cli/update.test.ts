@@ -561,7 +561,7 @@ describe("updateCheckout", () => {
     });
     expect(updateCheckout(h.deps).code).toBe(EXIT.OK);
     expect(gitRuns(h.exec)).toEqual([]);
-    expect(h.io.stdout.join("\n")).toContain("already current");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado");
     expect(h.io.stdout.join("\n")).toContain("update-major --plugin ad3.pastor");
   });
 
@@ -628,7 +628,7 @@ describe("updateCheckout", () => {
     expect(updateCheckout(h.deps).code).toBe(EXIT.OK);
     expect(gitRuns(h.exec)).toEqual([]);
     expect(h.io.stdout.join("\n")).toContain(
-      "already current — v1.0.0-beta.10 is the newest on the major 1 prerelease train.",
+      "já está atualizado — a v1.0.0-beta.10 é a prévia mais nova da linha 1.",
     );
     expect(h.io.stdout.join("\n")).not.toContain("no release of major 1 yet");
   });
@@ -645,7 +645,7 @@ describe("updateCheckout", () => {
     });
     expect(updateCheckout(h.deps).code).toBe(EXIT.OK);
     expect(gitRuns(h.exec)).toEqual([]);
-    expect(h.io.stdout.join("\n")).toContain("already current — v1.0.0 is the newest release of major 1.");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado — a v1.0.0 é a versão mais nova da linha 1.");
   });
 
   test("a major with no tag of its own yet leaves the checkout alone", () => {
@@ -766,7 +766,7 @@ describe("_apply-update", () => {
     expect(await cmdApplyUpdate(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls).toContain(`${ROOT}$ bash ${ROOT}/scripts/check-version.sh`);
     expect(h.restarts).toBe(1);
-    expect(h.io.stdout.join("\n")).toContain("✓ update complete");
+    expect(h.io.stdout.join("\n")).toContain("✓ atualização concluída");
   });
 
   test("a failed build does not restart, and says the running service is unchanged", async () => {
@@ -781,7 +781,7 @@ describe("_apply-update", () => {
   });
 
   // This path has no health gate of its own (ADR 0006), so the restart's code is the whole verdict:
-  // a failed one must not end on `✓ update complete`, and `update` then records no `pass` either.
+  // a failed one must not end on `✓ atualização concluída`, and `update` then records no `pass` either.
   test("a failed restart stops before the ✓", async () => {
     const h = harness({ answers: [...LINKED, ...SHALLOW], restart: EXIT.FAIL });
     expect(await cmdApplyUpdate(h.deps)).toBe(EXIT.FAIL);
@@ -950,7 +950,7 @@ describe("update", () => {
     expect(await cmdUpdate(h.deps)).toBe(EXIT.OK);
     expect(built(h)).toBe(false);
     expect(h.restarts).toBe(0);
-    expect(h.io.stdout.join("\n")).toContain("already current");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado");
     expect(h.exec.calls.some((call) => call.endsWith("bun --version"))).toBe(false);
     // …and the transcript never claims otherwise.
     expect(h.io.stdout.join("\n")).not.toContain("update complete");
@@ -1035,7 +1035,7 @@ describe("update", () => {
     });
     stamp(h, "0.32.0");
     expect(await cmdUpdate(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("already current");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado");
     expect(gitRuns(h.exec)).toEqual([]);
     expect(built(h)).toBe(false);
   });
@@ -1258,7 +1258,7 @@ describe("the origin assertion", () => {
     });
     // A self-consistent fork operator gets a working updater: already current, not a refusal.
     expect(await cmdUpdate(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("already current");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado");
   });
 });
 
@@ -1556,7 +1556,7 @@ describe("pastor update on a binary install", () => {
     // asked for the update, and a killed updater cannot roll anything back.
     expect(h.link.ops).toEqual([]);
     expect(h.restarts).toBe(0);
-    expect(h.io.stdout.join("\n")).toContain("Watch it with: pastor update --status");
+    expect(h.io.stdout.join("\n")).toContain("Acompanhe com: pastor update --status");
     // Nothing was compiled and nothing re-exec'd: no `bun` anywhere on this path.
     expect(h.exec.calls.join("\n")).not.toContain("bun ");
     // The state file says `staging`, so a bridge that comes up now reports a run in flight.
@@ -1688,7 +1688,7 @@ describe("pastor update on a binary install", () => {
     // The restart goes through the name that was just switched, never through this old process.
     expect(h.exec.calls).toContain(`${INST}$ ${INST}/current/bin/pastor restart`);
     expect(h.restarts).toBe(0);
-    expect(h.io.stdout.join("\n")).toContain(`✓ updated to ${NEW}`);
+    expect(h.io.stdout.join("\n")).toContain(`✓ atualizado para ${NEW}`);
     // GC: `current` plus one older is kept, so 0.9.0 goes and 1.0.0 stays.
     expect(h.files.ops.join("\n")).toContain(`${INST}/.trash/0.9.0.`);
     expect(h.files.ops.join("\n")).not.toContain(`${INST}/versions/1.0.0 ${INST}/.trash`);
@@ -1925,7 +1925,7 @@ describe("pastor update on a binary install", () => {
     };
     expect(await runner(h, BINARY_APPLY)).toBe(EXIT.OK);
     expect(h.io.stdout.join("\n")).toContain("note: could not remove the old version 0.9.0");
-    expect(h.io.stdout.join("\n")).toContain(`✓ updated to ${NEW}`);
+    expect(h.io.stdout.join("\n")).toContain(`✓ atualizado para ${NEW}`);
     expect(JSON.parse(h.files.read(`${STATE}/update.json`) ?? "{}").state).toBe("done");
     expect(currentTarget(h)).toBe(`${INST}/versions/${NEW}`);
   });
@@ -2132,7 +2132,7 @@ describe("pastor update on a binary install", () => {
   test("already current reads exactly as it does on a checkout — the paths are indistinguishable", async () => {
     const h = binaryHarness({ tags: apiTags("v1.0.0") });
     expect(await cmdUpdate(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("already current — v1.0.0 is the newest release of major 1.");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado — a v1.0.0 é a versão mais nova da linha 1.");
     expect(h.restarts).toBe(0);
   });
 
@@ -2176,7 +2176,7 @@ describe("pastor update on a binary install", () => {
   test("PASTOR_UPDATE_REPO is announced before the first fetch — a redirected updater is never silent", async () => {
     const h = binaryHarness({ env: { PASTOR_UPDATE_REPO: "my/pastor" } });
     await cmdUpdate(h.deps);
-    expect(h.io.stdout[0]).toBe("update source: github.com/my/pastor (PASTOR_UPDATE_REPO)");
+    expect(h.io.stdout[0]).toBe("origem da atualização: github.com/my/pastor (PASTOR_UPDATE_REPO)");
   });
 });
 
@@ -2236,7 +2236,7 @@ describe("the hooks nudge", () => {
   test("a check that cannot run leaves the update successful and silent", async () => {
     const h = binaryHarness({ hooksCheck: { found: false, code: 127 } });
     expect(await runner(h, BINARY_APPLY)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain(`✓ updated to ${NEW}`);
+    expect(h.io.stdout.join("\n")).toContain(`✓ atualizado para ${NEW}`);
     expect(h.io.stdout.join("\n")).not.toContain(NUDGE);
     expect(h.io.stderr).toEqual([]);
   });
@@ -2252,7 +2252,7 @@ describe("the hooks nudge", () => {
       return real(tool, args, timeoutMs);
     };
     expect(await runner(h, BINARY_APPLY)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain(`✓ updated to ${NEW}`);
+    expect(h.io.stdout.join("\n")).toContain(`✓ atualizado para ${NEW}`);
     expect(h.io.stdout.join("\n")).not.toContain(NUDGE);
     expect(h.io.stderr).toEqual([]);
   });
@@ -2395,7 +2395,7 @@ describe("the staged checkout path", () => {
     // …and then this process hands off: nothing is flipped and nothing is restarted here.
     expect(h.link.ops).toEqual([]);
     expect(h.restarts).toBe(0);
-    expect(h.io.stdout.join("\n")).toContain("Watch it with: pastor update --status");
+    expect(h.io.stdout.join("\n")).toContain("Acompanhe com: pastor update --status");
   });
 
   test("the runner flips `current` with the one rename, restarts through it, and re-links Herdr", async () => {
@@ -2413,7 +2413,7 @@ describe("the staged checkout path", () => {
     expect(h.exec.calls).toContain(`${CLONE}$ ${CURRENT}/bin/pastor restart`);
     expect(h.restarts).toBe(0);
     expect(h.exec.calls).toContain(`herdr plugin link ${CURRENT}`);
-    expect(h.io.stdout.join("\n")).toContain("✓ updated to 0.32.0");
+    expect(h.io.stdout.join("\n")).toContain("✓ atualizado para 0.32.0");
   });
 
   test("migrates a legacy in-place checkout with no manual step, and says it has no rollback target", async () => {
@@ -2503,7 +2503,7 @@ describe("the staged checkout path", () => {
   test("a staged install that is already current stages nothing at all", async () => {
     const h = stagedHarness({ answers: [[`git -C ${WT("v1.0.0")} ls-remote --tags ${TAG_REMOTE}`, { stdout: LS_REMOTE }]] });
     expect(await cmdUpdate(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("already current");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado");
     expect(h.exec.calls.join("\n")).not.toContain("worktree add");
     expect(h.link.ops).toEqual([]);
   });
@@ -2521,7 +2521,7 @@ describe("the staged checkout path", () => {
     const h = stagedHarness({ answers: [[`git -C ${WT("v1.0.0")} ls-remote --tags ${TAG_REMOTE}`, { stdout: LS_REMOTE }]] });
     h.files.write(`${WT("v1.0.0")}/herdr-plugin.toml`, `id = "ad3.pastor"\nversion = "0.32.0"\n`);
     expect(await cmdUpdate(h.deps, ["--major"])).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("already current — v1.0.0 is staged");
+    expect(h.io.stdout.join("\n")).toContain("já está atualizado — v1.0.0 está instalada");
     // No record at all: nothing was staged, so there is nothing for a phone to read as failed or
     // interrupted, and no Bun was asked for.
     expect(h.files.read(RUN_FILE)).toBeNull();
@@ -2558,7 +2558,7 @@ describe("pastor update --rollback on a staged checkout", () => {
     expect(h.link.ops).toContain(`symlink versions/v0.9.0 ${CLONE}/.current.new`);
     expect(h.files.ops).toContain(`mv ${CLONE}/.current.new ${CURRENT}`);
     expect(h.exec.calls).toContain(`${CLONE}$ ${CURRENT}/bin/pastor restart`);
-    expect(h.io.stdout.join("\n")).toContain("✓ rolled back to 0.9.0");
+    expect(h.io.stdout.join("\n")).toContain("✓ voltou para 0.9.0");
     // Never collects: the version rolled away from is the one most likely to be wanted back.
     expect(h.files.ops.join("\n")).not.toContain("rm -rf");
   });
@@ -2955,7 +2955,7 @@ describe("the handoff waits for the manager that will own the runner", () => {
     expect(parseUpdateRun(h.files.read(RUN_FILE))?.state).toBe("staging");
     // Nothing was fired and forgotten: on this tier the client IS the launch.
     expect(h.exec.spawned).toEqual([]);
-    expect(h.io.stdout.join("\n")).toContain("Watch it with: pastor update --status");
+    expect(h.io.stdout.join("\n")).toContain("Acompanhe com: pastor update --status");
   });
 
   test("a refused handoff aborts the run, releases the lock and quotes what the manager said", async () => {

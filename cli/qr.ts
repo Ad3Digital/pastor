@@ -40,21 +40,21 @@ export function urlToEncode(deps: QrDeps): string | null {
   if (named !== null) return named;
   if (deps.ctx.env.PASTOR_SKIP_SERVE === "1") {
     deps.io.err(
-      "no URL to encode: PASTOR_SKIP_SERVE=1 and PASTOR_PUBLIC_URL is unset — set it to your",
+      "sem endereço para o QR: PASTOR_SKIP_SERVE=1 e PASTOR_PUBLIC_URL não está definido — defina com o endereço",
     );
-    deps.io.err("reverse-proxy URL, or drop PASTOR_SKIP_SERVE to publish the tailnet front door.");
+    deps.io.err("do seu proxy reverso, ou tire PASTOR_SKIP_SERVE para publicar o acesso pelo tailnet.");
     return null;
   }
   const url = bridgeUrl(deps.exec, deps.ctx);
-  if (url.includes("(Tailscale name unavailable)")) {
-    deps.io.err("no URL to encode: the tailnet front door isn't up (run 'pastor serve')");
+  if (url.includes("(nome no Tailscale indisponível)")) {
+    deps.io.err("sem endereço para o QR: o acesso pelo tailnet não está publicado (rode 'pastor serve')");
     return null;
   }
   // A QR for a URL nothing can reach is just a prettier dead end — it scans perfectly and then
   // hangs. Say so before drawing it, but still draw it: the ACL is the thing to fix, not the URL.
   if (tailnetInboundBlocked(deps.exec)) {
-    deps.io.err("⚠ this node's packet filter admits no peer — scanning this will hang until your tailnet");
-    deps.io.err("  policy grants access, or another device joins the tailnet. See 'pastor status'.");
+    deps.io.err("⚠ o filtro deste computador no Tailscale não aceita nenhum aparelho — o QR vai travar até a política do");
+    deps.io.err("  tailnet liberar o acesso, ou outro aparelho entrar no tailnet. Veja 'pastor status'.");
   }
   return url;
 }
@@ -66,7 +66,7 @@ export async function cmdQr(deps: QrDeps): Promise<number> {
   try {
     code = await renderQr(url);
   } catch (err) {
-    deps.io.err(`error: ${err instanceof Error ? err.message : String(err)}`);
+    deps.io.err(`erro: ${err instanceof Error ? err.message : String(err)}`);
     return EXIT.FAIL;
   }
   // The URL is printed as plain text below the code — for anyone piping this, and for a camera that

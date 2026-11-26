@@ -1487,7 +1487,7 @@ describe("pastor leave", () => {
 
   // F22: the restart below prints the health banner, and the banner resolves what it probes from
   // `ctx.env`. Left at the value this run started with, the documented tear-down ended on
-  // `⚠ Pastor isn't answering on 192.168.77.2:8787 yet` about a machine that was healthy on
+  // `⚠ O Pastor ainda não responde em 192.168.77.2:8787 yet` about a machine that was healthy on
   // loopback — the same alarm F12 used to raise, now false, at the end of the same command.
   test("the closing banner probes the bind as REWRITTEN, not the one this run started with", async () => {
     const ctx = context({ PASTOR_HOST: "192.168.77.2", PASTOR_CREW_TIMEOUT_MS: "60000" });

@@ -361,7 +361,7 @@ function crewTree(): readonly Subcommand[] {
 /** The one tree. `crew` and its `crew` alias both point at THIS array, so neither can drift. */
 const CREW_TREE: readonly Subcommand[] = crewTree();
 
-const CREW_SUMMARY = `crew administration: ${CREW_SUBCOMMANDS.join(", ")}`;
+const CREW_SUMMARY = `administração da crew (vários computadores): ${CREW_SUBCOMMANDS.join(", ")}`;
 
 /**
  * Reached only when no subcommand matched — a bare `pastor crew` (or `pastor pack`), or a misspelt
@@ -415,18 +415,18 @@ export function crewAliasRow(sub: Subcommand): AliasRow {
 // over from `pastor-ctl.sh <verb>` still finds every verb where it was.
 export const COMMANDS: readonly Command[] = [
   // `start` and `status` share one banner (`statusBanner`), so they share its surface too.
-  lifecycleCommand("start", "start the bridge service (and publish the front door)", cmdStart, { rich: true }),
-  lifecycleCommand("stop", "stop the bridge service", (deps) => cmdStop(deps)),
-  lifecycleCommand("restart", "stop then start", cmdRestart),
+  lifecycleCommand("start", "liga o Pastor (e publica o acesso pelo Tailscale)", cmdStart, { rich: true }),
+  lifecycleCommand("stop", "desliga o Pastor", (deps) => cmdStop(deps)),
+  lifecycleCommand("restart", "desliga e liga de novo", cmdRestart),
   lifecycleCommand(
     "uninstall",
-    "remove the service, the front door and its ownership record",
+    "remove o serviço, a publicação no Tailscale e o registro dela",
     cmdUninstall,
   ),
   {
     name: "update",
     summary:
-      "advance to the newest release of this major (--check is a read-only preflight, and --check --local checks this instance only, skipping crew members; --major crosses one; --rollback flips current back to the previous version; --status shows the run)",
+      "atualiza para a versão mais nova desta linha (--check só confere sem mudar nada, e --check --local confere só esta instalação, sem a crew; --major pula para a próxima linha; --rollback volta para a versão anterior; --status mostra a execução)",
     // `--check` is a different verb wearing `update`'s name: a read-only preflight that answers
     // "could this update succeed right now?" and touches nothing (`cli/update-check.ts`). It is
     // routed HERE, before `cmdUpdate` is ever constructed, so no part of the real update path can
@@ -488,14 +488,14 @@ export const COMMANDS: readonly Command[] = [
   // Invoked directly, `serve` also prints where to point a phone (the pre-shim pastor-ctl.sh) —
   // `start` does not, because its banner already carries the URL. That extra line is `cmdServeVerb`,
   // which lives beside the publish decision it depends on (a peer prints none — F24).
-  lifecycleCommand("serve", "publish the single managed `tailscale serve` front door", cmdServeVerb),
-  lifecycleCommand("unserve", "tear down the front door we published", cmdUnserve),
-  lifecycleCommand("status", "is it running, and on what URLs", cmdStatus, { rich: true }),
-  lifecycleCommand("url", "print the bridge URL", cmdUrl),
-  lifecycleCommand("qr", "print the bridge URL as a scannable QR code", (deps) => cmdQr(deps)),
+  lifecycleCommand("serve", "publica o acesso pelo `tailscale serve`", cmdServeVerb),
+  lifecycleCommand("unserve", "tira a publicação que o Pastor fez no Tailscale", cmdUnserve),
+  lifecycleCommand("status", "mostra se está rodando, e em quais endereços", cmdStatus, { rich: true }),
+  lifecycleCommand("url", "mostra o endereço do Pastor", cmdUrl),
+  lifecycleCommand("qr", "mostra o endereço do Pastor como QR code", (deps) => cmdQr(deps)),
   {
     name: "version",
-    summary: "print the version actually being served",
+    summary: "mostra a versão que está rodando",
     run(_args, s) {
       const ctx = loadContext(s.io.err);
       s.io.out(pastorVersion(ctx.root));
@@ -507,22 +507,22 @@ export const COMMANDS: readonly Command[] = [
   // below are the same functions under the parent verb.
   {
     name: "push-keys",
-    summary: "generate the VAPID keypair and write it into this install's .env",
+    summary: "gera as chaves VAPID e grava no .env desta instalação",
     run: (args, s) => cmdPushKeys(pushDeps(s.io), args),
   },
   {
     name: "push-test",
-    summary: "send a one-off Web Push to every subscribed device",
+    summary: "manda uma notificação de teste para todo aparelho inscrito",
     run: (args, s) => cmdPushTest(pushDeps(s.io), args),
   },
-  lifecycleCommand("logs", "tail the service log (default 50 lines)", (deps, args) =>
+  lifecycleCommand("logs", "mostra o fim do log (50 linhas por padrão)", (deps, args) =>
     cmdLogs(deps, args),
   ),
   // Read-only by contract (cli/doctor.ts), so its deps are the lifecycle seams with every mutating
   // one left out — no service manager, no front door, no store write.
   {
     name: "doctor",
-    summary: "check this install for the traps that fail silently",
+    summary: "confere esta instalação atrás de problemas que falham em silêncio",
     run: async (args, s) => {
       const deps = lifecycleDeps(s.io);
       return cmdDoctor(
@@ -538,12 +538,12 @@ export const COMMANDS: readonly Command[] = [
   // the shell dispatcher never had.
   {
     name: "link",
-    summary: "put `pastor` on your PATH: ~/.local/bin/pastor → this checkout's binary",
+    summary: "coloca o `pastor` no PATH: ~/.local/bin/pastor → o binário desta instalação",
     run: (_args, s) => cmdLink(linkDeps(s.io)),
   },
   {
     name: "unlink",
-    summary: "remove that name again (only when it points at THIS checkout)",
+    summary: "tira esse nome de novo (só quando aponta para ESTA instalação)",
     run: (_args, s) => cmdUnlink(linkDeps(s.io)),
   },
   // ── Agent beacons (M11) ────────────────────────────────────────────────────
@@ -553,7 +553,7 @@ export const COMMANDS: readonly Command[] = [
   // prints nothing and exits 0 (cli/beacon.ts).
   {
     name: "hooks",
-    summary: `agent hooks that report a pane's identity: ${HOOKS_SUBCOMMANDS.join(", ")}`,
+    summary: `hooks dos agentes que informam qual painel é qual: ${HOOKS_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "install",
@@ -595,31 +595,31 @@ export const COMMANDS: readonly Command[] = [
   {
     name: "pair",
     summary:
-      "mint a one-time code and a QR for a phone to pair with (scan it, or enter the code in Settings); `--expires 30d` limits its lifetime",
+      "gera um código de uso único e um QR para parear o celular (leia o QR, ou digite o código em Configurações); `--expires 30d` limita a validade",
     run: (args, s) => cmdPair(pairingDeps(s.io), args),
   },
   {
     name: "devices",
-    summary: `paired devices: ${DEVICES_SUBCOMMANDS.join(", ")}`,
+    summary: `aparelhos pareados: ${DEVICES_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "list",
-        summary: "the paired devices, with when each was paired, last seen, and expires",
+        summary: "os aparelhos pareados, com quando cada um foi pareado, visto por último e quando vence",
         run: (_args, s) => cmdDevicesList(pairingDeps(s.io)),
       },
       {
         name: "revoke",
-        summary: "drop one device by label: `devices revoke <label>`",
+        summary: "tira um aparelho pelo nome: `devices revoke <nome>`",
         run: (args, s) => cmdDevicesRevoke(pairingDeps(s.io), args),
       },
       {
         name: "set-expiry",
-        summary: "give a device a lifetime from now: `devices set-expiry <label> 30d`",
+        summary: "dá uma validade a partir de agora: `devices set-expiry <nome> 30d`",
         run: (args, s) => cmdDevicesSetExpiry(pairingDeps(s.io), args),
       },
       {
         name: "clear-expiry",
-        summary: "remove a device's expiry: `devices clear-expiry <label>`",
+        summary: "tira a validade de um aparelho: `devices clear-expiry <nome>`",
         run: (args, s) => cmdDevicesClearExpiry(pairingDeps(s.io), args),
       },
     ],
@@ -631,7 +631,7 @@ export const COMMANDS: readonly Command[] = [
   // bridge, and how do I drop one. `list` and `forget` need no VAPID: the store is a file.
   {
     name: "push",
-    summary: `subscribed devices: ${PUSH_SUBCOMMANDS.join(", ")}`,
+    summary: `aparelhos inscritos nas notificações: ${PUSH_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "list",
@@ -662,7 +662,7 @@ export const COMMANDS: readonly Command[] = [
   // impersonate — into the state dir, and the bridge picks it up per request with no restart.
   {
     name: "stt",
-    summary: `speech-to-text (off until you run it): ${STT_SUBCOMMANDS.join(", ")}`,
+    summary: `voz para texto (desligado até você configurar): ${STT_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "setup",
@@ -698,7 +698,7 @@ export const COMMANDS: readonly Command[] = [
   // drives, over a file in their own config dir, with no route and no Herdr plugin action.
   {
     name: "config",
-    summary: `the config file: ${CONFIG_SUBCOMMANDS.join(", ")}`,
+    summary: `o arquivo de configuração: ${CONFIG_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "show",
@@ -728,12 +728,12 @@ export const COMMANDS: readonly Command[] = [
   // exit codes, one name each. `cli/crew.test.ts` pins that the two spellings are one code path.
   {
     name: "join",
-    summary: "same as `crew join`",
+    summary: "o mesmo que `crew join`",
     run: async (args, s) => cmdJoin(await crewVerbDeps(s.io), args),
   },
   {
     name: "leave",
-    summary: "same as `crew leave`",
+    summary: "o mesmo que `crew leave`",
     run: async (_args, s) => cmdLeave(await crewVerbDeps(s.io)),
   },
   {
@@ -757,19 +757,19 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     name: "promote",
-    summary: "make THIS machine the lead (run on the peer taking over; --force if the lead is gone)",
+    summary: "faz DESTE computador o líder (rode no membro que assume; --force se o líder sumiu)",
     run: async (args, s) => cmdPromote(await crewVerbDeps(s.io), args),
   },
   {
     name: "reconnect",
-    summary: "a member moved: re-point at its new address without re-enrolling anything",
+    summary: "um membro mudou de endereço: aponta para o novo sem refazer nada",
     run: async (args, s) => cmdReconnect(await crewVerbDeps(s.io), args),
   },
   // The manual, printed out of the binary rather than fetched or read off disk (`cli/docs-embed.ts`
   // says why). Both verbs are read-only and neither draws a terminal view, so `--plain` is moot.
   {
     name: "skill",
-    summary: "print the agent-facing brief on Pastor, for an AI coding agent working in this terminal (also `pastor --skill`)",
+    summary: "mostra o resumo do Pastor para um agente de IA que trabalha neste terminal (também `pastor --skill`)",
     run(_args, s) {
       const ctx = loadContext(s.io.err);
       return cmdSkill(s.io, pastorVersion(ctx.root));
@@ -778,12 +778,12 @@ export const COMMANDS: readonly Command[] = [
   {
     name: "docs",
     summary:
-      "print an operator page embedded in this binary (no argument lists them, `docs <name>` prints one, `--all` prints every one behind a marker)",
+      "mostra uma página da documentação que vem no binário (sem argumento lista todas, `docs <nome>` mostra uma, `--all` mostra todas)",
     run: (args, s) => cmdDocs(s.io, args),
   },
   {
     name: "help",
-    summary: "print this help",
+    summary: "mostra esta ajuda",
     run(_args, s) {
       for (const line of helpText()) s.io.out(line);
       return EXIT.OK;
@@ -816,7 +816,7 @@ export function helpText(commands: readonly Command[] = COMMANDS): string[] {
     lines.push(`  ${c.name.padEnd(12)} ${c.summary}`);
   }
   lines.push("");
-  lines.push(`  ${"--plain".padEnd(12)} never draw the terminal view — print the lines a pipe would get`);
+  lines.push(`  ${"--plain".padEnd(12)} não desenha a tela do terminal — mostra as linhas como num pipe`);
   return lines;
 }
 
@@ -921,7 +921,7 @@ function buildProgram(
     .argument("[verb...]")
     .action((verb: string[]) => {
       const name = verb[0];
-      if (name !== undefined && name !== "") session.io.err(`error: unknown command \`${name}\``);
+      if (name !== undefined && name !== "") session.io.err(`erro: comando desconhecido \`${name}\``);
       session.io.err(usageLine(commands));
       setCode(EXIT.USAGE);
     });

@@ -516,8 +516,8 @@ function printNoRelease(deps: UpdateDeps, major: number, tail: string): void {
 function printCurrent(deps: UpdateDeps, at: ReleaseTag): void {
   deps.io.out(
     at.prerelease === null
-      ? `already current — v${at.version} is the newest release of major ${at.major}.`
-      : `already current — v${at.version} is the newest on the major ${at.major} prerelease train.`,
+      ? `já está atualizado — a v${at.version} é a versão mais nova da linha ${at.major}.`
+      : `já está atualizado — a v${at.version} é a prévia mais nova da linha ${at.major}.`,
   );
 }
 
@@ -653,7 +653,7 @@ function updateLinked(
       return { code: EXIT.OK, moved: false, to: null, higher: null };
     }
   }
-  deps.io.out("updating Pastor (git pull --ff-only)…");
+  deps.io.out("atualizando o Pastor (git pull --ff-only)…");
   const code = git(["pull", "--ff-only"]);
   // A `--ff-only` pull that finds nothing to take succeeds and moves no commit — the linked-clone
   // spelling of "already current". Compare HEAD across the pull rather than parsing git's wording:
@@ -934,7 +934,7 @@ export async function cmdApplyUpdate(deps: UpdateDeps, args: readonly string[] =
   const restarted = await deps.restart();
   if (restarted !== EXIT.OK) return restarted;
   refreshRegistry(deps);
-  deps.io.out("✓ update complete");
+  deps.io.out("✓ atualização concluída");
   // `build` just wrote this binary from the code we are running, so it is the new list, not ours.
   nudgeHooks(deps, pastorBinary(deps.ctx.root, deps.host));
   return EXIT.OK;
@@ -1591,7 +1591,7 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
   const layout = binaryLayout(deps.ctx.root, deps.host);
   const repo = updateRepoOf(deps.ctx.env);
   // 1. A redirected updater is never silent — the repo IS the trust boundary on this path.
-  if (repo !== DEFAULT_UPDATE_REPO) deps.io.out(`update source: github.com/${repo} (PASTOR_UPDATE_REPO)`);
+  if (repo !== DEFAULT_UPDATE_REPO) deps.io.out(`origem da atualização: github.com/${repo} (PASTOR_UPDATE_REPO)`);
   const platform = platformId(deps.host.platform, deps.arch);
   if (platform === null) {
     deps.io.err("error: Pastor publishes no release artifact for this platform.");
@@ -1883,7 +1883,7 @@ async function rollbackBinary(deps: UpdateDeps): Promise<number> {
     deps.io.err(`error: nothing to roll back to — ${at} is the only version installed.`);
     return EXIT.FAIL;
   }
-  deps.io.out(`rolling back ${at} → ${target}…`);
+  deps.io.out(`voltando de ${at} → ${target}…`);
   if (!flipCurrent(deps, layout, target)) return EXIT.FAIL;
   const restarted = await deps.restart();
   const smoked: SmokeResult =
@@ -1897,7 +1897,7 @@ async function rollbackBinary(deps: UpdateDeps): Promise<number> {
     for (const line of smoked.tail) deps.io.err(`       | ${line}`);
     return EXIT.FAIL;
   }
-  deps.io.out(`✓ rolled back to ${target}`);
+  deps.io.out(`✓ voltou para ${target}`);
   return EXIT.OK;
 }
 
@@ -2265,7 +2265,7 @@ async function updateStagedCheckout(
     // names the pre-flip tree (a stale `PASTOR_PLUGIN_ROOT`, an operator running the old binary by
     // hand) reads as behind while `current` is not. Re-staging it would remove the running install.
     if (stagedCurrent(deps, layout)?.complete === true) {
-      deps.io.out(`already current — ${dir} is staged and \`current\` points at it.`);
+      deps.io.out(`já está atualizado — ${dir} está instalada e \`current\` aponta para ela.`);
       announceMajor(deps, higher);
       return EXIT.OK;
     }
@@ -2389,7 +2389,7 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
     deps.io.err("       first staged version has none, and a pruned one is gone for good.");
     return EXIT.FAIL;
   }
-  deps.io.out(`rolling back ${at.dir} → ${target.dir}…`);
+  deps.io.out(`voltando de ${at.dir} → ${target.dir}…`);
   const flip = flipToStaged(deps, layout, target);
   if (!flip.ok) {
     deps.io.err(`error: ${flip.reason} — nothing was changed.`);
@@ -2403,7 +2403,7 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
     return EXIT.FAIL;
   }
   refreshRegistry(deps, layout.currentLink);
-  deps.io.out(`✓ rolled back to ${target.version}`);
+  deps.io.out(`✓ voltou para ${target.version}`);
   return EXIT.OK;
 }
 
@@ -2771,9 +2771,9 @@ function handOff(
       return refused(plan.note, "the update was staged, but the detached updater could not be started.");
     }
   }
-  deps.io.out(`✓ ${a.to} is staged — ${plan.note}.`);
-  deps.io.out("  The swap, the restart and the health check run there, so this command is done.");
-  deps.io.out("  Watch it with: pastor update --status");
+  deps.io.out(`✓ ${a.to} está pronta para instalar — ${plan.note}.`);
+  deps.io.out("  A troca, o reinício e a conferência rodam lá, então este comando terminou.");
+  deps.io.out("  Acompanhe com: pastor update --status");
   return EXIT.OK;
 }
 
@@ -2790,13 +2790,13 @@ export function cmdUpdateStatus(deps: UpdateDeps, args: readonly string[]): numb
     return EXIT.OK;
   }
   if (run === null) {
-    deps.io.out("no update has run on this install yet.");
+    deps.io.out("nenhuma atualização rodou nesta instalação ainda.");
     return EXIT.OK;
   }
   const target = run.to ?? "?";
   const heading =
     run.state === "done"
-      ? `✓ updated to ${target}`
+      ? `✓ atualizado para ${target}`
       : run.state === "rolled-back"
         ? `rolled back to ${run.from ?? "the previous version"} — ${target} did not come up`
         : run.state === "stuck"
@@ -2905,7 +2905,7 @@ async function runApply(deps: UpdateDeps, a: ApplyArgs): Promise<number> {
       }
       refreshRegistry(deps, layout.currentLink);
     }
-    deps.io.out(`✓ updated to ${a.version === "" ? a.to : a.version}`);
+    deps.io.out(`✓ atualizado para ${a.version === "" ? a.to : a.version}`);
     nudgeHooks(deps, pastorBinary(layout.currentLink, deps.host));
     return EXIT.OK;
   }
