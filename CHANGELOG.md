@@ -17,13 +17,11 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-11-26
+
 ### Changed
 
-- **The installers and the everyday terminal commands speak Brazilian Portuguese.** `install.ps1`, `install.sh`, `pastor start`, `status`, `stop`, `restart`, `pair`, `devices`, `serve`, `qr`, `url`, the help text and the common `update` lines now print Portuguese; the rarer diagnostics (`doctor`, `crew`, `stt`) stay in English. `install.ps1` stays plain ASCII and decodes its accents as it prints.
-
-### Fixed
-
-- **The Windows installer prints its refusal under Constrained Language Mode again.** Its accent decoder now uses PowerShell operators only, which that mode allows.
+- **The installers and the everyday terminal commands speak Brazilian Portuguese.** `install.ps1`, `install.sh`, `pastor start`, `status`, `stop`, `restart`, `pair`, `devices`, `serve`, `qr`, `url`, the help text and the common `update` lines now print Portuguese; the rarer diagnostics (`doctor`, `crew`, `stt`) stay in English. `install.ps1` stays plain ASCII and decodes its accents as it prints, with PowerShell operators only, so its refusal under Constrained Language Mode still prints. ([1ac81ac](https://github.com/Ad3Digital/pastor/commit/1ac81ac)) ([4d27820](https://github.com/Ad3Digital/pastor/commit/4d27820))
 
 ## [1.23.0] - 2026-11-26
 
