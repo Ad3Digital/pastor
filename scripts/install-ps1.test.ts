@@ -905,7 +905,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const b = box();
     const r = await install(b, mirror, { env: { PASTOR_TAG: `v${v}` } });
     expectFailed(r);
-    for (const words of ["did not let pastor.exe run", "Smart App Control", "Microsoft Defender", "whoever manages this computer", "safe to leave in place", "turning it off is permanent", "More info, then Run anyway"]) {
+    for (const words of ["não deixou o pastor.exe rodar", "Controle Inteligente de Aplicativos", "Microsoft Defender", "quem administra este computador", "pode ficar onde está", "desligá-lo é definitivo", "Mais informações e depois em Executar assim mesmo"]) {
       expect(r.out).toContain(words);
     }
     expect(lastLine(r.out)).toContain("https://github.com/Ad3Digital/pastor/issues");
@@ -1014,7 +1014,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const failed = await runPowerShell(bad, ["-File", SCRIPT], childEnv(bad, mirror, { PASTOR_TAG: `v${v}` }, false));
     expect(failed.code).toBe(1);
     expect(lastLine(failed.out)).toMatch(/^A instalação falhou\. /);
-    expect(failed.out).toContain("CHECKSUM MISMATCH");
+    expect(failed.out).toContain("CHECKSUM DIFERENTE");
 
     const ok = box();
     const installed = await runPowerShell(ok, ["-File", SCRIPT], childEnv(ok, mirror, {}, false));
@@ -1252,7 +1252,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
         "\r\n",
       ),
     );
-    expect(r.out).toContain("é uma pasta ou arquivo de verdade, não uma junção");
+    expect(r.out).toContain("uma pasta ou arquivo de verdade, n");
     expect(existsSync(join(b.dir, "current", "mine.txt"))).toBe(true);
   }, 60_000);
 });

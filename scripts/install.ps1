@@ -64,8 +64,14 @@ function Stop-PastorInstall([string]$What, [string]$Fix = "Corrija o problema ac
 # The messages are Portuguese, but this file must stay plain ASCII (Windows PowerShell 5.1 reads a
 # file with no byte-order mark as the ANSI code page). So an accented letter is written as an
 # entity such as &#xE7; and turned back into the letter here, just before it is printed.
+# Operators and casts only, no .NET call: it also prints the refusal under Constrained Language Mode.
 function ConvertFrom-PastorText([string]$Text) {
-  return [regex]::Replace($Text, '&#x([0-9A-Fa-f]{2,4});', { param($m) [string][char][Convert]::ToInt32($m.Groups[1].Value, 16) })
+  $out = $Text
+  while ($out -cmatch '\A(?s).*?&#x([0-9A-Fa-f]{2,4});') {
+    $hex = $Matches[1]
+    $out = $out -creplace "&#x$hex;", [string][char][int]"0x$hex"
+  }
+  return $out
 }
 
 function Write-PastorLine([string]$Text) {
