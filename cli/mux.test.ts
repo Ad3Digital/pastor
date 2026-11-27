@@ -281,6 +281,14 @@ describe("the picker", () => {
       typed,
     });
 
+  test("one sighting is taken without a question, terminal or not: a picker with one row asks nothing", async () => {
+    const h = host({ files: { [SOCKET]: "" }, interactive: true, typed: ["1"] });
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+    expect(h.asked).toEqual([]);
+    expect(h.io.stdout.join("\n")).toContain("auto-selected herdr");
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ PASTOR_MUX: "herdr" });
+  });
+
   test("presents every sighting with its evidence and writes the one that was picked", async () => {
     const h = twoUp(["2"]);
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);

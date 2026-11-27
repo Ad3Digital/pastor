@@ -200,17 +200,18 @@ const PICKER_ATTEMPTS = 3;
  * Which multiplexer this pastor drives — asked, or deduced, or refused.
  *
  * The three branches are the whole policy. An explicit `PASTOR_MUX` returns before the probe runs.
- * With a terminal, everything found is presented with its evidence and the operator picks. Without
- * one, EXACTLY ONE sighting is auto-selected and said out loud; zero or several refuse, because
- * "the only multiplexer running" is a fact and "probably that one" is a guess — and a guess here
- * puts a bridge in front of somebody else's terminals.
+ * EXACTLY ONE sighting is auto-selected and said out loud, with a terminal or without one: "the
+ * only multiplexer running" is a fact, and a question with one answer teaches a first-time operator
+ * nothing. Several are presented with their evidence and the operator picks, when there is a
+ * terminal to ask. Zero, or several with nobody to ask, refuse — "probably that one" is a guess, and
+ * a guess here puts a bridge in front of somebody else's terminals.
  */
 export async function chooseMux(deps: MuxChoiceDeps): Promise<MuxDecision> {
   const explicit = explicitMux(deps.ctx.env);
   if (explicit !== null) return { kind: "explicit", mux: explicit };
 
   const found = probeMuxes(deps);
-  if (deps.interactive === true && found.length > 0) {
+  if (deps.interactive === true && found.length > 1) {
     const picked = await pick(deps, found);
     return picked === null ? refusal(deps, found) : { kind: "picked", sighting: picked };
   }
