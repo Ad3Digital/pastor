@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
 
-import { HOST } from "../../host.ts";
+import { HOST, hostFor } from "../../host.ts";
 import type { JsonObject, JsonValue } from "../../json.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -402,6 +401,8 @@ export interface HcBinaryProbe {
  * the long name is the one that always means this program.
  */
 export function hcBinaryCandidates(probe: Pick<HcBinaryProbe, "platform" | "home" | "env">): string[] {
+  // The path rules of the machine being asked about, so the answer is the same wherever this runs.
+  const { join } = hostFor(probe.platform).path;
   if (probe.platform === "win32") {
     const local = probe.env.LOCALAPPDATA ?? join(probe.home, "AppData", "Local");
     const dir = join(local, "Programs", "herdr-core");

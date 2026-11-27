@@ -215,10 +215,12 @@ describe("finding hc", () => {
 
   test("Windows looks where the installer puts it, under the user's local programs", () => {
     const probe = { platform: "win32", home: "C:\\Users\\Ana", env: { LOCALAPPDATA: "C:\\Users\\Ana\\AppData\\Local" } };
-    const [first, second] = hcBinaryCandidates(probe);
-    expect(first).toContain("herdr-core.exe");
-    expect(first).toContain("Programs");
-    expect(second).toContain("hc.exe");
+    expect(hcBinaryCandidates(probe)).toEqual([
+      "C:\\Users\\Ana\\AppData\\Local\\Programs\\herdr-core\\herdr-core.exe",
+      "C:\\Users\\Ana\\AppData\\Local\\Programs\\herdr-core\\hc.exe",
+    ]);
+    // With no LOCALAPPDATA to read, it is the folder Windows puts under every profile.
+    expect(hcBinaryCandidates({ ...probe, env: {} }).at(0)).toBe("C:\\Users\\Ana\\AppData\\Local\\Programs\\herdr-core\\herdr-core.exe");
   });
 
   test("an installed copy wins over PATH, and PATH is the last resort", () => {
