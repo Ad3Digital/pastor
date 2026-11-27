@@ -55,7 +55,8 @@ Você precisa do Windows 11, do [Herdr](https://herdr.dev) (o Herdr app serve) e
    ```powershell
    tailscale serve --bg --set-path=/ 8787
    $nome = (tailscale status --json | ConvertFrom-Json).Self.DNSName.TrimEnd('.')
-   $cfg = "$env:APPDATA\herdr\plugins\config\ad3.pastor"
+   $arq = (pastor config show --json | ConvertFrom-Json).files | Where-Object layer -eq 'instance'
+   $cfg = Split-Path $arq.path
    New-Item -ItemType Directory -Force $cfg | Out-Null
    Add-Content "$cfg\.env" "PASTOR_PUBLIC_HOSTS=$nome`nPASTOR_PUBLIC_URL=https://$nome"
    pastor restart

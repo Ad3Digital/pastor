@@ -84,7 +84,20 @@ pastor start
 3. Run `pastor start`.
 
 `pastor start` finds the app's own program, herdr-core, where the app installed it, and writes
-`PASTOR_MUX=herdr-app` to its `.env`. Steps 5 to 8 of [Zero to phone](#zero-to-phone) are the same.
+`PASTOR_MUX=herdr-app` to its `.env`. Steps 5 to 8 of [Zero to phone](#zero-to-phone) are the same,
+with one difference: the config folder.
+
+> **Caution.** With no `herdr` in a terminal, Pastor's `.env` is not in Herdr's plugin folder. It is
+> in `%USERPROFILE%\.config\pastor`, and the two lines of
+> [Reaching it from your phone](#reaching-it-from-your-phone) go there. `pastor config show` prints
+> the folder in use on its `instance` line.
+
+To find the folder from PowerShell, whichever Herdr you run:
+
+```powershell
+$file = (pastor config show --json | ConvertFrom-Json).files | Where-Object layer -eq 'instance'
+Split-Path $file.path
+```
 
 > **Note.** With both the Herdr app and a `herdr` terminal running, `pastor start` asks which one
 > to show. To choose without being asked, run `$env:PASTOR_MUX = "herdr-app"; pastor start`.

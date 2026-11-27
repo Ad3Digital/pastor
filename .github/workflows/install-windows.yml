@@ -44,9 +44,12 @@ jobs:
           pastor start
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           pastor status
-          $cfg = "$env:APPDATA\herdr\plugins\config\ad3.pastor\.env"
-          Get-Content $cfg
-          if (-not (Select-String -Path $cfg -Pattern '^PASTOR_MUX=herdr-app$' -CaseSensitive -Quiet)) {
+          # The README's own way of finding the config folder: ask Pastor.
+          $arq = (pastor config show --json | ConvertFrom-Json).files | Where-Object layer -eq 'instance'
+          $cfg = Split-Path $arq.path
+          "config folder: $cfg"
+          Get-Content "$cfg\.env"
+          if (-not (Select-String -Path "$cfg\.env" -Pattern '^PASTOR_MUX=herdr-app$' -CaseSensitive -Quiet)) {
             throw "pastor start did not choose the Herdr app"
           }
 
@@ -87,6 +90,28 @@ jobs:
           }
           if ($seen -lt 2) { throw "the line was not run: the mark shows $seen time(s)`n$($read.text)" }
           "the shell ran the line sent from the paired device"
+
+      # The README's publish block, minus Tailscale itself: the two lines it appends must land in the
+      # file Pastor reads, and the address must come back from `pastor url`.
+      - name: The README's address lines land where Pastor reads them
+        shell: powershell
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+          $nome = "aula.example.ts.net"
+          $arq = (pastor config show --json | ConvertFrom-Json).files | Where-Object layer -eq 'instance'
+          $cfg = Split-Path $arq.path
+          New-Item -ItemType Directory -Force $cfg | Out-Null
+          Add-Content "$cfg\.env" "PASTOR_PUBLIC_HOSTS=$nome`nPASTOR_PUBLIC_URL=https://$nome"
+          Get-Content "$cfg\.env"
+          pastor restart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $url = (pastor url | Out-String).Trim()
+          "pastor url: $url"
+          if ($url -cnotmatch 'https://aula\.example\.ts\.net') { throw "pastor url did not print the address from the .env" }
+          # The Host check now lets that name in, as it will for the phone.
+          $health = curl.exe -s -H "Host: $nome" http://127.0.0.1:8787/api/health
+          "health under that name: $health"
+          if ($health -cnotmatch '"ok":true') { throw "the bridge refused the published name" }
 
       - name: The bridge's own log, when something failed
         if: failure()
