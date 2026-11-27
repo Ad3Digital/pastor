@@ -17,13 +17,15 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-11-27
+
 ### Added
 
-- **Pastor shows the terminals of the Herdr app.** A new multiplexer, `herdr-app`, drives herdr-core, the program under the Herdr app, on Windows, Linux and macOS, so the app's spaces, tabs and agents reach the phone with no Herdr in a terminal. `pastor start` finds it where the app installed it and writes `PASTOR_MUX=herdr-app`; the Windows installer names it in its next steps. A reply goes in as text and Enter in one act, because herdr-core cannot type without Enter, and the mirror is plain text, because it hands over no colour. New tab, rename and Show in terminal are not offered there.
+- **Pastor shows the terminals of the Herdr app.** A new multiplexer, `herdr-app`, drives herdr-core, the program under the Herdr app, on Windows and Linux, so the app's spaces, tabs and agents reach the phone with no Herdr in a terminal. `pastor start` finds it where the app installed it and writes `PASTOR_MUX=herdr-app`; the Windows installer names it in its next steps. A reply goes in as text and Enter in one act, because herdr-core cannot type without Enter, and the mirror is plain text, because it hands over no colour. New tab, rename and Show in terminal are not offered there, and macOS is not tested yet. ([2a602b8](https://github.com/Ad3Digital/pastor/commit/2a602b8)) ([64d85b6](https://github.com/Ad3Digital/pastor/commit/64d85b6))
 
 ### Changed
 
-- **`pastor start` no longer asks which multiplexer when only one is running.** The one it finds is taken and named in the output, in a terminal as it already was without one. The question is kept for when two or more are running.
+- **`pastor start` no longer asks which multiplexer when only one is running.** The one it finds is taken and named in the output, in a terminal as it already was without one. The question is kept for when two or more are running. ([11304fb](https://github.com/Ad3Digital/pastor/commit/11304fb))
 
 ## [1.24.0] - 2026-11-26
 

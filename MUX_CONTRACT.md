@@ -373,7 +373,7 @@ PASTOR_MUX=herdr-app pastor start
 
 | Port method or fact | How the adapter answers it |
 | --- | --- |
-| transport | an `hc connect` child, JSON-RPC 2.0 over its stdin and stdout, one line per message. Reads share one child; a call that types gets its own, closed at its budget. The child is the same on Linux, macOS and Windows, where the core's own socket is a named pipe |
+| transport | an `hc connect` child, JSON-RPC 2.0 over its stdin and stdout, one line per message. Reads share one child; a call that types gets its own, closed at its budget. The child is the same on every host, where the core's own socket is not: a Unix socket on Linux, a named pipe on Windows. Probed on Linux and on Windows; macOS is not probed yet |
 | `reachable()` | `hello` answers |
 | `snapshot()` | `terminal.list`, one round trip, live terminals of this machine only |
 | `watch()` | `events.subscribe` on a child of its own: `created`, `finished`, `removed`, `labels`, `title`, `foreground`, `status` and `turn` arrive as `event` notifications, with a `heartbeat` every 15 s. A watched pane's `status` and `turn` are pane changes; everything else is a topology change. 45 s of silence ends the stream |

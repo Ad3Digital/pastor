@@ -23,8 +23,8 @@ a toda hora, com estes acréscimos:
 - **Ligação ao vivo com o Codex e o OMP.** Você fala no celular, o agente trabalha no PC e a
   resposta volta falada. Veja [Ligação ao vivo](#ligação-ao-vivo-fale-com-o-codex-pelo-celular).
 - **Nome, ícone e textos do Pastor.** O atualizador busca as versões deste repositório.
-- **Funciona com o Herdr app.** O Pastor mostra no celular os terminais do Herdr app, no Windows,
-  no Linux e no macOS, sem precisar do Herdr de terminal.
+- **Funciona com o Herdr app.** O Pastor mostra no celular os terminais do Herdr app, no Windows
+  e no Linux, sem precisar do Herdr de terminal.
 - **Em português do Brasil.** O app segue o idioma do celular, e o instalador e os comandos do
   dia a dia (`start`, `status`, `pair`, `update`) falam português no terminal.
 
