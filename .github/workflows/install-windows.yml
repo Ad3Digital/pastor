@@ -1,7 +1,10 @@
 name: Install on Windows (the student's path)
 
 # Runs the published installer on a clean Windows, exactly as the README tells a student to:
-# `irm .../scripts/install.ps1 | iex`, then `pastor version` from a new shell.
+# `irm .../scripts/install.ps1 | iex`, then `pastor version` from a new shell. Then the rest of the
+# README's path that needs no Tailscale and no window: with the Herdr app's core holding one
+# terminal, `pastor start` must find it by itself, and a paired device must see that terminal, send
+# it a line and read the answer back.
 on:
   release:
     types: [published]
@@ -10,6 +13,7 @@ on:
 jobs:
   install:
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - name: Install with the README one-liner
         shell: powershell
@@ -21,3 +25,72 @@ jobs:
           $env:Path = [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
           pastor version
           pastor --help | Select-Object -First 3
+
+      # What the Herdr app installs and runs: herdr-core, with a terminal labelled the way the app
+      # labels one. The app's window itself needs a desktop, which a runner has not.
+      - name: The Herdr app's core, with one terminal open
+        shell: powershell
+        run: |
+          irm https://releases.herdr.dev/core/install.ps1 | iex
+          $hc = "$env:LOCALAPPDATA\Programs\herdr-core\herdr-core.exe"
+          & $hc run --bg --no-parent --name aula --label herdr.space=spaula01 --label herdr.tab=tbaula01 --label "where=Aula / Codex"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $hc ls
+
+      - name: pastor start finds the Herdr app and comes up
+        shell: powershell
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+          pastor start
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pastor status
+          $cfg = "$env:APPDATA\herdr\plugins\config\ad3.pastor\.env"
+          Get-Content $cfg
+          if (-not (Select-String -Path $cfg -Pattern '^PASTOR_MUX=herdr-app$' -CaseSensitive -Quiet)) {
+            throw "pastor start did not choose the Herdr app"
+          }
+
+      - name: A paired device sees the terminal, sends a line and reads it back
+        shell: powershell
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+          $base = "http://127.0.0.1:8787"
+          $printed = (pastor pair | Out-String)
+          if ($printed -cnotmatch '\b([A-Z0-9]{8})\b') { throw "no pairing code in: $printed" }
+          $code = $Matches[1]
+          $origin = @{ Origin = $base }
+          $body = @{ code = $code; label = "ci" } | ConvertTo-Json
+          $pair = Invoke-RestMethod -Method Post -Uri "$base/api/pair" -Headers $origin -ContentType "application/json" -Body $body
+          $auth = @{ Origin = $base; Authorization = "Bearer $($pair.token)" }
+
+          $config = Invoke-RestMethod -Uri "$base/api/config" -Headers $auth
+          "mux: $($config.mux.name), text entry: $($config.mux.textEntry)"
+          if ($config.mux.name -cne "herdr-app") { throw "the bridge drives $($config.mux.name), not the Herdr app" }
+
+          $snap = Invoke-RestMethod -Uri "$base/api/snapshot" -Headers $auth
+          $pane = @($snap.shellPanes) + @($snap.agents) | Where-Object { $null -ne $_ } | Select-Object -First 1
+          if ($null -eq $pane) { throw "the Herdr app's terminal is not in the snapshot: $($snap | ConvertTo-Json -Depth 6)" }
+          "pane $($pane.paneId) in $($pane.workspaceLabel)"
+
+          $mark = "pastor-ci-$PID"
+          $reply = @{ text = "echo $mark"; submit = $true } | ConvertTo-Json
+          $sent = Invoke-RestMethod -Method Post -Uri "$base/api/pane/$($pane.paneId)/reply" -Headers $auth -ContentType "application/json" -Body $reply
+          if (-not $sent.ok) { throw "the reply was refused: $($sent | ConvertTo-Json -Depth 6)" }
+
+          # The typed line and its output: the mark shows twice once the shell has run it.
+          $seen = 0
+          foreach ($try in 1..20) {
+            Start-Sleep -Seconds 1
+            $read = Invoke-RestMethod -Uri "$base/api/pane/$($pane.paneId)?lines=60" -Headers $auth
+            $seen = ([regex]::Matches([string]$read.text, [regex]::Escape($mark))).Count
+            if ($seen -ge 2) { break }
+          }
+          if ($seen -lt 2) { throw "the line was not run: the mark shows $seen time(s)`n$($read.text)" }
+          "the shell ran the line sent from the paired device"
+
+      - name: The bridge's own log, when something failed
+        if: failure()
+        shell: powershell
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+          pastor logs 2>&1 | Select-Object -Last 60
