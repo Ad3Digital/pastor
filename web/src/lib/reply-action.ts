@@ -26,6 +26,7 @@ import { graphemeSegmenter } from "./env";
 import { adapterFor, type HarnessAdapter } from "./harness";
 import { POLL_ATTEMPTS, POLL_DELAY_MS, defaultSleep, type Sleep } from "./harness/guard";
 import { isLive } from "./liveness";
+import { textSubmittedOf } from "./mux-capability";
 import { detectNoEchoPrompt } from "./no-echo";
 import type { Scope } from "./scope";
 
@@ -297,6 +298,14 @@ export async function sendGuardedReply(args: GuardedReplyArgs): Promise<ReplyOut
   // sudo prompt) would never show the text, so the submit key would be withheld forever. Non-Claude
   // harnesses gain this safety exactly when they gain an adapter.
   if (!adapter) return oneShot(args);
+  // Under a multiplexer whose one text verb pastes AND presses Enter, text sent without Enter never
+  // shows on the screen, so no read can confirm it landed in the input box and the type-then-verify
+  // sequence below cannot run. The reply goes as one act, and the guard is that multiplexer's own:
+  // it will not type into a program that reported itself blocked on a dialog, and the bridge then
+  // answers `reply.send_failed` with its words. The pre-flight is not run either, on evidence: such a
+  // multiplexer hands the screen over without colour, and probed on real panes (2026-11-27) a
+  // grammar that reads colour then misses an idle composer and sees a menu in a working one.
+  if (textSubmittedOf(args.scope)) return oneShot(args);
 
   // PRE-FLIGHT. The verify-after guard below is enough to keep Enter from answering a dialog, but it
   // is not enough to keep the MESSAGE out of one: it types first and checks second, so a modal that

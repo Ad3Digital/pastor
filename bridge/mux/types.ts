@@ -34,6 +34,7 @@ export type {
   MuxCapability,
   MuxCapabilityDeclaration,
   MuxSpaceCapacity,
+  MuxTextEntry,
   MuxTopologyLatency,
 } from "./capabilities.ts";
 export { declareCapabilities, MUX_CAPABILITIES, supportsCapability } from "./capabilities.ts";
@@ -707,6 +708,17 @@ export interface MuxAdapter {
   typeText(paneId: string, text: string): Promise<MuxAck>;
 
   /**
+   * Type text and submit it, as ONE act. OPTIONAL: only a multiplexer that declares `textEntry:
+   * "submitted"` has it, because only there is "type, then Enter" not two steps the pane can be read
+   * between (capabilities.ts § MuxTextEntry).
+   *
+   * A refusal means nothing was typed. That is the difference from {@link typeText} followed by
+   * {@link sendKeys}, where a failed second step leaves text in the pane, and it is why the reply
+   * route asks this instead of composing the two when it is there.
+   */
+  typeAndSubmit?(paneId: string, text: string): Promise<MuxAck>;
+
+  /**
    * Send keys in the contract's neutral spelling (keys.ts), applied in order. Needs `sendKeys`.
    *
    * A key the multiplexer cannot send is `refused` and is listed in `unsupportedKeys` — the whole
@@ -808,7 +820,7 @@ export function muxDataFields(adapter: MuxAdapter): Pick<MuxAdapter, "logo"> {
 }
 
 /** The OPTIONAL methods a decorator carries through, each only when the adapter has it. */
-export type MuxOptionalMethod = "readLogicalText" | "listStarters" | "startStarter" | "openAsks" | "answerAsk" | "paneTurn" | "controlTurn" | "foregroundProcesses";
+export type MuxOptionalMethod = "readLogicalText" | "listStarters" | "startStarter" | "openAsks" | "answerAsk" | "paneTurn" | "controlTurn" | "foregroundProcesses" | "typeAndSubmit";
 
 /**
  * The OPTIONAL methods, gathered the way {@link muxDataFields} gathers the optional data fields.
@@ -838,6 +850,8 @@ export function muxOptionalMethods(
   if (controlTurn !== undefined) methods.controlTurn = controlTurn;
   const foregroundProcesses = adapter.foregroundProcesses?.bind(adapter);
   if (foregroundProcesses !== undefined) methods.foregroundProcesses = foregroundProcesses;
+  const typeAndSubmit = adapter.typeAndSubmit?.bind(adapter);
+  if (typeAndSubmit !== undefined) methods.typeAndSubmit = typeAndSubmit;
   return methods;
 }
 

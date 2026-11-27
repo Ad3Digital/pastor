@@ -1,0 +1,56 @@
+name: Herdr app (real herdr-core)
+
+# The Herdr app adapter against a real herdr-core, on Windows and on Linux. The conformance suite
+# proves the adapter over a fake; this proves the part a fake cannot: the `hc connect` child, the
+# core's named pipe on Windows, and a real shell running what was sent.
+#
+# ITS OWN WORKFLOW, like windows.yml: it downloads herdr-core from its release server, so an outage
+# there shows red here and blocks nothing else.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bridge/mux/herdr-app/**"
+      - "bridge/mux/types.ts"
+      - "bridge/mux/capabilities.ts"
+      - "scripts/herdr-app-e2e.ts"
+      - ".github/workflows/herdr-app.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: herdr-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: herdr-core on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: No line-ending rewrite
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.1
+      - name: Install (root)
+        run: bun install --frozen-lockfile
+
+      - name: Install herdr-core (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: irm https://releases.herdr.dev/core/install.ps1 | iex
+      - name: Install herdr-core (Linux)
+        if: runner.os == 'Linux'
+        run: curl -fsSL https://releases.herdr.dev/core/install.sh | sh
+
+      - name: Drive a real herdr-core through the adapter
+        run: bun scripts/herdr-app-e2e.ts

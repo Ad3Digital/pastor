@@ -663,6 +663,12 @@ function Invoke-PastorInstall {
   }
   $pastor = Get-PastorCommandName $exe
   $herdr = Get-Command herdr -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+  # The Herdr app's own core, where its installer puts it. Pastor shows the terminals of either Herdr.
+  $herdrApp = $null
+  if ($env:LOCALAPPDATA) {
+    $core = Join-Path $env:LOCALAPPDATA "Programs\herdr-core\herdr-core.exe"
+    if (Test-Path -LiteralPath $core -PathType Leaf) { $herdrApp = $core }
+  }
 
   # A pinned run over an install: Pastor may be running already, so the next step is a restart,
   # as for a rescue that found the version on disk, never a first start.
@@ -680,23 +686,31 @@ function Invoke-PastorInstall {
   Write-PastorLine "OK  O Pastor $version est&#xE1; instalado em $dir. Nada est&#xE1; rodando ainda."
   Write-PastorLine "    O download confere com o checksum publicado na vers&#xE3;o, e o pastor.exe roda."
   Write-PastorLine $published
-  if ($null -eq $herdr) { Write-PastorLine "O Herdr n&#xE3;o foi encontrado no PATH. O Pastor no Windows precisa dele (passo 2)." }
-  else { Write-PastorLine "Herdr encontrado: $($herdr.Source)" }
+  if ($null -ne $herdrApp) { Write-PastorLine "Herdr app encontrado: $herdrApp" }
+  elseif ($null -ne $herdr) { Write-PastorLine "Herdr encontrado: $($herdr.Source)" }
+  else { Write-PastorLine "O Herdr n&#xE3;o foi encontrado. O Pastor no Windows precisa dele (passo 2)." }
   Write-PastorLine ""
   Write-PastorLine "Pr&#xF3;ximos passos. Este script n&#xE3;o faz por voc&#xEA;:"
   Write-PastorLine ""
   if ($env:PASTOR_NO_PATH_EDIT -eq "1") { Write-PastorLine "  1. Abra uma janela NOVA do terminal." }
   else { Write-PastorLine "  1. Abra uma janela NOVA do terminal. O Windows s&#xF3; entrega o PATH novo para janelas abertas depois desta instala&#xE7;&#xE3;o." }
   Write-PastorLine ""
-  Write-PastorLine "  2. Abra o Herdr em outra janela do terminal e deixe rodando. O Pastor precisa dele antes de ligar."
-  Write-PastorLine "     Baixe o Herdr em https://herdr.dev (instalador: irm https://herdr.dev/install.ps1 | iex). Depois rode:"
-  Write-PastorLine "       herdr"
+  if ($null -ne $herdrApp) {
+    Write-PastorLine "  2. Abra o Herdr app e deixe aberto, com o seu agente (Codex, Claude Code) numa aba."
+    Write-PastorLine "     O Pastor mostra no celular os terminais que estiverem abertos nele."
+  } elseif ($null -ne $herdr) {
+    Write-PastorLine "  2. Abra o Herdr em outra janela do terminal e deixe rodando. O Pastor precisa dele antes de ligar."
+    Write-PastorLine "       herdr"
+  } else {
+    Write-PastorLine "  2. Abra o Herdr app e deixe aberto. O Pastor precisa dele antes de ligar."
+    Write-PastorLine "     Baixe o Herdr em https://herdr.dev e abra um agente (Codex, Claude Code) numa aba dele."
+  }
   Write-PastorLine ""
   Write-PastorLine "  3. Ligue o Pastor e mostre o endere&#xE7;o dele:"
   Write-PastorLine "       $pastor start"
   Write-PastorLine "       $pastor url"
   Write-PastorLine "     No Windows, o Pastor s&#xF3; atende neste computador. Para abrir no celular, use a sua rede do"
-  Write-PastorLine "     Tailscale (passo 6 do README): https://github.com/Ad3Digital/pastor#instalar-no-windows"
+  Write-PastorLine "     Tailscale (passo 5 do README): https://github.com/Ad3Digital/pastor#instalar-no-windows"
   Write-PastorLine ""
   Write-PastorLine "  4. Pareie o celular. O Pastor n&#xE3;o responde a nenhum aparelho at&#xE9; um ser pareado:"
   Write-PastorLine "       $pastor pair"

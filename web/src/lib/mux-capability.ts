@@ -119,6 +119,20 @@ export function paneGridOf(scope?: Scope): boolean {
   return muxCapability(scopedMuxConfig(getMuxConfig(), member), "paneGrid").capable;
 }
 
+/**
+ * Whether the multiplexer behind a scope types text only together with Enter, read now and outside
+ * React (the reply path asks it before it chooses how to send).
+ *
+ * A DECLARED fact, like the topology latency: under such a multiplexer text sent without Enter never
+ * shows on the screen, so the reply cannot be typed first and checked second. Absent data reads as
+ * `false`, a terminal's own way, which is what every bridge older than the field does.
+ */
+export function textSubmittedOf(scope?: Scope): boolean {
+  const host = normalizeHost(scope?.host);
+  const member = host === undefined ? null : getHostMuxConfig(host);
+  return scopedMuxConfig(getMuxConfig(), member)?.textEntry === "submitted";
+}
+
 /** Subscribe to the one-shot `/api/config` read, kicking it on mount like the operator-row hooks. */
 function useMuxConfig(): MuxConfig | null {
   useEffect(() => {

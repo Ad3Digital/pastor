@@ -1482,7 +1482,7 @@ describe("mux", () => {
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
     expect(finding.detail).toContain("no multiplexers are running");
-    expect(finding.remedy).toContain("PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start");
+    expect(finding.remedy).toContain("PASTOR_MUX=<durable|herdr|herdr-app|tern|tmux|tuios|zellij> pastor start");
   });
 
   test("nothing configured and two multiplexers running is an error naming both", async () => {

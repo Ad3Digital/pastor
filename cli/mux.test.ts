@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { parseEnvFile } from "./context.ts";
 import { capture, context, CONFIG, fakeExec, fakeFiles, HOME, type Scripted } from "./fakes.ts";
 import { EXIT } from "./io.ts";
+import { HOST } from "../bridge/host.ts";
+import { hcBinaryCandidates } from "../bridge/mux/herdr-app/client.ts";
 import { chooseMux, ensureMuxChosen, probeMuxes, type MuxSettleDeps } from "./mux.ts";
 import { cmdMuxProbe, muxProbeReport, parseMuxProbe } from "./mux-probe.ts";
 
@@ -19,6 +21,8 @@ import { cmdMuxProbe, muxProbeReport, parseMuxProbe } from "./mux-probe.ts";
 const SOCKET = "/home/pat/.config/herdr/herdr.sock";
 /** Where the tmux adapter's own candidate list looks first. */
 const TMUX_BIN = "/usr/bin/tmux";
+/** Where herdr-core's own installer puts it — the first candidate `hcBinaryCandidates` probes here. */
+const HC_BIN = hcBinaryCandidates({ platform: HOST.platform, home: HOME, env: {} }).at(0) ?? "";
 /** Where zellij's own installer puts it — the first candidate `zellijBinaryCandidates` probes. */
 const ZELLIJ_BIN = `${HOME}/.local/bin/zellij`;
 
@@ -68,6 +72,33 @@ describe("the probe", () => {
       { mux: "herdr", endpoint: "", evidence: `a Herdr socket at ${SOCKET}` },
     ]);
     expect(probeMuxes(host().deps)).toEqual([]);
+  });
+
+  test("the Herdr app is its core installed and answering, found where its installer puts it", () => {
+    const status = JSON.stringify({ version: "0.1.22", live: 2, finished: 0 });
+    const h = host({ files: { [HC_BIN]: "" }, answers: [[`${HC_BIN} server status --json`, { stdout: status }]] });
+    expect(probeMuxes(h.deps)).toEqual([
+      { mux: "herdr-app", endpoint: "", evidence: "the Herdr app's herdr-core 0.1.22 — 2 terminals running" },
+    ]);
+    expect(h.exec.calls).toEqual([`${HC_BIN} server status --json`]);
+  });
+
+  test("the Herdr app with no core installed is not probed, and a core that does not answer is not a sighting", () => {
+    const absent = host();
+    expect(probeMuxes(absent.deps)).toEqual([]);
+    expect(absent.exec.calls).toEqual([]);
+    const silent = host({ files: { [HC_BIN]: "" }, answers: [[`${HC_BIN} server status --json`, { code: 1, stderr: "hc: no core" }]] });
+    expect(probeMuxes(silent.deps)).toEqual([]);
+    const garbled = host({ files: { [HC_BIN]: "" }, answers: [[`${HC_BIN} server status --json`, { stdout: "not json" }]] });
+    expect(probeMuxes(garbled.deps)).toEqual([]);
+  });
+
+  test("the Herdr app alone is chosen without asking, and its name is written down", async () => {
+    const status = JSON.stringify({ version: "0.1.22", live: 1 });
+    const h = host({ files: { [HC_BIN]: "" }, answers: [[`${HC_BIN} server status --json`, { stdout: status }]] });
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+    expect(h.dotenv()).toContain("PASTOR_MUX=herdr-app");
+    expect(h.io.stdout.join("\n")).toContain("the Herdr app's herdr-core 0.1.22 — 1 terminal running");
   });
 
   test("tmux is a running server, asked for with the one listing that never starts one", () => {
@@ -191,7 +222,7 @@ describe("with no terminal", () => {
     expect(said).toContain("no PASTOR_MUX is set");
     expect(said).toContain("no multiplexers are running");
     // No hint is possible with nothing found, so the name is left as the choice it is.
-    expect(said).toContain("  PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start");
+    expect(said).toContain("  PASTOR_MUX=<durable|herdr|herdr-app|tern|tmux|tuios|zellij> pastor start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -204,7 +235,7 @@ describe("with no terminal", () => {
     expect(said).toContain("  tmux     a tmux server on tmux's own default server — 2 sessions");
     // Nothing in this environment names one of them, so nothing is suggested.
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start");
+    expect(said).toContain("  PASTOR_MUX=<durable|herdr|herdr-app|tern|tmux|tuios|zellij> pastor start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -231,7 +262,7 @@ describe("with no terminal", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start");
+    expect(said).toContain("  PASTOR_MUX=<durable|herdr|herdr-app|tern|tmux|tuios|zellij> pastor start");
   });
 
   test("a prompt seam that is there is still never used without a terminal", async () => {

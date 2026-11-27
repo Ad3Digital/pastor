@@ -1575,6 +1575,14 @@ export interface MuxConfig {
    * rather than here, so that rule lives in exactly one place.
    */
   topologyLatency?: MuxTopologyLatency;
+  /**
+   * `"submitted"` under a multiplexer whose one text verb pastes and presses Enter. Mirrors
+   * `MuxTextEntry` in bridge/mux/capabilities.ts.
+   *
+   * **Absent everywhere else, and absent reads as a terminal's own way**: type, read the input box
+   * back, then submit. Read it through `textSubmittedOf()` rather than here.
+   */
+  textEntry?: "submitted";
 }
 
 /**

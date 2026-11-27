@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { declareCapabilities, keysDeliverable } from "./capabilities.ts";
 import { MUX_CONFORMANCE_FIXTURES } from "./fixtures.ts";
 import { toHerdrKey } from "./herdr/keys.ts";
+import { toHerdrAppKey } from "./herdr-app/keys.ts";
 import {
   canonicalMuxKey,
   EXTENDED_ONLY_CHORDS,
@@ -118,13 +119,19 @@ describe("ctrl+Enter, the chord that needs an extended keyboard encoding", () =>
     expect(toHerdrKey("ctrl+Enter").ok).toBe(true);
   });
 
+  // Probed 2026-11-27 against `cat -v` under herdr-core 0.1.22: `ctrl+enter` arrived as
+  // `ESC[27;5;13~`, its own encoding, and not as the `^M` a plain Enter sends.
+  test("the Herdr app sends it, as probed on herdr-core 0.1.22", () => {
+    expect(toHerdrAppKey("ctrl+Enter")).toEqual({ ok: true, key: "ctrl+enter" });
+  });
+
   test("every adapter that refuses it declares it, so a surface can ask before it offers a button", async () => {
     for (const fixture of MUX_CONFORMANCE_FIXTURES) {
       const world = await fixture.create();
       try {
         const deliverable = keysDeliverable(world.adapter.capabilities, ["ctrl+Enter"]);
         expect(deliverable, `${fixture.mux}${fixture.variant === undefined ? "" : ` (${fixture.variant})`}`).toBe(
-          fixture.mux === "herdr",
+          fixture.mux === "herdr" || fixture.mux === "herdr-app",
         );
       } finally {
         await world.close();

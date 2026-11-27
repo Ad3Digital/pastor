@@ -21,6 +21,8 @@ import { MUX_ADAPTERS } from "./registry.ts";
 // forgets its logo — which the config test in bridge/server.test.ts catches instead.
 const LOGOS: readonly [name: string, svg: string][] = [
   ["herdr", HERDR_LOGO_SVG],
+  // The Herdr app is Herdr's own window over herdr-core, so it carries Herdr's mark.
+  ["herdr-app", HERDR_LOGO_SVG],
   ["tern", TERN_LOGO_SVG],
   ["tmux", TMUX_LOGO_SVG],
   ["zellij", ZELLIJ_LOGO_SVG],

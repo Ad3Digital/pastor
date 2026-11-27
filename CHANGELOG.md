@@ -17,6 +17,10 @@ install. Check the result with `pastor version`. The phone app updates itself wi
 
 ## [Unreleased]
 
+### Added
+
+- **Pastor shows the terminals of the Herdr app.** A new multiplexer, `herdr-app`, drives herdr-core, the program under the Herdr app, on Windows, Linux and macOS, so the app's spaces, tabs and agents reach the phone with no Herdr in a terminal. `pastor start` finds it where the app installed it and writes `PASTOR_MUX=herdr-app`; the Windows installer names it in its next steps. A reply goes in as text and Enter in one act, because herdr-core cannot type without Enter, and the mirror is plain text, because it hands over no colour. New tab, rename and Show in terminal are not offered there.
+
 ## [1.24.0] - 2026-11-26
 
 ### Changed

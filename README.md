@@ -16,27 +16,24 @@ Os agentes rodam dentro do [Herdr](https://herdr.dev).
 ## O que muda em relação ao ColliePWA
 
 Esta é a linha 1.21 do ColliePWA, a última em que o acesso pelo Tailscale funcionava sem pedir login
-a toda hora, com três acréscimos:
+a toda hora, com estes acréscimos:
 
 - **Pareamento por passkey.** Um aparelho já pareado registra uma passkey e depois entra sozinho,
   sem digitar código de novo.
 - **Ligação ao vivo com o Codex e o OMP.** Você fala no celular, o agente trabalha no PC e a
   resposta volta falada. Veja [Ligação ao vivo](#ligação-ao-vivo-fale-com-o-codex-pelo-celular).
 - **Nome, ícone e textos do Pastor.** O atualizador busca as versões deste repositório.
+- **Funciona com o Herdr app.** O Pastor mostra no celular os terminais do Herdr app, no Windows,
+  no Linux e no macOS, sem precisar do Herdr de terminal.
 - **Em português do Brasil.** O app segue o idioma do celular, e o instalador e os comandos do
   dia a dia (`start`, `status`, `pair`, `update`) falam português no terminal.
 
 ## Instalar no Windows
 
-Você precisa do Windows 11, do [Herdr para Windows](https://herdr.dev) e do
+Você precisa do Windows 11, do [Herdr](https://herdr.dev) (o Herdr app serve) e do
 [Tailscale](https://tailscale.com/download) no PC e no celular, logados na mesma conta.
 
-1. Instale o Herdr e confira a versão (0.9.3 ou mais nova):
-
-   ```powershell
-   irm https://herdr.dev/install.ps1 | iex
-   herdr --version
-   ```
+1. Abra o Herdr app e deixe aberto, com o seu agente (Codex, Claude Code) numa aba.
 
 2. Instale o Pastor:
 
@@ -44,18 +41,16 @@ Você precisa do Windows 11, do [Herdr para Windows](https://herdr.dev) e do
    irm https://raw.githubusercontent.com/Ad3Digital/pastor/main/scripts/install.ps1 | iex
    ```
 
-3. Abra um terminal **novo**, rode `herdr` e deixe aberto.
-
-4. Num segundo terminal, ligue o Pastor:
+3. Abra um terminal **novo** e ligue o Pastor. Ele acha o Herdr app sozinho:
 
    ```powershell
    pastor start
    ```
 
-5. No painel do Tailscale, em [DNS](https://login.tailscale.com/admin/dns), ligue **MagicDNS** e
+4. No painel do Tailscale, em [DNS](https://login.tailscale.com/admin/dns), ligue **MagicDNS** e
    **Enable HTTPS**.
 
-6. Publique o Pastor na sua rede do Tailscale (copie o bloco inteiro):
+5. Publique o Pastor na sua rede do Tailscale (copie o bloco inteiro):
 
    ```powershell
    tailscale serve --bg --set-path=/ 8787
@@ -67,12 +62,15 @@ Você precisa do Windows 11, do [Herdr para Windows](https://herdr.dev) e do
    pastor url
    ```
 
-7. Abra no celular o endereço que o `pastor url` mostrou e adicione à tela inicial.
+6. Abra no celular o endereço que o `pastor url` mostrou e adicione à tela inicial.
 
-8. Pareie o celular: rode `pastor pair` no PC e digite o código (ou leia o QR) no celular.
+7. Pareie o celular: rode `pastor pair` no PC e digite o código (ou leia o QR) no celular.
 
 O Windows pode avisar que o `pastor.exe` não é assinado. Clique em **Mais informações** e depois em
 **Executar assim mesmo**. Detalhes e problemas comuns: [docs/windows.md](docs/windows.md).
+
+> **Note.** Usa o Herdr de terminal em vez do app? Rode `herdr` num terminal e deixe aberto antes do
+> `pastor start`. Com os dois abertos, o `pastor start` pergunta qual mostrar.
 
 ## Instalar no Linux
 

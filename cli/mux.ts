@@ -1,6 +1,9 @@
 import { join } from "node:path";
 
+import { HOST } from "../bridge/host.ts";
 import { HERDR_MUX } from "../bridge/mux/herdr/adapter.ts";
+import { HERDR_APP_MUX } from "../bridge/mux/herdr-app/adapter.ts";
+import { hcBinaryCandidates, hcSessionEnv, HC_STATUS_ARGS, parseHcStatus } from "../bridge/mux/herdr-app/client.ts";
 import { buildMuxRegistry, muxEndpointVar, muxNames } from "../bridge/mux/registry.ts";
 import { TMUX_MUX } from "../bridge/mux/tmux/adapter.ts";
 import { resolveTmuxBinary, tmuxServerArgs, tmuxServerLabel } from "../bridge/mux/tmux/exec.ts";
@@ -80,7 +83,7 @@ export function explicitMux(env: Pick<CliContext, "env">["env"]): string | null 
  * being asked is "what is here", not "is this one healthy".
  */
 export function probeMuxes(deps: MuxProbeDeps): MuxSighting[] {
-  return [probeHerdr(deps), probeTmux(deps), probeZellij(deps)].filter(
+  return [probeHerdr(deps), probeHerdrApp(deps), probeTmux(deps), probeZellij(deps)].filter(
     (sighting): sighting is MuxSighting => sighting !== null,
   );
 }
@@ -89,6 +92,33 @@ function probeHerdr(deps: MuxProbeDeps): MuxSighting | null {
   const socket = deps.ctx.socket;
   if (!deps.files.exists(socket)) return null;
   return { mux: HERDR_MUX, endpoint: "", evidence: `a Herdr socket at ${socket}` };
+}
+
+/** How long the Herdr app's core gets to answer. It starts itself when asked, which takes a moment. */
+const HC_PROBE_TIMEOUT_MS = 10_000;
+
+/**
+ * The Herdr app is its core being installed and answering.
+ *
+ * Found at the paths herdr-core's own installers use, never through `PATH`, for the reason tmux and
+ * zellij are: the service that runs the bridge does not share the operator's shell `PATH`. The core
+ * starts itself when asked, so this read works whether or not the app's window is open, and the
+ * evidence says how many terminals it holds.
+ */
+function probeHerdrApp(deps: MuxProbeDeps): MuxSighting | null {
+  const candidates = hcBinaryCandidates({ platform: HOST.platform, home: deps.ctx.home, env: deps.ctx.env });
+  const binary = candidates.find((candidate) => deps.files.exists(candidate));
+  if (binary === undefined) return null;
+  const endpoint = (deps.ctx.env[muxEndpointVar(HERDR_APP_MUX)] ?? "").trim();
+  const asked = deps.exec.capture(binary, [...HC_STATUS_ARGS], HC_PROBE_TIMEOUT_MS, undefined, hcSessionEnv(endpoint));
+  if (!asked.found || asked.code !== 0) return null;
+  const status = parseHcStatus(asked.stdout);
+  if (status === null) return null;
+  return {
+    mux: HERDR_APP_MUX,
+    endpoint,
+    evidence: `the Herdr app's herdr-core ${status.version} — ${String(status.live)} terminal${status.live === 1 ? "" : "s"} running`,
+  };
 }
 
 function probeTmux(deps: MuxProbeDeps): MuxSighting | null {

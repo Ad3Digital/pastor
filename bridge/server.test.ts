@@ -549,6 +549,46 @@ describe("sendReplySteps — two-step send & partial-failure clarity", () => {
     expect(out).toEqual({ ok: true, textDelivered: true });
     expect(client.calls).toEqual(["text"]);
   });
+
+  // A multiplexer whose one text verb pastes AND presses Enter offers `typeAndSubmit` (mux/types.ts).
+  class OneActClient extends FakeClient {
+    constructor(private readonly refusal?: string) {
+      super();
+    }
+    typeAndSubmit(_paneId: string, text: string): Promise<MuxAck> {
+      this.calls.push(`both:${text}`);
+      return Promise.resolve(this.refusal === undefined ? muxAck() : muxRefused(this.refusal));
+    }
+  }
+
+  test("text and submit go as ONE act where the multiplexer offers it", async () => {
+    const client = new OneActClient();
+    const out = await sendReplySteps(client, "p1", "hello", true, ["Enter"], noSleep);
+    expect(out).toEqual({ ok: true, textDelivered: true });
+    expect(client.calls).toEqual(["both:hello"]);
+  });
+
+  test("a refusal of that one act typed nothing, so it is a failed send and never a stranded draft", async () => {
+    const client = new OneActClient("the program is blocked");
+    const out = await sendReplySteps(client, "p1", "hello", true, ["Enter"], noSleep);
+    expect(out).toEqual({
+      ok: false,
+      textDelivered: false,
+      error: "the program is blocked",
+      code: "reply.send_failed",
+      detail: { reason: "the program is blocked" },
+    });
+    expect(client.calls).toEqual(["both:hello"]);
+  });
+
+  test("a submit with no text, and text with no submit, still take the two ordinary steps", async () => {
+    const submitOnly = new OneActClient();
+    await sendReplySteps(submitOnly, "p1", "", true, ["Enter"], noSleep);
+    expect(submitOnly.calls).toEqual(["keys"]);
+    const textOnly = new OneActClient();
+    await sendReplySteps(textOnly, "p1", "hello", false, ["Enter"], noSleep);
+    expect(textOnly.calls).toEqual(["text"]);
+  });
 });
 
 /**
@@ -2634,6 +2674,14 @@ describe("muxConfigBody — the capability declaration, as the phone reads it", 
     expect(muxConfigBody({ mux: "reference", capabilities: everything }).notes).toEqual({});
     const notes = muxConfigBody({ mux: "partial", capabilities: partial }).notes;
     expect(Object.keys(notes).toSorted()).toEqual(["agentSessionRef", "createSpace"]);
+  });
+
+  test("how text is entered rides only when it is the unusual way", () => {
+    // Absent is a terminal's own way (type, then submit), so an ordinary multiplexer adds no key and
+    // a phone older than the field reads this bridge as it always did.
+    expect("textEntry" in muxConfigBody({ mux: "reference", capabilities: everything })).toBe(false);
+    const oneAct = declareCapabilities({ supports: ["typeText", "sendKeys"], topologyLatency: { kind: "push" }, textEntry: "submitted" });
+    expect(muxConfigBody({ mux: "one-act", capabilities: oneAct }).textEntry).toBe("submitted");
   });
 
   test("how many spaces the multiplexer can hold rides too, and defaults to `many`", () => {

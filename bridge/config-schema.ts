@@ -308,7 +308,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
     section: "mux",
     kind: "string",
     default: DEFAULT_MUX,
-    doc: "Which multiplexer this pastor mirrors: herdr, tern, tmux, zellij, tuios or durable.",
+    doc: "Which multiplexer this pastor mirrors: herdr, herdr-app (the Herdr app), tern, tmux, zellij, tuios or durable.",
     configField: "mux",
   },
   {
@@ -407,6 +407,15 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
     kind: "secret",
     default: "",
     doc: "The bearer token sent with every request to durable_url, at least 32 bytes. A file holding it must be mode 600.",
+  },
+  {
+    key: "mux_endpoint_herdr_app",
+    env: "PASTOR_MUX_ENDPOINT_HERDR_APP",
+    section: "mux",
+    kind: "string",
+    default: "",
+    doc: "The herdr-core session behind the Herdr app to drive. Empty takes the default session, the one the app opens.",
+    configField: "muxEndpoint",
   },
   {
     key: "mux_endpoint_tuios",

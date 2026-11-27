@@ -21,6 +21,7 @@ Sources, once:
 | **H8** | First-hand probe of **herdr 0.8.2** (protocol 20) on this host — 2026-08-28, an isolated `herdr --session wtprobe` over a throwaway repo, worktree verbs only |
 | **TU** | First-hand probe of a **tuios daemon built from main (`c24cbc80`)**, protocol 1, on this host, 2026-10-01. A throwaway daemon in its own `XDG_RUNTIME_DIR`, state and config directories, never an operator's own. The read-only set ran through `scripts/mux-probe.ts --mux tuios` (12 of 12). The writes ran through the adapter against the same throwaway daemon, with a stand-in agent that reports its state with `tuios set-agent-state` from inside its pane, because no paid agent was used. The focus probe attached a real `tuios attach` and a tuios-web client (bound to 127.0.0.1) at once. Re-probed by the maintainer the same day on the released **tuios 0.8.4** (checksum-verified release binary, throwaway daemon on a second host): the read-only set 12 of 12, and a `claude-code` window reporting `needs_input` read as `claude`, `blocked`, with its session id, while a `gemini-cli` window read as `shell` |
 | **TN** | First-hand probe of **tern 0.4.5 (`1d14241`)** on this host (Linux), 2026-10-05, against the operator's own session daemon, so every write went to a throwaway session made for it and killed after. The read-only set ran through `scripts/mux-probe.ts --mux tern` (12 of 12). The writes ran the `tern` verbs the adapter calls: `new session` / `new tab` (`--json` names the session, tab and block it made), `send … text`, `send … paste` (two lines arrived as two lines), `send … keys` over every key in `keys.ts`'s table plus `ctrl+c`, `alt+f`, `shift+tab`, `ctrl+alt+x`, `rename` (tab and session), `close`, `kill session`. `tern events` was recorded across those writes: create is `pane_spawned` + `layout_changed`, close is `layout_changed` + `pane_closed`, and a rename is a bare `layout_changed`. `ls --json` reports `focused` per TAB: one shown session with three tabs reported three focused blocks. The contributor ran a second round on the same Tern the same day and posted it in PR 356. `tern focus <block>` on a block in a background session with several tabs moved the window to that session, showed its tab and focused the block in one call, and `tern focus` on the first block moved it back. `tern send <id> text --help` printed Tern's help and typed nothing, and `tern send <id> text -- --help` and `-- '- item'` typed the text as written, so the adapter always passes `--`. `tern new session` and `tern new tab` make their session and tab with `shown: false` and do not move the window. `TERN_DAEMON_SOCKET` is the variable Tern reads (a path with no daemon answers `no Tern is running`), and `$TERN_PANE_SOCKET` inside a block equals `$XDG_RUNTIME_DIR/tern/daemon.sock`. The largest id seen is `519716812619778`, 49 bits. One real `ls --json` answer and one real `events` stream are kept in `bridge/mux/tern/captures/` |
+| **HA** | First-hand probe of **herdr-core 0.1.22** (`hc`, protocol generation 1), the program under the Herdr app, on this host (Linux), 2026-11-27. Every write went to a throwaway core of its own (`HC_SESSION=pastorprobe`), never to the operator's terminals; the operator's own core was only listed and read. The read-only set ran through `scripts/mux-probe.ts --mux herdr-app` against both (12 of 12). The writes ran through the adapter: `scripts/herdr-app-e2e.ts` starts its own core, sends a line as one act and a line as held text plus Enter into a real shell, presses a key, closes the terminal and reads each result back. A real Codex in the throwaway core took a reply sent through `sendReplySteps` in 216 ms and answered it. `.github/workflows/herdr-app.yml` runs the same script on Windows and Linux. See [The Herdr app](#the-herdr-app) |
 | **?** | Not probed yet. The adapter's spec probes it and fills the cell in; **an unprobed cell is never declared supported.** |
 
 ## The floor — not capabilities
@@ -351,3 +352,58 @@ tmux peer's panes are offered the lead's worktree verbs and greyed on the lead's
 because nothing on that lead knows the peer answers differently. There is no adapter change and no
 peer change to make. The remedy is levelling the lead, which `pastor crew status` already prints
 beside the skew it reports.
+
+## The Herdr app
+
+The Herdr app is a window over herdr-core (`hc`), and the `herdr-app` adapter drives the core. It
+has a section and no column in the tables above, because it shares almost nothing with Herdr's own
+socket: other verbs, other ids, and one text verb that also presses Enter. Every cell is from **HA**.
+
+```sh
+PASTOR_MUX=herdr-app pastor start
+```
+
+| Pastor | herdr-core |
+| --- | --- |
+| pane | a terminal, by its address (`t7`), which the core never hands out twice |
+| space | the `herdr.space` label the app writes, named by the first part of the `where` label |
+| tab | the `herdr.tab` label, named by the second part of `where`; a number is a position, not a name |
+| a terminal with no labels | listed with its nearest labelled ancestor (an agent's helper), else in a space of its own, `hc` |
+| a linked machine's terminal (`vps/t7`) | left out: that machine's own pastor shows it (ADR 0011) |
+
+| Port method or fact | How the adapter answers it |
+| --- | --- |
+| transport | an `hc connect` child, JSON-RPC 2.0 over its stdin and stdout, one line per message. Reads share one child; a call that types gets its own, closed at its budget. The child is the same on Linux, macOS and Windows, where the core's own socket is a named pipe |
+| `reachable()` | `hello` answers |
+| `snapshot()` | `terminal.list`, one round trip, live terminals of this machine only |
+| `watch()` | `events.subscribe` on a child of its own: `created`, `finished`, `removed`, `labels`, `title`, `foreground`, `status` and `turn` arrive as `event` notifications, with a `heartbeat` every 15 s. A watched pane's `status` and `turn` are pane changes; everything else is a topology change. 45 s of silence ends the stream |
+| `refresh()` | a no-op that resolves: every snapshot is a fresh list |
+| `topologyLatency` | `push` |
+| `spaces` | `"many"` |
+| `textEntry` | `"submitted"`, the only adapter that says so. See below |
+| `focused` | `false` on every pane. The core does not know which pane the app's window shows |
+
+| Capability | herdr-core |
+| --- | --- |
+| `paneGrid` | `terminal.read`, plain text. The core hands over no colour, so `preserve` and `strip` are the same read |
+| `gridScrollback` | `terminal.read {lines}`, the screen plus that many lines of history. The core reports no depth, so `readableLines` is absent |
+| `agentDetection` | the `app` of the status a program reported (`claude-code` reads as `claude`), else the name of the foreground program, mapped to a Pastor harness; a shell in the foreground reads as a shell whatever an agent that exited left behind. `status.state` is `idle`, `working`, `blocked` or `done` |
+| `agentSessionRef` | the `resume.session` label, when something wrote one. The core itself knows no agent session |
+| `typeText` | held in the client. `terminal.send` pastes AND presses Enter, and `terminal.keys` refuses any character outside its own key names (`á`, `~`, `"`), so the core has no way to leave text unsubmitted. The text goes in with the Enter that follows; any other first key drops it; it waits two minutes at most |
+| `typeAndSubmit` (optional method) | `terminal.send`, one call. It answers `blocked` for a program that reported a dialog, which the adapter passes on as `refused` |
+| `sendKeys` | `terminal.keys`. Every named key of the contract has an hc name, read without regard to case, and modifiers join with `+`. `ctrl+Enter` arrived at `cat -v` as `ESC[27;5;13~`, its own encoding. A character that needs Shift on a US keyboard (`!"#$%&()*+:<>?@^_{}~` and the bar) and any character outside ASCII have no key name: the first set is `unsupportedKeys`, and both are refused before anything is sent |
+| `closePane` | `terminal.kill` |
+| `pushTopologyEvents`, `pushPaneEvents` | `events.subscribe`, as above |
+| `renamePane`, `setFocus`, `createTab`, `renameTab`, `closeTab`, `createSpace` | **no**. The app arranges its own spaces, tabs and panes, and the core has no verb for them |
+| `listWorktrees`, `createWorktree`, `openWorktree` | **no**. The core has no Git vocabulary |
+| `listSessions` | **no**. One pastor drives one core session; `PASTOR_MUX_ENDPOINT_HERDR_APP` names another |
+
+### Text entry is a declared fact
+
+`textEntry` says how text reaches a pane. `"typed"`, the default, is a terminal's own way: text
+lands in the program's input and waits for a key. `"submitted"` is herdr-core's: the one text verb
+pastes and presses Enter. The phone reads it from `/api/config` and, under `"submitted"`, sends a
+reply as one `POST …/reply` with `submit: true` and skips the type, read back and submit sequence,
+because text sent without Enter never shows on that screen. The bridge then calls the adapter's
+`typeAndSubmit`, and a refusal there is `reply.send_failed`, never `reply.not_submitted`: nothing
+was typed.

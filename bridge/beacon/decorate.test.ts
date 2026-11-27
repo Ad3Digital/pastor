@@ -9,6 +9,7 @@ import {
   muxAck,
   muxGone,
   muxOk,
+  type MuxAck,
   type MuxAdapter,
   type MuxGridRequest,
   type MuxOutcome,
@@ -81,6 +82,7 @@ class StubAdapter implements MuxAdapter {
   /** The foreground argv, when a case gives it one. Absent by default, like a multiplexer
    *  without the call — the decorators must carry it without inventing it. */
   foregroundProcesses?: (paneId: string) => Promise<MuxOutcome<readonly ForegroundProcess[]>>;
+  typeAndSubmit?: (paneId: string, text: string) => Promise<MuxAck>;
   capabilities = declareCapabilities({
     supports: ["paneGrid", "typeText", "sendKeys"],
     notes: { agentDetection: "the adapter's own note", closePane: "untouched" },
@@ -285,6 +287,7 @@ describe("a decorator preserves the adapter's whole surface", () => {
     controlTurn: true,
     foregroundProcesses: true,
     typeText: true,
+    typeAndSubmit: true,
     sendKeys: true,
     renamePane: true,
     closePane: true,
@@ -326,6 +329,7 @@ describe("a decorator preserves the adapter's whole surface", () => {
     stub.paneTurn = () => "turn-1";
     stub.controlTurn = () => Promise.resolve({ kind: "ok", replayed: false });
     stub.foregroundProcesses = () => Promise.resolve(muxOk([]));
+    stub.typeAndSubmit = () => Promise.resolve(muxAck());
     return stub;
   }
 

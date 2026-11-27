@@ -30,6 +30,7 @@ import { BEACON_SCHEMA_VERSION, type BeaconMarker, type BeaconStatus } from "../
 import type { MuxConformanceFixture, MuxConformanceWorld } from "./conformance.ts";
 import { durableConformanceFixture, durableHttpConformanceFixture } from "./durable/fixture.ts";
 import { herdrConformanceFixture } from "./herdr/fixture.ts";
+import { herdrAppConformanceFixture } from "./herdr-app/fixture.ts";
 import { tmuxMuxFactory } from "./tmux/adapter.ts";
 import { FakeTmux, FAKE_TMUX_SOCKET, tmuxConformanceFixture, tmuxWorld } from "./tmux/fixture.ts";
 import { tmuxBeaconMatcher } from "./tmux/markers.ts";
@@ -152,6 +153,7 @@ function decorated(world: MuxConformanceWorld, adapter: MuxAdapter): MuxConforma
  */
 export const MUX_CONFORMANCE_FIXTURES: readonly MuxConformanceFixture[] = [
   herdrConformanceFixture,
+  herdrAppConformanceFixture,
   ternConformanceFixture,
   tmuxConformanceFixture,
   zellijConformanceFixture,

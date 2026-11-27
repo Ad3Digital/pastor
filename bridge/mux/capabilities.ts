@@ -155,7 +155,27 @@ export interface MuxCapabilityDeclaration {
    * adapter never said.
    */
   readonly topologyLatency: MuxTopologyLatency;
+  /**
+   * How text reaches a pane. See {@link MuxTextEntry}.
+   *
+   * Published in `/api/config` under `mux` only when it is `"submitted"`, so an absent value reads as
+   * `"typed"` on the phone, which is what every bridge older than this field does.
+   */
+  readonly textEntry: MuxTextEntry;
 }
+
+/**
+ * How text reaches a pane, declared because the reply path reacts to it.
+ *
+ * `"typed"` is a terminal's own way: text lands in the program's input and sits there until a key
+ * submits it, so the phone can type, read the input box back, and only then press Enter.
+ *
+ * `"submitted"` is a multiplexer whose only text verb pastes AND presses Enter. Text typed without
+ * Enter never shows on its screen, so there is nothing to read back: the phone sends text and Enter
+ * as one act, and the adapter offers `typeAndSubmit` for it. A fact and not a capability, because
+ * both kinds reply; they differ in how, and a route that asked "can you type" would learn nothing.
+ */
+export type MuxTextEntry = "typed" | "submitted";
 
 /**
  * How many spaces a multiplexer can hold — declared, because the UI reacts to it.
@@ -180,6 +200,8 @@ export interface MuxCapabilityInput {
   readonly spaces?: MuxSpaceCapacity;
   /** Required — see {@link MuxCapabilityDeclaration.topologyLatency} for why there is no default. */
   readonly topologyLatency: MuxTopologyLatency;
+  /** How text reaches a pane. Omitted reads as `"typed"`, a terminal's own way. */
+  readonly textEntry?: MuxTextEntry;
 }
 
 /**
@@ -221,6 +243,7 @@ export function declareCapabilities(input: MuxCapabilityInput): MuxCapabilityDec
     notes: input.notes ?? {},
     spaces: input.spaces ?? "many",
     topologyLatency: input.topologyLatency,
+    textEntry: input.textEntry ?? "typed",
   };
 }
 

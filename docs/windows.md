@@ -51,8 +51,9 @@ You need these:
 - **Windows 11 on x64.** WSL is not Windows here. Inside WSL, follow the Linux install in
   [Install](install.md).
 - **PowerShell.** The Windows PowerShell 5.1 that comes with Windows 11 is enough.
-- **Herdr 0.9.3 or newer for Windows.** Step 1 below installs it. The Herdr project makes its
-  Windows build, and Pastor depends on it.
+- **Herdr for Windows: the Herdr app, or Herdr 0.9.3 or newer in a terminal.** Step 1 below
+  installs the terminal one. With the app, skip steps 1 and 3 and read
+  [With the Herdr app](#with-the-herdr-app). The Herdr project makes both, and Pastor depends on one.
 - **A phone** with a browser, an iPhone or an Android phone.
 - **A free Tailscale account.** You create it when you first sign in to the Tailscale app. The PC
   and the phone must sign in to the same one. The phone reaches the PC through it, and step 6 sets
@@ -69,6 +70,33 @@ then **App & browser control**, then **Smart App Control settings**. It has thre
 
 If it is on, read [Unsigned binary](#unsigned-binary-smartscreen-and-smart-app-control) first. It
 lists your choices.
+
+## With the Herdr app
+
+Pastor shows the terminals of the Herdr app with no Herdr in a terminal.
+
+```powershell
+pastor start
+```
+
+1. Open the Herdr app and leave it open, with your agent in a tab.
+2. Install Pastor with step 2 of [Zero to phone](#zero-to-phone), then open a new terminal.
+3. Run `pastor start`.
+
+`pastor start` finds the app's own program, herdr-core, where the app installed it, and writes
+`PASTOR_MUX=herdr-app` to its `.env`. Steps 5 to 8 of [Zero to phone](#zero-to-phone) are the same.
+
+> **Note.** With both the Herdr app and a `herdr` terminal running, `pastor start` asks which one
+> to show. To choose without being asked, run `$env:PASTOR_MUX = "herdr-app"; pastor start`.
+
+Four things differ from Herdr in a terminal:
+
+| What | With the Herdr app |
+| --- | --- |
+| The mirror | Plain text. herdr-core hands a screen over without colour. |
+| A reply | Text and Enter go in as one act. herdr-core has no way to type without Enter. |
+| A program showing a dialog | herdr-core refuses the reply and Pastor says so. Answer the dialog with its keys. |
+| New tab, rename, Show in terminal | Not offered. The app arranges its own spaces and tabs. |
 
 ## Zero to phone
 

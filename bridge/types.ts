@@ -1445,6 +1445,15 @@ export interface MuxConfig {
    * put "synced 4s ago" under a multiplexer that is never stale, which is noise that means nothing.
    */
   topologyLatency?: MuxTopologyLatency;
+  /**
+   * Present, and `"submitted"`, only under a multiplexer whose one text verb pastes and presses
+   * Enter (bridge/mux/capabilities.ts § MuxTextEntry). There the phone sends a reply as one act
+   * instead of typing it, reading the input box back and pressing Enter.
+   *
+   * **Absent everywhere else**, including on every bridge older than the field, and absent reads as
+   * a terminal's own way: type first, submit second.
+   */
+  textEntry?: "submitted";
 }
 
 /**

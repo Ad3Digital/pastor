@@ -634,6 +634,9 @@ export function muxConfigBody(mux: MuxPublication): MuxConfig {
   // Unconditional, unlike the mark: every adapter answers this, and it is the whole point of the
   // field that the phone can tell "this bridge says push" from "this bridge is too old to say".
   wire.topologyLatency = decl.topologyLatency;
+  // Only the unusual answer travels, so a multiplexer that types the ordinary way puts nothing new
+  // on the wire and an older phone reads this bridge exactly as it did.
+  if (decl.textEntry === "submitted") wire.textEntry = "submitted";
   return wire;
 }
 
@@ -3994,6 +3997,8 @@ export async function filesImage(
 export interface ReplySender {
   typeText(paneId: string, text: string): Promise<MuxAck>;
   sendKeys(paneId: string, keys: readonly string[]): Promise<MuxAck>;
+  /** Text and its submit as one act, on a multiplexer that has no other way to type (mux/types.ts). */
+  typeAndSubmit?(paneId: string, text: string): Promise<MuxAck>;
 }
 
 /** Outcome of the two-step send. `textDelivered` is only meaningful on the failure branch. */
@@ -4037,6 +4042,13 @@ export async function sendReplySteps(
         // translated line has no other way to quote them.
         { ok: false, textDelivered, ...apiError("reply.send_failed", { reason }) };
   try {
+    // One act where the multiplexer types only with Enter: a refusal there means nothing was typed,
+    // so it is reported as a failed send and never as text left unsubmitted in the pane.
+    const typeAndSubmit = client.typeAndSubmit?.bind(client);
+    if (txt && submit && typeAndSubmit !== undefined) {
+      const sent = await typeAndSubmit(paneId, txt);
+      return sent.ok ? { ok: true, textDelivered: true } : failed(sent.detail);
+    }
     if (txt) {
       const typed = await client.typeText(paneId, txt);
       if (!typed.ok) return failed(typed.detail);

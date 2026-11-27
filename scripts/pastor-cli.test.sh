@@ -550,7 +550,7 @@ firstrun HERDR_SOCKET_PATH="${F_HOME}/absent.sock" "$BIN" start \
   && fail "\`pastor start\` came up with no multiplexer to mirror"
 assert_contains "$STDERR" "no PASTOR_MUX is set"
 assert_contains "$STDERR" "no multiplexers are running"
-assert_contains "$STDERR" "PASTOR_MUX=<durable|herdr|tern|tmux|tuios|zellij> pastor start"
+assert_contains "$STDERR" "PASTOR_MUX=<durable|herdr|herdr-app|tern|tmux|tuios|zellij> pastor start"
 [ -f "${F_CONFIG}/.env" ] && fail "a refused start still wrote a config"
 
 # Exactly one found, and no terminal to ask at: auto-selected, said out loud, and written down.

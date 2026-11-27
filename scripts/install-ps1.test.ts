@@ -529,7 +529,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const tail = r.out.trimEnd().split(/\r?\n/).slice(-24).join("\n");
     expect(tail).toContain("Próximos passos. Este script não faz por você:");
     expect(tail).toContain("1. Abra uma janela NOVA do terminal.");
-    expect(tail).toContain("2. Abra o Herdr em outra janela do terminal e deixe rodando.");
+    expect(tail).toContain("2. Abra o Herdr app e deixe aberto. O Pastor precisa dele antes de ligar.");
     expect(tail).toContain("Baixe o Herdr em https://herdr.dev");
     expect(tail).toContain(`${exe} start`);
     expect(tail).toContain(`${exe} url`);
@@ -539,7 +539,7 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     expect(tail).toContain("O pastor.exe não é assinado: o Windows não conhece quem publicou o arquivo.");
     expect(r.out).toContain("PASTOR_NO_PATH_EDIT=1 está definido, então o seu PATH não foi alterado.");
     // No herdr on this PATH: the PATH check says so, and the install goes on.
-    expect(r.out).toContain("O Herdr não foi encontrado no PATH.");
+    expect(r.out).toContain("O Herdr não foi encontrado.");
     // The `pastor` on PATH leaves a mark when run. There is none.
     expect(existsSync(join(b.root, "pastor-ran.txt"))).toBe(false);
   }, 60_000);
@@ -549,7 +549,24 @@ describe.skipIf(!IS_WINDOWS)("scripts/install.ps1 on Windows, against a local mi
     const r = await install(b, mirror, { herdr: true });
     expect(r.code).toBe(0);
     expect(r.out).toContain(`Herdr encontrado: ${join(b.fakeBin, "herdr.cmd")}`);
+    expect(r.out).toContain("2. Abra o Herdr em outra janela do terminal e deixe rodando.");
     expect(r.out).not.toContain("Herdr não foi encontrado");
+    expect(r.out).not.toContain("Baixe o Herdr");
+  }, 60_000);
+
+  test("finds the Herdr app by its core, and says to leave the app open", async () => {
+    const b = box();
+    // Where herdr-core's own installer puts it: the app's terminals live in this program.
+    const coreDir = join(b.profile, "Local", "Programs", "herdr-core");
+    mkdirSync(coreDir, { recursive: true });
+    const core = join(coreDir, "herdr-core.exe");
+    writeFileSync(core, "");
+    const r = await install(b, mirror);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain(`Herdr app encontrado: ${core}`);
+    expect(r.out).toContain("2. Abra o Herdr app e deixe aberto, com o seu agente (Codex, Claude Code) numa aba.");
+    expect(r.out).not.toContain("Herdr não foi encontrado");
+    expect(r.out).not.toContain("Baixe o Herdr");
   }, 60_000);
 
   test("writes nothing outside PASTOR_DIR, and leaves no scratch folder in it", async () => {
